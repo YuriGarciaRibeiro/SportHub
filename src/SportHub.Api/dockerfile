@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /app
+
+COPY *.sln ./
+COPY src/SportHub.Api/SportHub.Api.csproj ./src/SportHub.Api/
+COPY src/SportHub.Application/SportHub.Application.csproj ./src/SportHub.Application/
+COPY src/SportHub.Domain/SportHub.Domain.csproj ./src/SportHub.Domain/
+COPY src/SportHub.Infrastructure/SportHub.Infrastructure.csproj ./src/SportHub.Infrastructure/
+COPY tests/SportHub.Tests/SportHub.Tests.csproj ./tests/SportHub.Tests/
+
+RUN dotnet restore
+
+COPY . .
+
+RUN dotnet publish src/SportHub.Api/SportHub.Api.csproj -c Release -o /out
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+COPY --from=build /out ./
+
+EXPOSE 80
+
+ENTRYPOINT ["dotnet", "SportHub.Api.dll"]
