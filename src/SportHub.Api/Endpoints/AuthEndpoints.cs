@@ -1,5 +1,6 @@
 
 using Application.UseCases.Auth.Register;
+using Application.UserCases.Auth;
 using FluentResults;
 using MediatR;
 using WebApi.Extensions.ResultExtensions;
@@ -17,7 +18,16 @@ public static class AuthEndpoints
             RegisterUserCommand command,
             ISender sender) =>
         {
-            Result<string> result = await sender.Send(command);
+            Result<AuthResponse> result = await sender.Send(command);
+
+            return result.ToIResult();
+        });
+
+        group.MapPost("/login", async (
+            LoginCommand command,
+            ISender sender) =>
+        {
+            Result<AuthResponse> result = await sender.Send(command);
 
             return result.ToIResult();
         });

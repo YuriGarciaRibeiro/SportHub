@@ -1,8 +1,9 @@
 using Application.CQRS;
+using Application.UserCases.Auth;
 
 namespace Application.UseCases.Auth.Register;
 
-public record RegisterUserCommand: ICommand<string>
+public record RegisterUserCommand: ICommand<AuthResponse>
 {
     public required string FirstName { get; init; }
     public required string LastName { get; init; }

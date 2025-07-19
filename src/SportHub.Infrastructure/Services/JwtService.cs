@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.UserCases.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -17,7 +18,7 @@ public class JwtService : IJwtService
         _config = config;
     }
 
-    public string GenerateToken(Guid userId, string fullName, string email)
+    public (string Token, DateTime ExpiresAt) GenerateToken(Guid userId, string fullName, string email)
     {
         var claims = new[]
         {
@@ -33,10 +34,12 @@ public class JwtService : IJwtService
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(2),
+            expires: DateTime.Now.AddHours(2),
             signingCredentials: creds
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
+
+        return (jwtToken, token.ValidTo);
     }
 }

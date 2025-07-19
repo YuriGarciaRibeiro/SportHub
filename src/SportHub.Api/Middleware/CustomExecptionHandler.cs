@@ -12,7 +12,7 @@ public class CustomExecptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
-        logger.LogError($"Error occurred: {exception.Message}, StackTrace: {exception.StackTrace}, Time: {DateTime.UtcNow}");
+        logger.LogError($"Error occurred: {exception.Message}, StackTrace: {exception.StackTrace}, Time: {DateTime.Now}");
 
         (string Detail, string Title, int StatusCode) details = exception switch
         {

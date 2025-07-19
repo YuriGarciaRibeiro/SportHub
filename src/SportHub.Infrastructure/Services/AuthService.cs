@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.UserCases.Auth;
 using FluentResults;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -14,7 +15,7 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
     }
 
-    public async Task<Result<string>> RegisterAsync(string firstName, string lastName, string email, string password)
+    public async Task<Result<AuthResponse>> RegisterAsync(string firstName, string lastName, string email, string password)
     {
         var existing = await _userManager.FindByEmailAsync(email);
         if (existing != null)
@@ -36,11 +37,18 @@ public class AuthService : IAuthService
             return Result.Fail(errors);
         }
 
-        var token = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
-        return Result.Ok(token);
+        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
+        return Result.Ok(new AuthResponse
+        {
+            UserId = user.Id,
+            FullName = user.FullName,
+            Email = user.Email!,
+            Token = token,
+            ExpiresAt = expiresAt
+        });
     }
 
-    public async Task<Result<string>> LoginAsync(string email, string password)
+    public async Task<Result<AuthResponse>> LoginAsync(string email, string password)
     {
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
@@ -50,7 +58,16 @@ public class AuthService : IAuthService
         if (!isPasswordValid)
             return Result.Fail("Invalid credentials.");
 
-        var token = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
-        return Result.Ok(token);
+        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
+
+        return Result.Ok(new AuthResponse
+        {
+            UserId = user.Id,
+            FullName = user.FullName,
+            Email = user.Email!,
+            Token = token,
+            ExpiresAt = expiresAt
+        });
     }
+
 }

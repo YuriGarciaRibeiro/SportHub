@@ -2,10 +2,11 @@ using FluentResults;
 using MediatR;
 using Application.Common.Interfaces;
 using Application.CQRS;
+using Application.UserCases.Auth;
 
 namespace Application.UseCases.Auth.Register;
 
-public class RegisterUserHandler : ICommandHandler<RegisterUserCommand,string>
+public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResponse>
 {
     private readonly IAuthService _authService;
 
@@ -14,7 +15,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand,string>
         _authService = authService;
     }
 
-    public Task<Result<string>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         return _authService.RegisterAsync(
             request.FirstName,
