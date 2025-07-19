@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using WebAPI.Middleware;
 
 
@@ -103,6 +104,31 @@ public static class ServiceExtensions
             };
         });
 
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddSettings(this WebApplicationBuilder builder)
+    {
+        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+        builder.Services.Configure<AdminUserSettings>(builder.Configuration.GetSection("AdminUser"));
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddSeeders(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddTransient<UserSeeder>();
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddSerilogLogging(this WebApplicationBuilder builder)
+    {
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)
+            .Enrich.FromLogContext()
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
         return builder;
     }
 }

@@ -1,3 +1,6 @@
+using Application.Settings;
+using Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Scalar.AspNetCore;
 using WebAPI.Extensions;
 
@@ -11,7 +14,10 @@ builder.AddAuthentication()
         .AddRepositories()
         .AddCustomExecptionHanlder()
         .AddDatabase(builder.Configuration)
-        .AddMediatR();
+        .AddMediatR()
+        .AddSettings()
+        .AddSeeders()
+        .AddSerilogLogging();
 
 var app = builder.Build();
 
@@ -25,7 +31,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseEndpoints();
 
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await RoleSeeder.SeedAsync(roleManager, logger);
 
-
+    var userSeeder = scope.ServiceProvider.GetRequiredService<UserSeeder>();
+    await userSeeder.SeedAdminAsync();
+}
 
 app.Run();
