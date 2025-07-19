@@ -14,18 +14,19 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
     }
 
-    public async Task<Result<string>> RegisterAsync(string fullName, string email, string password)
+    public async Task<Result<string>> RegisterAsync(string firstName, string lastName, string email, string password)
     {
         var existing = await _userManager.FindByEmailAsync(email);
         if (existing != null)
-            return Result.Fail("E-mail já está em uso.");
+            return Result.Fail("E-mail is already in use.");
 
         var user = new AppUser
         {
             Id = Guid.NewGuid(),
-            FullName = fullName,
             Email = email,
-            UserName = email
+            UserName = email,
+            FirstName = firstName,
+            LastName = lastName
         };
 
         var result = await _userManager.CreateAsync(user, password);
@@ -35,7 +36,21 @@ public class AuthService : IAuthService
             return Result.Fail(errors);
         }
 
-        var token = _jwtService.GenerateToken(user.Id, user.FullName, user.Email);
+        var token = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
+        return Result.Ok(token);
+    }
+
+    public async Task<Result<string>> LoginAsync(string email, string password)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return Result.Fail("Invalid credentials.");
+
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
+        if (!isPasswordValid)
+            return Result.Fail("Invalid credentials.");
+
+        var token = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
         return Result.Ok(token);
     }
 }

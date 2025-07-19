@@ -16,6 +16,10 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand,string>
 
     public Task<Result<string>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        return _authService.RegisterAsync(request.FullName, request.Email, request.Password);
+        return _authService.RegisterAsync(
+            request.FirstName,
+            request.LastName,
+            request.Email,
+            request.Password);
     }
 }
