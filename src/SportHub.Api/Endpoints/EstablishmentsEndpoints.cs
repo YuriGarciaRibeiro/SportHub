@@ -1,5 +1,6 @@
 using Application.UserCases.Establishments.GetEstablishmentById;
 using Application.UserCases.Establishments.GetEstablishmentByOwnerId;
+using Application.UserCases.EstablishmentUser.CreateEstablishmentUser;
 using MediatR;
 using WebApi.Extensions.ResultExtensions;
 
@@ -49,5 +50,17 @@ public static class EstablishmentsEndpoints
         .WithDescription("Retrieves all establishments associated with a specific owner ID.")
         .RequireAuthorization();
 
+        group.MapPost("/users", async (
+            CreateEstablishmentUserCommand command,
+            ISender sender) =>
+        {
+            var result = await sender.Send(command);
+
+            return result.ToIResult();
+        })
+        .WithName("CreateEstablishmentUser")
+        .WithSummary("Create a user for an establishment")
+        .WithDescription("Creates a new user for the specified establishment.")
+        .RequireAuthorization();
     }
 }
