@@ -1,4 +1,4 @@
-public record GetEstablishmentResponse(
+public record GetEstablishmentByIdResponse(
     Guid Id,
     string Name,
     string Description,

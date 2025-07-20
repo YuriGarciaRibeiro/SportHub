@@ -27,7 +27,7 @@ public static class EstablishmentsEndpoints
             Guid id,
             ISender sender) =>
         {
-            var result = await sender.Send(new GetEstablishmentQuery(id));
+            var result = await sender.Send(new GetEstablishmentByIdQuery(id));
 
             return result.ToIResult();
         })

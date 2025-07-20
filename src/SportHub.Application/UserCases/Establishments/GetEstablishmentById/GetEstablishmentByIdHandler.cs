@@ -1,18 +1,18 @@
 using Application.Common.Interfaces;
 using Application.CQRS;
 
-public class GetEstablishmentHandler : IQueryHandler<GetEstablishmentQuery, GetEstablishmentResponse>
+public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQuery, GetEstablishmentByIdResponse>
 {
     private readonly IEstablishmentsRepository _establishmentRepository;
     private readonly IUserService _userService;
 
-    public GetEstablishmentHandler(IEstablishmentsRepository establishmentRepository, IUserService userService)
+    public GetEstablishmentByIdHandler(IEstablishmentsRepository establishmentRepository, IUserService userService)
     {
         _establishmentRepository = establishmentRepository;
         _userService = userService;
     }
 
-    public async Task<Result<GetEstablishmentResponse>> Handle(GetEstablishmentQuery request, CancellationToken cancellationToken)
+    public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
     {
         var establishment = await _establishmentRepository.GetByIdAsync(request.Id);
         if (establishment == null)
@@ -36,7 +36,7 @@ public class GetEstablishmentHandler : IQueryHandler<GetEstablishmentQuery, GetE
 
         var users = await Task.WhenAll(userTasks);
 
-        var response = new GetEstablishmentResponse(
+        var response = new GetEstablishmentByIdResponse(
             Id: establishment.Id,
             Name: establishment.Name,
             Description: establishment.Description,
