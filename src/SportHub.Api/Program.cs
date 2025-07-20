@@ -1,3 +1,4 @@
+using Api.Document;
 using Application.Settings;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -7,7 +8,10 @@ using WebAPI.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1", options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+});
 
 builder.AddAuthentication()
         .AddServices()
@@ -18,6 +22,8 @@ builder.AddAuthentication()
         .AddSettings()
         .AddSeeders()
         .AddSerilogLogging();
+        
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
@@ -30,6 +36,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseEndpoints();
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 using (var scope = app.Services.CreateScope())
 {

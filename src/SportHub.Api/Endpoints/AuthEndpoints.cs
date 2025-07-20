@@ -21,7 +21,10 @@ public static class AuthEndpoints
             Result<AuthResponse> result = await sender.Send(command);
 
             return result.ToIResult();
-        });
+        })
+        .WithName("RegisterUser")
+        .WithSummary("Register a new user")
+        .WithDescription("Registers a new user with the provided details.");
 
         group.MapPost("/login", async (
             LoginCommand command,
@@ -30,7 +33,10 @@ public static class AuthEndpoints
             Result<AuthResponse> result = await sender.Send(command);
 
             return result.ToIResult();
-        });
+        })
+        .WithName("LoginUser")
+        .WithSummary("Login a user")
+        .WithDescription("Logs in a user with the provided email and password.");
 
     
         return group;

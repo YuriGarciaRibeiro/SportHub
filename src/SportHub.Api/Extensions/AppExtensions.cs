@@ -12,6 +12,7 @@ public static class AppExtensions
     public static WebApplication UseEndpoints(this WebApplication app)
     {
         app.MapAuthEndpoints();
+        app.MapEstablishmentsEndpoints();
 
         return app;
     }

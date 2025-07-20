@@ -24,11 +24,15 @@ public static class ServiceExtensions
     {
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         return builder;
     }
 
     public static WebApplicationBuilder AddRepositories(this WebApplicationBuilder builder)
-    {
+    {   
+        builder.Services.AddScoped<IEstablishmentsRepository, EstablishmentsRepository>();
+        builder.Services.AddScoped<IEstablishmentUsersRepository, EstablishmentUsersRepository>();
+
         return builder;
     }
 
@@ -46,18 +50,20 @@ public static class ServiceExtensions
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
         });
 
-        builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>(options =>
+        builder.Services.AddIdentityCore<AppUser>(options =>
         {
             options.Password.RequireDigit = true;
             options.Password.RequiredLength = 8;
             options.Password.RequireNonAlphanumeric = true;
             options.Password.RequireUppercase = true;
         })
+        .AddRoles<IdentityRole<Guid>>() // se você usa roles
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
         return builder;
     }
+
 
 
     public static WebApplication ExecuteMigrations(this WebApplication app)
@@ -104,9 +110,10 @@ public static class ServiceExtensions
             };
         });
 
+        builder.Services.AddAuthorization();
+
         return builder;
     }
-
     public static WebApplicationBuilder AddSettings(this WebApplicationBuilder builder)
     {
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));

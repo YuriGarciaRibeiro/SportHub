@@ -37,7 +37,10 @@ public class AuthService : IAuthService
             return Result.Fail(errors);
         }
 
-        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
+        var roles = await _userManager.GetRolesAsync(user);
+        var role = roles.FirstOrDefault();
+
+        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, role, user.Email!);
         return Result.Ok(new AuthResponse
         {
             UserId = user.Id,
@@ -58,7 +61,11 @@ public class AuthService : IAuthService
         if (!isPasswordValid)
             return Result.Fail("Invalid credentials.");
 
-        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, user.Email!);
+        // ⬇️ Pegando a role
+        var roles = await _userManager.GetRolesAsync(user);
+        var role = roles.FirstOrDefault(); // ou adapte conforme sua lógica
+
+        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, role, user.Email!);
 
         return Result.Ok(new AuthResponse
         {
@@ -69,5 +76,6 @@ public class AuthService : IAuthService
             ExpiresAt = expiresAt
         });
     }
+
 
 }

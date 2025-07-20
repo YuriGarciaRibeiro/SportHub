@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SportHub.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250719222224_AddEstablishments")]
+    partial class AddEstablishments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,30 +31,11 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ImageUrl")
+                    b.Property<string>("Address")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Website")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -77,6 +61,29 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                     b.HasIndex("EstablishmentId");
 
                     b.ToTable("EstablishmentUsers");
+                });
+
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("Infrastructure.Identity.AppUser", b =>
@@ -282,52 +289,6 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Establishment", b =>
-                {
-                    b.OwnsOne("Domain.ValueObjects.Address", "Address", b1 =>
-                        {
-                            b1.Property<Guid>("EstablishmentId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Complement")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Neighborhood")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Number")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("State")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Street")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("ZipCode")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.HasKey("EstablishmentId");
-
-                            b1.ToTable("Establishments");
-
-                            b1.WithOwner()
-                                .HasForeignKey("EstablishmentId");
-                        });
-
-                    b.Navigation("Address")
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Entities.EstablishmentUser", b =>
                 {
                     b.HasOne("Domain.Entities.Establishment", "Establishment")
@@ -336,13 +297,15 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Infrastructure.Identity.AppUser", null)
-                        .WithMany()
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("Establishments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Establishment");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -399,6 +362,11 @@ namespace SportHub.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Domain.Entities.Establishment", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.Navigation("Establishments");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,6 +1,6 @@
-using Domamin.Entities;
+using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
-using System;
+
 
 namespace Infrastructure.Identity;
 
@@ -8,7 +8,6 @@ public class AppUser : IdentityUser<Guid>
 {
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
-
 
     public string FullName => $"{FirstName} {LastName}";
     

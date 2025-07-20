@@ -18,13 +18,14 @@ public class JwtService : IJwtService
         _config = config;
     }
 
-    public (string Token, DateTime ExpiresAt) GenerateToken(Guid userId, string fullName, string email)
+    public (string Token, DateTime ExpiresAt) GenerateToken(Guid userId, string fullName,string role, string email)
     {
         var claims = new[]
         {
-            new Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email, email),
-            new Claim("name", fullName)
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Name, fullName),
+            new Claim(ClaimTypes.Role, role)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
