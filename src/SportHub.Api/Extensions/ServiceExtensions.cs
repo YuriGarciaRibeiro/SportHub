@@ -26,6 +26,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
         return builder;
     }
 

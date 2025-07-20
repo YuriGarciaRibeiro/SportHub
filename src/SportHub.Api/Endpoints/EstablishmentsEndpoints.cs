@@ -1,3 +1,5 @@
+using Application.UserCases.Establishments.GetEstablishmentById;
+using Application.UserCases.Establishments.GetEstablishmentByOwnerId;
 using MediatR;
 using WebApi.Extensions.ResultExtensions;
 
@@ -34,6 +36,18 @@ public static class EstablishmentsEndpoints
         .WithName("GetEstablishment")
         .WithSummary("Get an establishment by ID")
         .WithDescription("Retrieves an establishment by its ID.");
-        
+
+        group.MapGet("/owner", async (
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetEstablishmentByOwnerIdQuery());
+
+            return result.ToIResult();
+        })
+        .WithName("GetEstablishmentsByOwnerId")
+        .WithSummary("Get establishments by owner ID")
+        .WithDescription("Retrieves all establishments associated with a specific owner ID.")
+        .RequireAuthorization();
+
     }
 }

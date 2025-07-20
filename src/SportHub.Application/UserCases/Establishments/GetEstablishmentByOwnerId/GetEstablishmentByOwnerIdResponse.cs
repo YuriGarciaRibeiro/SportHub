@@ -1,6 +1,10 @@
-namespace Application.UserCases.Establishments.GetEstablishmentById;
+namespace Application.UserCases.Establishments.GetEstablishmentByOwnerId;
 
-public record GetEstablishmentByIdResponse(
+public record GetEstablishmentsByOwnerIdResponse(
+    IEnumerable<EstablishmentResponse> Establishments
+);
+
+public record EstablishmentResponse(
     Guid Id,
     string Name,
     string Description,

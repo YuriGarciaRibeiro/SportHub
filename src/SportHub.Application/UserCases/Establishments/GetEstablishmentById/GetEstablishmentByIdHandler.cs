@@ -1,6 +1,8 @@
 using Application.Common.Interfaces;
 using Application.CQRS;
 
+namespace Application.UserCases.Establishments.GetEstablishmentById;
+
 public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQuery, GetEstablishmentByIdResponse>
 {
     private readonly IEstablishmentsRepository _establishmentRepository;
