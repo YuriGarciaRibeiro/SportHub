@@ -22,6 +22,18 @@ public static class EstablishmentsEndpoints
         .WithSummary("Create a new establishment")
         .WithDescription("Creates a new establishment with the provided details.")
         .RequireAuthorization();
+
+        group.MapGet("/{id:guid}", async (
+            Guid id,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetEstablishmentQuery(id));
+
+            return result.ToIResult();
+        })
+        .WithName("GetEstablishment")
+        .WithSummary("Get an establishment by ID")
+        .WithDescription("Retrieves an establishment by its ID.");
         
     }
 }

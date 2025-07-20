@@ -15,12 +15,17 @@ public class EstablishmentsRepository : IEstablishmentsRepository
 
     public async Task<Establishment?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.Establishments.FindAsync(id);
+        return await _dbContext.Establishments
+            .Include(e => e.Users) 
+            .FirstOrDefaultAsync(e => e.Id == id);
     }
+
 
     public async Task<List<Establishment>> GetAllAsync()
     {
-        return await _dbContext.Establishments.ToListAsync();
+        return await _dbContext.Establishments
+            .Include(e => e.Users)
+            .ToListAsync();
     }
 
     public async Task AddAsync(Establishment establishment)

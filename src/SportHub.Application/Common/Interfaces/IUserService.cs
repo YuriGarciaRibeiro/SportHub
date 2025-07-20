@@ -1,4 +1,6 @@
+using Domain.Entities;
+
 public interface IUserService
 {
-    public Task GetUserByIdAsync(Guid userId);
+    public Task<User> GetUserByIdAsync(Guid userId);
 }

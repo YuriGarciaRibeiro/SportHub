@@ -18,7 +18,7 @@ public class AppUser : IdentityUser<Guid>
             Id = Id,
             Email = Email!,
             FirstName = FirstName,
-            LastName = LastName
+            LastName = LastName,
         };
     }
 
