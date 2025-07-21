@@ -20,14 +20,10 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
         await _dbContext.SaveChangesAsync();
     }
 
-    public Task<List<EstablishmentUser>> GetByEstablishmentIdAsync(Guid establishmentId)
+    public Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId)
     {
-        throw new NotImplementedException();
-    }
-
-    public Task<EstablishmentUser?> GetByIdAsync(Guid id)
-    {
-        throw new NotImplementedException();
+        return _dbContext.EstablishmentUsers
+            .FirstOrDefaultAsync(eu => eu.UserId == userId && eu.EstablishmentId == establishmentId);
     }
 
     public Task<List<string>> GetByOwnerIdAsync(Guid ownerId)
@@ -38,10 +34,6 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
             .ToListAsync();
     }
 
-    public Task<List<EstablishmentUser>> GetByUserIdAsync(Guid userId)
-    {
-        throw new NotImplementedException();
-    }
 
-    
+
 }

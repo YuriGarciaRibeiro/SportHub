@@ -3,7 +3,7 @@ namespace Domain.Enums;
 public enum UserRole
 {
     Admin,
-    EstablishmentOwner,
+    EstablishmentMember,
     User
 }
 

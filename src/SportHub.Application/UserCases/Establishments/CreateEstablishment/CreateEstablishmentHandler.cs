@@ -9,15 +9,22 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
 {
     private readonly IEstablishmentsRepository _establishmentRepository;
     private readonly IEstablishmentUsersRepository _establishmentUsersRepository;
+    private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUser;
     private readonly ILogger<CreateEstablishmentHandler> _logger;
 
-    public CreateEstablishmentHandler(IEstablishmentsRepository establishmentRepository, IEstablishmentUsersRepository establishmentUsersRepository, ICurrentUserService currentUser, ILogger<CreateEstablishmentHandler> logger)
+    public CreateEstablishmentHandler(
+        IEstablishmentsRepository establishmentRepository,
+        IEstablishmentUsersRepository establishmentUsersRepository,
+        IUserService userService,
+        ICurrentUserService currentUser,
+        ILogger<CreateEstablishmentHandler> logger)
     {
         _logger = logger;
         _currentUser = currentUser;
         _establishmentRepository = establishmentRepository;
         _establishmentUsersRepository = establishmentUsersRepository;
+        _userService = userService;
     }
 
     public async Task<Result<string>> Handle(CreateEstablishmentCommand request, CancellationToken cancellationToken)
@@ -54,6 +61,8 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
 
         await _establishmentRepository.AddAsync(establishment);
         await _establishmentUsersRepository.AddAsync(newEstablishmentUser);
+        await _userService.AddRoleToUserAsync(_currentUser.UserId, UserRole.EstablishmentMember);
+
 
         return Result.Ok(establishment.Id.ToString());
     }

@@ -1,5 +1,6 @@
 using Application.Common.Interfaces;
 using Application.UserCases.Auth;
+using Domain.Enums;
 using FluentResults;
 using Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -34,6 +35,13 @@ public class AuthService : IAuthService
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            return Result.Fail(errors);
+        }
+
+        var addRoleResult = await _userManager.AddToRoleAsync(user, UserRole.User.ToString());
+        if (!addRoleResult.Succeeded)
+        {
+            var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
             return Result.Fail(errors);
         }
 

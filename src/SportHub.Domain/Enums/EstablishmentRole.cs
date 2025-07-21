@@ -2,7 +2,7 @@ namespace Domain.Enums;
 
 public enum EstablishmentRole
 {
-    Owner,
-    Manager,
-    Staff
+    Staff = 0,
+    Manager = 1,
+    Owner = 2
 }

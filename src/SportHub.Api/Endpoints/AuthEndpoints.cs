@@ -1,4 +1,6 @@
 
+using Application.Common.Interfaces;
+using Application.Security;
 using Application.UseCases.Auth.Register;
 using Application.UserCases.Auth;
 using FluentResults;
@@ -38,7 +40,6 @@ public static class AuthEndpoints
         .WithSummary("Login a user")
         .WithDescription("Logs in a user with the provided email and password.");
 
-    
         return group;
     }
 }
