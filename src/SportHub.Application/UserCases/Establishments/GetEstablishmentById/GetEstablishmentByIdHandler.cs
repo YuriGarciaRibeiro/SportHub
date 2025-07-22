@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Errors;
 using Application.CQRS;
 
 namespace Application.UserCases.Establishments.GetEstablishmentById;
@@ -19,9 +20,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
         var establishment = await _establishmentRepository.GetByIdAsync(request.Id);
         if (establishment == null)
         {
-            return Result.Fail(
-                new Error("Establishment not found.")
-                    .WithMetadata("StatusCode", 404));
+            return Result.Fail(new NotFound($"Establishment with ID '{request.Id}' not found."));
         }
 
         var userTasks = establishment.Users.Select(async e =>

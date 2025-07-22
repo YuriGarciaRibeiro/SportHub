@@ -33,7 +33,7 @@ public class EstablishmentService : IEstablishmentService
     public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId)
     {
         var establishmentsId = await _establishmentUsersRepository.GetByOwnerIdAsync(ownerId);
-        if (establishmentsId == null || !establishmentsId.Any())
+        if (establishmentsId == null)
         {
             return Result.Fail("No establishments found for the given owner ID.");
         }

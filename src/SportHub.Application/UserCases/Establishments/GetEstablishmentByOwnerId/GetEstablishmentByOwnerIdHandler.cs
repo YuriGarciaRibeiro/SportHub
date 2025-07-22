@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Errors;
 using Application.CQRS;
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,11 @@ public class GetEstablishmentByOwnerIdHandler : IQueryHandler<GetEstablishmentBy
 
         if (establishments.IsFailed)
             return Result.Fail(establishments.Errors);
+
+        if (!establishments.Value.Any())
+        {
+            return Result.Ok(new GetEstablishmentsByOwnerIdResponse(new List<EstablishmentResponse>()));
+        }
 
         var userIds = establishments.Value
             .SelectMany(e => e.Users)

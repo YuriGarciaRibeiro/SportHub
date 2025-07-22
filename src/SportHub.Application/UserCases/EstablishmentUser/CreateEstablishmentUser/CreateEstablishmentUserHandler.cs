@@ -1,7 +1,9 @@
+using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Application.CQRS;
 using Domain.Entities;
 using Domain.Enums;
+using FluentResults;
 
 namespace Application.UserCases.EstablishmentUser.CreateEstablishmentUser;
 
@@ -19,6 +21,13 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
     public async Task<Result<CreateEstablishmentUserResponse>> Handle(CreateEstablishmentUserCommand request, CancellationToken cancellationToken)
     {
+        // Verificar se o usuário existe
+        var currentUser = await _userService.GetUserByIdAsync(request.UserId);
+        if (currentUser == null)
+        {
+            return Result.Fail(new NotFound($"User with ID '{request.UserId}' not found."));
+        }
+
         var establishmentUser = new Domain.Entities.EstablishmentUser
         {
             UserId = request.UserId,
@@ -29,7 +38,6 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
         await _repository.AddAsync(establishmentUser);
 
         // Se o usuário for apenas "User", atualize para "EstablishmentMember"
-        var currentUser = await _userService.GetUserByIdAsync(establishmentUser.UserId);
         if (currentUser.Role == UserRole.User)
         {
             var userResult = await _userService.AddRoleToUserAsync(

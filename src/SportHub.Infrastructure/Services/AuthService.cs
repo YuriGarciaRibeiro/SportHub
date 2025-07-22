@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Errors;
 using Application.UserCases.Auth;
 using Domain.Entities;
 using Domain.Enums;
@@ -26,11 +27,11 @@ public class AuthService : IAuthService
     {
         // Verificar se o email já existe
         if (await _usersRepository.EmailExistsAsync(email))
-            return Result.Fail("E-mail is already in use.");
+            return Result.Fail(new Conflict($"E-mail '{email}' is already in use."));
 
         // Validar senha (você pode implementar validações personalizadas aqui)
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
-            return Result.Fail("Password must be at least 8 characters long.");
+            return Result.Fail(new BadRequest("Password must be at least 8 characters long."));
 
         // Hash da senha
         var passwordHash = _passwordService.HashPassword(password, out var salt);
@@ -69,9 +70,9 @@ public class AuthService : IAuthService
                 ExpiresAt = expiresAt
             });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return Result.Fail($"Error creating user: {ex.Message}");
+            return Result.Fail(new InternalServerError("Error creating user."));
         }
     }
 
@@ -79,11 +80,11 @@ public class AuthService : IAuthService
     {
         var user = await _usersRepository.GetByEmailAsync(email);
         if (user is null || !user.IsActive)
-            return Result.Fail("Invalid credentials.");
+            return Result.Fail(new Unauthorized("Invalid credentials."));
 
         // Verificar senha
         if (!_passwordService.VerifyPassword(password, user.PasswordHash, user.Salt))
-            return Result.Fail("Invalid credentials.");
+            return Result.Fail(new Unauthorized("Invalid credentials."));
 
         // Atualizar último login
         user.LastLoginAt = DateTime.UtcNow;
