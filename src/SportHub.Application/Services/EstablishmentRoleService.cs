@@ -1,5 +1,7 @@
+using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Domain.Enums;
+using FluentResults;
 
 namespace Application.Services;
 public class EstablishmentRoleService : IEstablishmentRoleService
@@ -19,5 +21,14 @@ public class EstablishmentRoleService : IEstablishmentRoleService
     {
         var actual = await GetRoleAsync(userId, estId);
         return actual.HasValue && actual.Value >= required;
+    }
+
+    public async Task<Result> ValidateUserPermissionAsync(Guid userId, Guid establishmentId, EstablishmentRole minimumRole)
+    {
+        var hasPermission = await HasAtLeastRoleAsync(userId, establishmentId, minimumRole);
+        
+        return hasPermission 
+            ? Result.Ok() 
+            : Result.Fail(new Forbidden("Você não tem permissão para realizar esta ação neste estabelecimento."));
     }
 }

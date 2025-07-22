@@ -11,16 +11,33 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 {
     private readonly IEstablishmentUsersRepository _repository;
     private readonly IUserService _userService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IEstablishmentRoleService _establishmentRoleService;
 
-
-    public CreateEstablishmentUserHandler(IEstablishmentUsersRepository repository, IUserService userService)
+    public CreateEstablishmentUserHandler(
+        IEstablishmentUsersRepository repository, 
+        IUserService userService,
+        ICurrentUserService currentUserService,
+        IEstablishmentRoleService establishmentRoleService)
     {
         _repository = repository;
         _userService = userService;
+        _currentUserService = currentUserService;
+        _establishmentRoleService = establishmentRoleService;
     }
 
     public async Task<Result<CreateEstablishmentUserResponse>> Handle(CreateEstablishmentUserCommand request, CancellationToken cancellationToken)
     {
+        var permissionResult = await _establishmentRoleService.ValidateUserPermissionAsync(
+            _currentUserService.UserId, 
+            request.EstablishmentId, 
+            EstablishmentRole.Staff);
+            
+        if (permissionResult.IsFailed)
+        {
+            return Result.Fail(permissionResult.Errors);
+        }
+
         var currentUser = await _userService.GetUserByIdAsync(request.UserId);
         if (currentUser == null)
         {

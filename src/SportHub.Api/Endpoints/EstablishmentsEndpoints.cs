@@ -1,3 +1,4 @@
+using Application.Security;
 using Application.UserCases.Establishments.GetEstablishmentById;
 using Application.UserCases.Establishments.GetEstablishmentByOwnerId;
 using Application.UserCases.EstablishmentUser.CreateEstablishmentUser;
@@ -48,7 +49,7 @@ public static class EstablishmentsEndpoints
         .WithName("GetEstablishmentsByOwnerId")
         .WithSummary("Get establishments by owner ID")
         .WithDescription("Retrieves all establishments associated with a specific owner ID.")
-        .RequireAuthorization();
+        .RequireAuthorization(PolicyNames.IsOwner);
 
         group.MapPost("/users", async (
             CreateEstablishmentUserCommand command,
