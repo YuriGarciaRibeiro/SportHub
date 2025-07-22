@@ -1,89 +1,108 @@
 using Application.Common.Interfaces;
 using Application.UserCases.Auth;
+using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
-using Infrastructure.Identity;
-using Microsoft.AspNetCore.Identity;
+
+namespace Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly UserManager<AppUser> _userManager;
+    private readonly IUsersRepository _usersRepository;
+    private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
 
-    public AuthService(UserManager<AppUser> userManager, IJwtService jwtService)
+    public AuthService(
+        IUsersRepository usersRepository,
+        IPasswordService passwordService,
+        IJwtService jwtService)
     {
-        _userManager = userManager;
+        _usersRepository = usersRepository;
+        _passwordService = passwordService;
         _jwtService = jwtService;
     }
 
     public async Task<Result<AuthResponse>> RegisterAsync(string firstName, string lastName, string email, string password)
     {
-        var existing = await _userManager.FindByEmailAsync(email);
-        if (existing != null)
+        // Verificar se o email já existe
+        if (await _usersRepository.EmailExistsAsync(email))
             return Result.Fail("E-mail is already in use.");
 
-        var user = new AppUser
+        // Validar senha (você pode implementar validações personalizadas aqui)
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+            return Result.Fail("Password must be at least 8 characters long.");
+
+        // Hash da senha
+        var passwordHash = _passwordService.HashPassword(password, out var salt);
+
+        // Criar novo usuário
+        var user = new User
         {
             Id = Guid.NewGuid(),
             Email = email,
-            UserName = email,
             FirstName = firstName,
-            LastName = lastName
+            LastName = lastName,
+            PasswordHash = passwordHash,
+            Salt = salt,
+            Role = UserRole.User,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
 
-        var result = await _userManager.CreateAsync(user, password);
-        if (!result.Succeeded)
+        try
         {
-            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            return Result.Fail(errors);
+            await _usersRepository.CreateAsync(user);
+
+            // Gerar token JWT
+            var (token, expiresAt) = _jwtService.GenerateToken(
+                user.Id, 
+                user.FullName, 
+                user.Role.ToString(), 
+                user.Email);
+
+            return Result.Ok(new AuthResponse
+            {
+                UserId = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                Token = token,
+                ExpiresAt = expiresAt
+            });
         }
-
-        var addRoleResult = await _userManager.AddToRoleAsync(user, UserRole.User.ToString());
-        if (!addRoleResult.Succeeded)
+        catch (Exception ex)
         {
-            var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
-            return Result.Fail(errors);
+            return Result.Fail($"Error creating user: {ex.Message}");
         }
-
-        var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault();
-
-        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, role, user.Email!);
-        return Result.Ok(new AuthResponse
-        {
-            UserId = user.Id,
-            FullName = user.FullName,
-            Email = user.Email!,
-            Token = token,
-            ExpiresAt = expiresAt
-        });
     }
 
     public async Task<Result<AuthResponse>> LoginAsync(string email, string password)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user is null)
+        var user = await _usersRepository.GetByEmailAsync(email);
+        if (user is null || !user.IsActive)
             return Result.Fail("Invalid credentials.");
 
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, password);
-        if (!isPasswordValid)
+        // Verificar senha
+        if (!_passwordService.VerifyPassword(password, user.PasswordHash, user.Salt))
             return Result.Fail("Invalid credentials.");
 
-        // ⬇️ Pegando a role
-        var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault(); // ou adapte conforme sua lógica
+        // Atualizar último login
+        user.LastLoginAt = DateTime.UtcNow;
+        await _usersRepository.UpdateAsync(user);
 
-        var (token, expiresAt) = _jwtService.GenerateToken(user.Id, user.FullName, role, user.Email!);
+        // Gerar token JWT
+        var (token, expiresAt) = _jwtService.GenerateToken(
+            user.Id, 
+            user.FullName, 
+            user.Role.ToString(), 
+            user.Email);
 
         return Result.Ok(new AuthResponse
         {
             UserId = user.Id,
             FullName = user.FullName,
-            Email = user.Email!,
+            Email = user.Email,
             Token = token,
             ExpiresAt = expiresAt
         });
     }
-
-
 }

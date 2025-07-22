@@ -26,8 +26,8 @@ public class EstablishmentHandler
             return;
 
         // pega userId do token
-        var sub = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (sub is null || !Guid.TryParse(sub, out var userId))
+        var subClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
+        if (subClaim is null || !Guid.TryParse(subClaim.Value, out var userId))
             return;
 
         // checa hierarquia

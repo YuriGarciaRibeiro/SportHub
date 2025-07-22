@@ -1,7 +1,7 @@
 using Application.Common.Interfaces;
 using Domain.Enums;
 
-namespace Application.Common.Services;
+namespace Application.Services;
 public class EstablishmentRoleService : IEstablishmentRoleService
 {
     private readonly IEstablishmentUsersRepository _repo;

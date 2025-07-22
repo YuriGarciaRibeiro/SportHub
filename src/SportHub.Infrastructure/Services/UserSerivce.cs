@@ -1,103 +1,71 @@
+using Application.Common.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;
-using Infrastructure.Identity;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Services;
 
 public class UserService : IUserService
 {
-    private readonly UserManager<AppUser> _userManager;
-    private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+    private readonly IUsersRepository _usersRepository;
 
-    public UserService(UserManager<AppUser> userManager, RoleManager<IdentityRole<Guid>> roleManager)
+    public UserService(IUsersRepository usersRepository)
     {
-        _roleManager = roleManager;
-        _userManager = userManager;
+        _usersRepository = usersRepository;
     }
 
     public async Task<User> GetUserByIdAsync(Guid userId)
     {
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await _usersRepository.GetByIdAsync(userId);
 
         if (user == null)
             throw new KeyNotFoundException("User not found.");
 
-        var userEntity = user.ToDomain();
-        return userEntity;
+        return user;
     }
     
     public async Task<Result<List<User>>> GetUsersByIdsAsync(List<Guid> userIds)
     {
-        var users = await _userManager.Users
-            .Where(u => userIds.Contains(u.Id))
-            .ToListAsync();
-
-        var mappedUsers = users.Select(MapToUser).ToList();
-
-        return Result.Ok(mappedUsers);
-    }
-
-    private static User MapToUser(AppUser appUser)
-    {
-        return new User
+        var users = new List<User>();
+        
+        foreach (var userId in userIds)
         {
-            Id = appUser.Id,
-            FirstName = appUser.FirstName,
-            LastName = appUser.LastName,
-            Email = appUser.Email!
-        };
+            var user = await _usersRepository.GetByIdAsync(userId);
+            if (user != null)
+            {
+                users.Add(user);
+            }
+        }
+
+        return Result.Ok(users);
     }
 
     public async Task<Result<User>> AddRoleToUserAsync(Guid userId, UserRole role)
     {
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await _usersRepository.GetByIdAsync(userId);
         if (user is null)
             return Result.Fail("User not found.");
 
-        var roleName = role.ToString();
+        // Com a implementação própria, apenas atualizamos a role do usuário
+        user.Role = role;
+        await _usersRepository.UpdateAsync(user);
 
-        if (!await _roleManager.RoleExistsAsync(roleName))
-        {
-            var create = await _roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
-            if (!create.Succeeded)
-            {
-                var errors = string.Join(", ", create.Errors.Select(e => e.Description));
-                return Result.Fail(errors);
-            }
-        }
-
-        var addResult = await _userManager.AddToRoleAsync(user, roleName);
-        if (!addResult.Succeeded)
-        {
-            var errors = string.Join(", ", addResult.Errors.Select(e => e.Description));
-            return Result.Fail(errors);
-        }
-
-        return Result.Ok(user.ToDomain());
+        return Result.Ok(user);
     }
 
     public async Task<Result<User>> RemoveRoleFromUserAsync(Guid userId, UserRole role)
     {
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await _usersRepository.GetByIdAsync(userId);
         if (user is null)
             return Result.Fail("User not found.");
 
-        var roleName = role.ToString();
-
-        if (role == UserRole.User)
-            return Result.Ok(user.ToDomain());
-
-        if (!await _roleManager.RoleExistsAsync(roleName))
-            return Result.Fail($"Role '{roleName}' does not exist.");
-
-        var remResult = await _userManager.RemoveFromRoleAsync(user, roleName);
-        if (!remResult.Succeeded)
+        // Se estamos removendo a role atual, definimos como User (role padrão)
+        if (user.Role == role)
         {
-            var errors = string.Join(", ", remResult.Errors.Select(e => e.Description));
-            return Result.Fail(errors);
+            user.Role = UserRole.User;
+            await _usersRepository.UpdateAsync(user);
         }
 
-        return Result.Ok(user.ToDomain());
+        return Result.Ok(user);
     }
 }

@@ -2,20 +2,19 @@ using System.Security.Claims;
 using System.Text;
 using Application.Behaviors;
 using Application.Common.Interfaces;
-using Application.Common.Services;
 using Application.Security;
+using Application.Services;
 using Application.Settings;
 using Application.UseCases.Auth.Register;
 using Domain.Enums;
 using FluentValidation;
-using Infrastructure.Identity;
 using Infrastructure.Persistence;
+using Infrastructure.Repositories;
 using Infrastructure.Security;
 using Infrastructure.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -36,6 +35,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
         builder.Services.AddScoped<IEstablishmentRoleService, EstablishmentRoleService>();
         builder.Services.AddScoped<IAuthorizationHandler, EstablishmentHandler>();
+        builder.Services.AddScoped<IPasswordService, PasswordService>();
         return builder;
     }
 
@@ -43,6 +43,7 @@ public static class ServiceExtensions
     {
         builder.Services.AddScoped<IEstablishmentsRepository, EstablishmentsRepository>();
         builder.Services.AddScoped<IEstablishmentUsersRepository, EstablishmentUsersRepository>();
+        builder.Services.AddScoped<IUsersRepository, UsersRepository>();
 
         return builder;
     }
@@ -61,18 +62,6 @@ public static class ServiceExtensions
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
         });
-
-        builder.Services.AddIdentityCore<AppUser>(options =>
-        {
-            options.Password.RequireDigit = true;
-            options.Password.RequiredLength = 8;
-            options.Password.RequireNonAlphanumeric = true;
-            options.Password.RequireUppercase = true;
-        })
-        .AddRoles<IdentityRole<Guid>>()
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddUserManager<SingleRoleUserManager<AppUser>>()
-        .AddDefaultTokenProviders();
 
         return builder;
     }
@@ -145,7 +134,7 @@ public static class ServiceExtensions
 
     public static WebApplicationBuilder AddSeeders(this WebApplicationBuilder builder)
     {
-        builder.Services.AddTransient<UserSeeder>();
+        builder.Services.AddTransient<CustomUserSeeder>();
         return builder;
     }
 

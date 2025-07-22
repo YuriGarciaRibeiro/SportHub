@@ -28,12 +28,17 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
         await _repository.AddAsync(establishmentUser);
 
-        var userResult = await _userService.AddRoleToUserAsync(
-            establishmentUser.UserId, 
-            UserRole.EstablishmentMember);
+        // Se o usuário for apenas "User", atualize para "EstablishmentMember"
+        var currentUser = await _userService.GetUserByIdAsync(establishmentUser.UserId);
+        if (currentUser.Role == UserRole.User)
+        {
+            var userResult = await _userService.AddRoleToUserAsync(
+                establishmentUser.UserId, 
+                UserRole.EstablishmentMember);
 
-        if (userResult.IsFailed)
-            return Result.Fail(userResult.Errors);
+            if (userResult.IsFailed)
+                return Result.Fail(userResult.Errors);
+        }
 
         return new CreateEstablishmentUserResponse(establishmentUser.UserId, establishmentUser.EstablishmentId, establishmentUser.Role);
     }

@@ -1,7 +1,6 @@
 using Api.Document;
 using Application.Settings;
-using Infrastructure.Identity;
-using Microsoft.AspNetCore.Identity;
+using Infrastructure.Services;
 using Scalar.AspNetCore;
 using WebAPI.Extensions;
 
@@ -42,12 +41,13 @@ app.UseAuthorization();
 
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await RoleSeeder.SeedAsync(roleManager, logger);
+    // Remover RoleSeeder já que não usaremos mais Identity
+    // var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+    // var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    // await RoleSeeder.SeedAsync(roleManager, logger);
 
-    var userSeeder = scope.ServiceProvider.GetRequiredService<UserSeeder>();
-    await userSeeder.SeedAdminAsync();
+    var userSeeder = scope.ServiceProvider.GetRequiredService<CustomUserSeeder>();
+    await userSeeder.SeedAsync();
 }
 
 app.Run();

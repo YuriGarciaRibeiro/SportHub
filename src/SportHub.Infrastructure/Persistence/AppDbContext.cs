@@ -1,18 +1,16 @@
 using Domain.Entities;
-using Infrastructure.Identity;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
 
-public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<Guid>, Guid>
+public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
     
+    public DbSet<User> Users { get; set; } = null!;
     public DbSet<Establishment> Establishments { get; set; } = null!;
     public DbSet<EstablishmentUser> EstablishmentUsers { get; set; } = null!;
 
@@ -20,12 +18,26 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<Guid
     {
         base.OnModelCreating(builder);
 
+        // Configuração da entidade User
+        builder.Entity<User>(entity =>
+        {
+            entity.HasKey(u => u.Id);
+            entity.HasIndex(u => u.Email).IsUnique();
+            entity.Property(u => u.Email).IsRequired().HasMaxLength(256);
+            entity.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(u => u.PasswordHash).IsRequired();
+            entity.Property(u => u.Salt).IsRequired();
+            entity.Property(u => u.Role).HasConversion<string>();
+        });
+
+        // Configuração da entidade EstablishmentUser
         builder.Entity<EstablishmentUser>()
             .HasKey(x => new { x.UserId, x.EstablishmentId });
 
         builder.Entity<EstablishmentUser>()
-            .HasOne<AppUser>() 
-            .WithMany()
+            .HasOne<User>() 
+            .WithMany(u => u.Establishments)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
@@ -39,6 +51,7 @@ public class ApplicationDbContext : IdentityDbContext<AppUser, IdentityRole<Guid
             .Property(x => x.Role)
             .HasConversion<string>();
 
+        // Configuração da entidade Establishment
         builder.Entity<Establishment>(entity =>
         {
             entity.OwnsOne(e => e.Address);

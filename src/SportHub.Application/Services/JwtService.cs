@@ -1,13 +1,11 @@
 using Application.Common.Interfaces;
-using Application.UserCases.Auth;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Infrastructure.Services;
+namespace Application.Services;
 
 public class JwtService : IJwtService
 {

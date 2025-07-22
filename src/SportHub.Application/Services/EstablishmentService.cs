@@ -2,7 +2,7 @@ using Application.Common.Interfaces;
 using Domain.Entities;
 using FluentResults;
 
-namespace Infrastructure.Services;
+namespace Application.Services;
 
 public class EstablishmentService : IEstablishmentService
 {

@@ -1,6 +1,6 @@
     using System.Security.Claims;
-    using Application.Common.Interfaces;
-    using Microsoft.AspNetCore.Http;
+using Application.Common.Interfaces;
+using Microsoft.AspNetCore.Http;
 
     namespace Infrastructure.Services;
 
@@ -16,9 +16,9 @@
         public Guid UserId
         {
             get
-            {   
-                var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-                return Guid.TryParse(userId, out var guid) ? guid : Guid.Empty;
+            {
+                var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier);
+                return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var guid) ? guid : Guid.Empty;
             }
         }
 }
