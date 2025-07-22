@@ -21,7 +21,6 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
     public async Task<Result<CreateEstablishmentUserResponse>> Handle(CreateEstablishmentUserCommand request, CancellationToken cancellationToken)
     {
-        // Verificar se o usuário existe
         var currentUser = await _userService.GetUserByIdAsync(request.UserId);
         if (currentUser == null)
         {
@@ -37,7 +36,6 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
         await _repository.AddAsync(establishmentUser);
 
-        // Se o usuário for apenas "User", atualize para "EstablishmentMember"
         if (currentUser.Role == UserRole.User)
         {
             var userResult = await _userService.AddRoleToUserAsync(

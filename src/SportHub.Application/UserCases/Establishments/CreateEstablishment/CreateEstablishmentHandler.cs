@@ -62,7 +62,6 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
         await _establishmentRepository.AddAsync(establishment);
         await _establishmentUsersRepository.AddAsync(newEstablishmentUser);
         
-        // Se o usuário for apenas "User", atualize para "EstablishmentMember"
         var currentUser = await _userService.GetUserByIdAsync(_currentUser.UserId);
         if (currentUser.Role == UserRole.User)
         {

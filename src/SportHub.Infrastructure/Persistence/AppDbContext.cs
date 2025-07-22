@@ -18,7 +18,6 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(builder);
 
-        // Configuração da entidade User
         builder.Entity<User>(entity =>
         {
             entity.HasKey(u => u.Id);
@@ -31,7 +30,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(u => u.Role).HasConversion<string>();
         });
 
-        // Configuração da entidade EstablishmentUser
         builder.Entity<EstablishmentUser>()
             .HasKey(x => new { x.UserId, x.EstablishmentId });
 
@@ -51,7 +49,6 @@ public class ApplicationDbContext : DbContext
             .Property(x => x.Role)
             .HasConversion<string>();
 
-        // Configuração da entidade Establishment
         builder.Entity<Establishment>(entity =>
         {
             entity.OwnsOne(e => e.Address);

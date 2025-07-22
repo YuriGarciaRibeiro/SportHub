@@ -6,7 +6,6 @@ namespace SportHub.Api.Middleware;
 
 public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
 {
-    // podemos reaproveitar o default para casos de sucesso
     private readonly AuthorizationMiddlewareResultHandler DefaultHandler = new();
 
     public async Task HandleAsync(
@@ -33,13 +32,12 @@ public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
             context.Response.ContentType = "application/json";
             var payload = JsonSerializer.Serialize(new
             {
-                message = "Você não tem permissão para este recurso."
+                message = "You don't have permission to access this resource."
             });
             await context.Response.WriteAsync(payload);
             return;
         }
 
-        // se passou na policy, delega ao pipeline normal
         await DefaultHandler.HandleAsync(next, context, policy, authorizeResult);
     }
 }

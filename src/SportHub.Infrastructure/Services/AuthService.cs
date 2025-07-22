@@ -25,18 +25,14 @@ public class AuthService : IAuthService
 
     public async Task<Result<AuthResponse>> RegisterAsync(string firstName, string lastName, string email, string password)
     {
-        // Verificar se o email já existe
         if (await _usersRepository.EmailExistsAsync(email))
             return Result.Fail(new Conflict($"E-mail '{email}' is already in use."));
 
-        // Validar senha (você pode implementar validações personalizadas aqui)
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
             return Result.Fail(new BadRequest("Password must be at least 8 characters long."));
 
-        // Hash da senha
         var passwordHash = _passwordService.HashPassword(password, out var salt);
 
-        // Criar novo usuário
         var user = new User
         {
             Id = Guid.NewGuid(),
@@ -54,7 +50,6 @@ public class AuthService : IAuthService
         {
             await _usersRepository.CreateAsync(user);
 
-            // Gerar token JWT
             var (token, expiresAt) = _jwtService.GenerateToken(
                 user.Id, 
                 user.FullName, 
@@ -82,15 +77,12 @@ public class AuthService : IAuthService
         if (user is null || !user.IsActive)
             return Result.Fail(new Unauthorized("Invalid credentials."));
 
-        // Verificar senha
         if (!_passwordService.VerifyPassword(password, user.PasswordHash, user.Salt))
             return Result.Fail(new Unauthorized("Invalid credentials."));
 
-        // Atualizar último login
         user.LastLoginAt = DateTime.UtcNow;
         await _usersRepository.UpdateAsync(user);
 
-        // Gerar token JWT
         var (token, expiresAt) = _jwtService.GenerateToken(
             user.Id, 
             user.FullName, 

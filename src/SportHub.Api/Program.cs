@@ -41,11 +41,6 @@ app.UseAuthorization();
 
 using (var scope = app.Services.CreateScope())
 {
-    // Remover RoleSeeder já que não usaremos mais Identity
-    // var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-    // var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    // await RoleSeeder.SeedAsync(roleManager, logger);
-
     var userSeeder = scope.ServiceProvider.GetRequiredService<CustomUserSeeder>();
     await userSeeder.SeedAsync();
 }

@@ -20,17 +20,14 @@ public class EstablishmentHandler
         EstablishmentRequirement requirement,
         HttpContext httpContext)
     {
-        // pega o establishmentId da rota
         var raw = httpContext.GetRouteValue("establishmentId");
         if (raw is null || !Guid.TryParse(raw.ToString(), out var estId))
             return;
 
-        // pega userId do token
         var subClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
         if (subClaim is null || !Guid.TryParse(subClaim.Value, out var userId))
             return;
 
-        // checa hierarquia
         if (await _svc.HasAtLeastRoleAsync(userId, estId, requirement.RequiredRole))
             context.Succeed(requirement);
     }

@@ -46,7 +46,6 @@ public class UserService : IUserService
         if (user is null)
             return Result.Fail("User not found.");
 
-        // Com a implementação própria, apenas atualizamos a role do usuário
         user.Role = role;
         await _usersRepository.UpdateAsync(user);
 
@@ -59,7 +58,6 @@ public class UserService : IUserService
         if (user is null)
             return Result.Fail("User not found.");
 
-        // Se estamos removendo a role atual, definimos como User (role padrão)
         if (user.Role == role)
         {
             user.Role = UserRole.User;

@@ -24,12 +24,10 @@ public class CustomUserSeeder
 
     public async Task SeedAsync()
     {
-        // Verificar se já existe um usuário admin
         var existingAdmin = await _usersRepository.GetByEmailAsync(_adminSettings.Email);
         if (existingAdmin != null)
             return;
 
-        // Criar usuário admin padrão
         var passwordHash = _passwordService.HashPassword(_adminSettings.Password, out var salt);
 
         var adminUser = new User
