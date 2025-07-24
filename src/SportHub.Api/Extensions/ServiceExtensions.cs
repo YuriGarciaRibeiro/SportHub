@@ -44,6 +44,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IEstablishmentsRepository, EstablishmentsRepository>();
         builder.Services.AddScoped<IEstablishmentUsersRepository, EstablishmentUsersRepository>();
         builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+        builder.Services.AddScoped<ICourtsRepository, CourtsRepository>();
 
         return builder;
     }

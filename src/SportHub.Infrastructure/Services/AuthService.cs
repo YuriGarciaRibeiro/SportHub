@@ -43,7 +43,7 @@ public class AuthService : IAuthService
             Salt = salt,
             Role = UserRole.User,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         try
@@ -80,7 +80,7 @@ public class AuthService : IAuthService
         if (!_passwordService.VerifyPassword(password, user.PasswordHash, user.Salt))
             return Result.Fail(new Unauthorized("Invalid credentials."));
 
-        user.LastLoginAt = DateTime.Now;
+        user.LastLoginAt = DateTime.UtcNow;
         await _usersRepository.UpdateAsync(user);
 
         var (token, expiresAt) = _jwtService.GenerateToken(

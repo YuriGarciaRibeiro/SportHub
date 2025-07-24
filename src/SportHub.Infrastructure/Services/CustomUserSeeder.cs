@@ -40,7 +40,7 @@ public class CustomUserSeeder
             Salt = salt,
             Role = UserRole.Admin,
             IsActive = true,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         await _usersRepository.CreateAsync(adminUser);

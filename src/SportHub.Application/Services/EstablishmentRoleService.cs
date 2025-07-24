@@ -1,7 +1,6 @@
 using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Domain.Enums;
-using FluentResults;
 
 namespace Application.Services;
 public class EstablishmentRoleService : IEstablishmentRoleService

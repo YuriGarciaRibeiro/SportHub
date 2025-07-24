@@ -47,7 +47,7 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
             Email = request.Email,
             Website = request.Website,
             ImageUrl = request.ImageUrl,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             Address = address
         };
 

@@ -11,8 +11,9 @@ public class Establishment
     public string Email { get; set; } = null!;
     public string Website { get; set; } = null!;
     public string ImageUrl { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Address Address { get; set; } = null!;
 
     public ICollection<EstablishmentUser> Users { get; set; } = new List<EstablishmentUser>();
+    public ICollection<Court> Courts { get; set; } = new List<Court>(); // <-- add aqui
 }

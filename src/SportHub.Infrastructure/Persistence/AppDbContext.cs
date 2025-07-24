@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Establishment> Establishments { get; set; } = null!;
     public DbSet<EstablishmentUser> EstablishmentUsers { get; set; } = null!;
+    public DbSet<Domain.Entities.Court> Courts { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -34,7 +35,7 @@ public class ApplicationDbContext : DbContext
             .HasKey(x => new { x.UserId, x.EstablishmentId });
 
         builder.Entity<EstablishmentUser>()
-            .HasOne<User>() 
+            .HasOne<User>()
             .WithMany(u => u.Establishments)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);

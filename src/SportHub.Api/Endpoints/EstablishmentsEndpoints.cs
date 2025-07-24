@@ -63,5 +63,19 @@ public static class EstablishmentsEndpoints
         .WithSummary("Create a user for an establishment")
         .WithDescription("Creates a new user for the specified establishment.")
         .RequireAuthorization();
+
+        group.MapPost("/{establishmentId:guid}/courts", async (
+            Guid establishmentId,
+            CourtRequest request,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new CreateCourtCommand(establishmentId, request));
+
+            return result.ToIResult();
+        })
+        .WithName("CreateCourt")
+        .WithSummary("Create a new court")
+        .WithDescription("Creates a new court for the specified establishment.")
+        .RequireAuthorization();
     }
 }
