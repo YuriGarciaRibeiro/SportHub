@@ -35,6 +35,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
         builder.Services.AddScoped<IEstablishmentRoleService, EstablishmentRoleService>();
         builder.Services.AddScoped<IAuthorizationHandler, EstablishmentHandler>();
+        builder.Services.AddScoped<IAuthorizationHandler, GlobalRoleHandler>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         return builder;
     }
@@ -119,23 +120,23 @@ public static class ServiceExtensions
         builder.Services.AddAuthorization(options =>
         {
             // Policies globais (verifica se tem o cargo em qualquer estabelecimento)
-            options.AddPolicy("GlobalManager", policy =>
+            options.AddPolicy(PolicyNames.IsStaff, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Staff)));
             
-            options.AddPolicy("GlobalAdmin", policy =>
+            options.AddPolicy(PolicyNames.IsManager, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Manager)));
 
-            options.AddPolicy("GlobalOwner", policy =>
+            options.AddPolicy(PolicyNames.IsOwner, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Owner)));
 
             // Policies específicas do estabelecimento (verifica cargo no estabelecimento específico)
-            options.AddPolicy("EstablishmentManager", policy =>
+            options.AddPolicy(PolicyNames.IsEstablishmentStaff, policy =>
                 policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Staff)));
 
-            options.AddPolicy("EstablishmentAdmin", policy =>
+            options.AddPolicy(PolicyNames.IsEstablishmentManager, policy =>
                 policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Manager)));
 
-            options.AddPolicy("EstablishmentOwner", policy =>
+            options.AddPolicy(PolicyNames.IsEstablishmentAdmin, policy =>
                 policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Owner)));
         });
 

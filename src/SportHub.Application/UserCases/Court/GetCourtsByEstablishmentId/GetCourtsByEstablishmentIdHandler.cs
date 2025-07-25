@@ -28,7 +28,6 @@ public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByE
             return Result.Fail(new NotFound($"Establishment with ID {request.EstablishmentId} not found."));
         }
 
-
         var courts = await _courtsRepository.GetByEstablishmentIdAsync(request.EstablishmentId);
 
         var response = new GetCourtsByEstablishmentIdResponse

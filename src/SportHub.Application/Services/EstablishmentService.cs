@@ -1,3 +1,4 @@
+using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Domain.Entities;
 using FluentResults;
@@ -25,9 +26,12 @@ public class EstablishmentService : IEstablishmentService
         throw new NotImplementedException();
     }
 
-    public Task<Result<Establishment>> GetEstablishmentByIdAsync(Guid id)
+    public async Task<Result<Establishment>> GetEstablishmentByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var establishment = await _establishmentRepository.GetByIdAsync(id);
+        return establishment != null
+            ? Result.Ok(establishment)
+            : Result.Fail("Establishment not found.");
     }
 
     public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId)
