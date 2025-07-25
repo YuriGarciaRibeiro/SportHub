@@ -13,7 +13,6 @@ public class Address
         ZipCode = zipCode;
     }
 
-
     public string Street { get; set; } = null!;
     public string Number { get; set; } = null!;
     public string? Complement { get; set; }

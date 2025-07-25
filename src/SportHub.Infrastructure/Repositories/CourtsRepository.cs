@@ -2,6 +2,8 @@ using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+namespace Infrastructure.Repositories;
+
 public class CourtsRepository : ICourtsRepository
 {
     private readonly ApplicationDbContext _dbContext;

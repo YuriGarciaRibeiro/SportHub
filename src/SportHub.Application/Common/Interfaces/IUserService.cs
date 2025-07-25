@@ -1,6 +1,8 @@
 using Domain.Entities;
 using Domain.Enums;
 
+namespace Application.Common.Interfaces;
+
 public interface IUserService
 {
     public Task<User> GetUserByIdAsync(Guid userId);

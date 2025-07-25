@@ -1,6 +1,5 @@
 namespace Application.CQRS;
 
-
 public interface ICommandHandler<TCommand> 
     : IRequestHandler<TCommand, Result>
     where TCommand : ICommand

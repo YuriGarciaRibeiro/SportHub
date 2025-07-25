@@ -1,5 +1,4 @@
 using Domain.Enums;
-using FluentResults;
 
 namespace Application.Common.Interfaces;
 

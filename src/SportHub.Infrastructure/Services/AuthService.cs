@@ -1,6 +1,6 @@
 using Application.Common.Interfaces;
 using Application.Common.Errors;
-using Application.UserCases.Auth;
+using Application.UseCases.Auth;
 using Domain.Entities;
 using Domain.Enums;
 using FluentResults;

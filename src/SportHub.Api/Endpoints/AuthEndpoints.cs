@@ -1,12 +1,10 @@
-
-using Application.Common.Interfaces;
-using Application.Security;
 using Application.UseCases.Auth.Register;
-using Application.UserCases.Auth;
+using Application.UseCases.Auth;
 using FluentResults;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
+using Application.UseCases.Auth.Login;
 
 namespace SportHub.Api.Endpoints;
 

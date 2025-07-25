@@ -1,4 +1,4 @@
-using Application.UserCases.Auth;
+using Application.UseCases.Auth;
 
 namespace Application.Common.Interfaces;
 

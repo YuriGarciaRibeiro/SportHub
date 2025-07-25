@@ -4,6 +4,8 @@ using Domain.Enums;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
+namespace Infrastructure.Repositories;
+
 public class EstablishmentUsersRepository : IEstablishmentUsersRepository
 {
     private readonly ApplicationDbContext _dbContext;

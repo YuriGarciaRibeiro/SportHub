@@ -1,12 +1,15 @@
 using Application.Security;
-using Application.UserCases.Court.CreateCourt;
-using Application.UserCases.Court.GetCourtsByEstablishmentId;
-using Application.UserCases.Establishments.GetEstablishmentById;
-using Application.UserCases.Establishments.GetEstablishmentByOwnerId;
-using Application.UserCases.EstablishmentUser.CreateEstablishmentUser;
+using Application.UseCases.Court.CreateCourt;
+using Application.UseCases.Court.GetCourtsByEstablishmentId;
+using Application.UseCases.Establishments.CreateEstablishment;
+using Application.UseCases.Establishments.GetEstablishmentById;
+using Application.UseCases.Establishments.GetEstablishmentByOwnerId;
+using Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
+
+namespace SportHub.Api.Endpoints;
 
 public static class EstablishmentsEndpoints
 {

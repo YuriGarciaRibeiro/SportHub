@@ -1,8 +1,9 @@
 using Application.Common.Interfaces;
 using Domain.Entities;
-using Domain.Enums;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Repositories;
 
 public class EstablishmentsRepository : IEstablishmentsRepository
 {
@@ -16,7 +17,7 @@ public class EstablishmentsRepository : IEstablishmentsRepository
     public async Task<Establishment?> GetByIdAsync(Guid id)
     {
         return await _dbContext.Establishments
-            .Include(e => e.Users) 
+            .Include(e => e.Users)
             .Include(e => e.Courts)
             .FirstOrDefaultAsync(e => e.Id == id);
     }

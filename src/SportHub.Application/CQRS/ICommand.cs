@@ -1,7 +1,3 @@
-
-
-
-
 namespace Application.CQRS;
 
 public interface ICommand : IRequest<Result> { }
