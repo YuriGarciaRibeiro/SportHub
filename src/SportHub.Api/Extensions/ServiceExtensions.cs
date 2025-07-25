@@ -118,9 +118,25 @@ public static class ServiceExtensions
         });
         builder.Services.AddAuthorization(options =>
         {
-            options.AddPolicy(PolicyNames.IsStaff,   p => p.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Staff)));
-            options.AddPolicy(PolicyNames.IsManager, p => p.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Manager)));
-            options.AddPolicy(PolicyNames.IsOwner,   p => p.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Owner)));
+            // Policies globais (verifica se tem o cargo em qualquer estabelecimento)
+            options.AddPolicy("GlobalManager", policy =>
+                policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Staff)));
+            
+            options.AddPolicy("GlobalAdmin", policy =>
+                policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Manager)));
+
+            options.AddPolicy("GlobalOwner", policy =>
+                policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Owner)));
+
+            // Policies específicas do estabelecimento (verifica cargo no estabelecimento específico)
+            options.AddPolicy("EstablishmentManager", policy =>
+                policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Staff)));
+
+            options.AddPolicy("EstablishmentAdmin", policy =>
+                policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Manager)));
+
+            options.AddPolicy("EstablishmentOwner", policy =>
+                policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Owner)));
         });
 
         return builder;

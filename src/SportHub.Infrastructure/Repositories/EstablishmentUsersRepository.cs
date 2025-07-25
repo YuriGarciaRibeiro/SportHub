@@ -33,6 +33,9 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
             .ToListAsync();
     }
 
-
-
+    public Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole)
+    {
+        return _dbContext.EstablishmentUsers
+            .AnyAsync(eu => eu.UserId == userId && eu.Role >= requiredRole);
+    }
 }

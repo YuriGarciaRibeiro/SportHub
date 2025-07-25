@@ -35,14 +35,6 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
             return Result.Fail("Establishment not found.");
         }
 
-        var isManager = await _establishmentRoleService.HasAtLeastRoleAsync(
-            _currentUser.UserId, request.EstablishmentId, EstablishmentRole.Manager);
-
-        if (!isManager)
-        {
-            return Result.Fail("You do not have permission to create a court in this establishment.");
-        }
-
         _logger.LogInformation($"Creating court for establishment: {request.Court.Name} in {establishmentResult.Name}");
         var court = new Domain.Entities.Court
         {

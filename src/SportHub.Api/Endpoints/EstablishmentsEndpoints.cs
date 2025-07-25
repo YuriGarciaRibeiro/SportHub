@@ -78,7 +78,7 @@ public static class EstablishmentsEndpoints
         .WithName("CreateCourt")
         .WithSummary("Create a new court")
         .WithDescription("Creates a new court for the specified establishment.")
-        .RequireAuthorization();
+        .RequireAuthorization(PolicyNames.IsEstablishmentManager);
 
 
         group.MapGet("/{establishmentId:guid}/courts", async (
@@ -88,6 +88,10 @@ public static class EstablishmentsEndpoints
             var result = await sender.Send(new GetCourtsByEstablishmentIdQuery(establishmentId));
 
             return result.ToIResult();
-        });
+        })
+        .WithName("GetCourtsByEstablishmentId")
+        .WithSummary("Get courts by establishment ID")
+        .WithDescription("Retrieves all courts associated with a specific establishment ID.")
+        .RequireAuthorization();
     }
 }
