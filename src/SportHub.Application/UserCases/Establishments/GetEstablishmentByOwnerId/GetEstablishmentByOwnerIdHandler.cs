@@ -67,6 +67,16 @@ public class GetEstablishmentByOwnerIdHandler : IQueryHandler<GetEstablishmentBy
                 })
                 .ToList();
 
+            var courts = establishment.Courts.Select(c => new CourtResponse(
+                c.Id,
+                c.Name,
+                c.SportType.ToString(),
+                c.SlotDurationMinutes,
+                c.MinBookingSlots,
+                c.MaxBookingSlots,
+                c.TimeZone
+            ));
+
             return new EstablishmentResponse(
                 establishment.Id,
                 establishment.Name,
@@ -80,7 +90,8 @@ public class GetEstablishmentByOwnerIdHandler : IQueryHandler<GetEstablishmentBy
                     establishment.Address.State,
                     establishment.Address.ZipCode),
                 establishment.ImageUrl,
-                establishmentUserResponses
+                establishmentUserResponses,
+                courts
             );
         }).ToList();
 
