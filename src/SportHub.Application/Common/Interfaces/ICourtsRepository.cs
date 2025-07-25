@@ -6,4 +6,5 @@ public interface ICourtsRepository
     Task CreateAsync(Court court);
     Task UpdateAsync(Court court);
     Task DeleteAsync(Guid id);
+    Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId);
 }

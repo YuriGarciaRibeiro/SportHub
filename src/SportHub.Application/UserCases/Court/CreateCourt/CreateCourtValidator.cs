@@ -1,5 +1,8 @@
 using FluentValidation;
 
+namespace Application.UserCases.Court.CreateCourt;
+
+
 public class CreateCourtValidator : AbstractValidator<CourtRequest>
 {
     public CreateCourtValidator()

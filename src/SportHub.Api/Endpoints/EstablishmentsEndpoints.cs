@@ -1,4 +1,6 @@
 using Application.Security;
+using Application.UserCases.Court.CreateCourt;
+using Application.UserCases.Court.GetCourtsByEstablishmentId;
 using Application.UserCases.Establishments.GetEstablishmentById;
 using Application.UserCases.Establishments.GetEstablishmentByOwnerId;
 using Application.UserCases.EstablishmentUser.CreateEstablishmentUser;
@@ -77,5 +79,15 @@ public static class EstablishmentsEndpoints
         .WithSummary("Create a new court")
         .WithDescription("Creates a new court for the specified establishment.")
         .RequireAuthorization();
+
+
+        group.MapGet("/{establishmentId:guid}/courts", async (
+            Guid establishmentId,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetCourtsByEstablishmentIdQuery(establishmentId));
+
+            return result.ToIResult();
+        });
     }
 }

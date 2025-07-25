@@ -37,4 +37,11 @@ public class CourtsRepository : ICourtsRepository
             await _dbContext.SaveChangesAsync();
         }
     }
+
+    public async Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId)
+    {
+        return await _dbContext.Courts
+            .Where(c => c.EstablishmentId == establishmentId)
+            .ToListAsync();
+    }
 }

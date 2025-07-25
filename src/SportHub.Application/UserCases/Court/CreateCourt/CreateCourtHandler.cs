@@ -1,8 +1,9 @@
 using Application.Common.Interfaces;
 using Application.CQRS;
-using Domain.Entities;
 using Domain.Enums;
 using Microsoft.Extensions.Logging;
+
+namespace Application.UserCases.Court.CreateCourt;
 
 public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
 {
@@ -43,8 +44,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
         }
 
         _logger.LogInformation($"Creating court for establishment: {request.Court.Name} in {establishmentResult.Name}");
-
-        var court = new Court
+        var court = new Domain.Entities.Court
         {
             Name = request.Court.Name,
             EstablishmentId = request.EstablishmentId,
@@ -54,7 +54,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
             SportType = request.Court.SportType,
             TimeZone = request.Court.TimeZone,
 
-        };  
+        };
 
         await _courtsRepository.CreateAsync(court);
         return Result.Ok();

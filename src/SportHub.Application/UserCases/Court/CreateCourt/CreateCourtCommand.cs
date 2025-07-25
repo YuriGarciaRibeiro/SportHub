@@ -1,5 +1,7 @@
 using Application.CQRS;
 
+namespace Application.UserCases.Court.CreateCourt;
+
 public class CreateCourtCommand : ICommand
 {
 
