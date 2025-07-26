@@ -40,17 +40,7 @@ public class EstablishmentService : IEstablishmentService
             return Result.Fail("No establishments found for the given owner ID.");
         }
 
-        var establishments = new List<Establishment>();
-
-        foreach (var id in establishmentsId)
-        {
-            var establishment = await _establishmentRepository.GetByIdAsync(Guid.Parse(id));
-            if (establishment == null)
-            {
-                return Result.Fail($"Establishment with ID {id} not found.");
-            }
-            establishments.Add(establishment);
-        }
+        var establishments = await _establishmentRepository.GetByIdsAsync(establishmentsId);
 
         return Result.Ok(establishments);
     }

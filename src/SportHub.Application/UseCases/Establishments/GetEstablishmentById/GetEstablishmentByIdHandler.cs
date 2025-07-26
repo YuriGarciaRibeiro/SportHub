@@ -37,6 +37,20 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
 
         var users = await Task.WhenAll(userTasks);
 
+        var courts = establishment.Courts.Select(c => new CourtResponse(
+            Id: c.Id,
+            Name: c.Name,
+            MinBookingSlots: c.MinBookingSlots,
+            MaxBookingSlots: c.MaxBookingSlots,
+            SlotDurationMinutes: c.SlotDurationMinutes,
+            TimeZone: c.TimeZone,
+            Sports: c.Sports.Select(s => new SportResponse(
+                Id: s.Id,
+                Name: s.Name,
+                Description: s.Description
+            ))
+        ));
+
         var response = new GetEstablishmentByIdResponse(
             Id: establishment.Id,
             Name: establishment.Name,
@@ -51,7 +65,13 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
                 Neighborhood: establishment.Address.Neighborhood
             ),
             Users: users,
-            ImageUrl: establishment.ImageUrl
+            ImageUrl: establishment.ImageUrl,
+            Courts: courts,
+            Sports: establishment.Sports.Select(s => new SportResponse(
+                Id: s.Id,
+                Name: s.Name,
+                Description: s.Description
+            ))
         );
 
         return Result.Ok(response);

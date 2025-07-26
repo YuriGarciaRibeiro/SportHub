@@ -1,3 +1,5 @@
+using Application.Common.Interfaces;
+using Domain.Common;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -5,15 +7,19 @@ namespace Infrastructure.Persistence;
 
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+
+    private readonly ICurrentUserService _currentUserService;
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUserService currentUserService)
         : base(options)
     {
+        _currentUserService = currentUserService;
     }
-    
+
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Establishment> Establishments { get; set; } = null!;
     public DbSet<EstablishmentUser> EstablishmentUsers { get; set; } = null!;
-    public DbSet<Domain.Entities.Court> Courts { get; set; } = null!;
+    public DbSet<Court> Courts { get; set; } = null!;
+    public DbSet<Sport> Sports { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -54,6 +60,50 @@ public class ApplicationDbContext : DbContext
         {
             entity.OwnsOne(e => e.Address);
         });
+
+        builder.Entity<Establishment>()
+            .HasMany(e => e.Sports)
+            .WithMany(s => s.Establishments)
+            .UsingEntity<Dictionary<string, object>>(
+                "EstablishmentSport",
+                j => j.HasOne<Sport>()
+                    .WithMany()
+                    .HasForeignKey("SportId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j.HasOne<Establishment>()
+                    .WithMany()
+                    .HasForeignKey("EstablishmentId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j =>
+                {
+                    j.HasKey("EstablishmentId", "SportId");
+                    j.HasIndex(new[] { "EstablishmentId", "SportId" }).IsUnique();
+                    j.ToTable("EstablishmentSports");
+                });
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var userId = _currentUserService.UserId;
+
+        foreach (var entry in ChangeTracker.Entries<AuditEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                entry.Entity.SetCreated(userId);
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.SetUpdated(userId);
+            }
+            else if (entry.State == EntityState.Deleted)
+            {
+                entry.State = EntityState.Modified;
+                entry.Entity.MarkAsDeleted(userId);
+            }
+        }
+
+        return base.SaveChangesAsync(cancellationToken);
     }
 
 }

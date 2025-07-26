@@ -1,4 +1,5 @@
 using Application.CQRS;
+using Domain.Entities;
 
 namespace Application.UseCases.Establishments.CreateEstablishment;
 
@@ -17,4 +18,5 @@ public class CreateEstablishmentCommand : ICommand<string>
     public string City { get; set; } = null!;
     public string State { get; set; } = null!;
     public string ZipCode { get; set; } = null!;
+    public ICollection<Guid> Sports { get; set; } = new List<Guid>();
 }

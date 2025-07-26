@@ -13,6 +13,7 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
     private readonly IEstablishmentUsersRepository _establishmentUsersRepository;
     private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUser;
+    private readonly ISportsRepository _sportsRepository;
     private readonly ILogger<CreateEstablishmentHandler> _logger;
 
     public CreateEstablishmentHandler(
@@ -20,17 +21,21 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
         IEstablishmentUsersRepository establishmentUsersRepository,
         IUserService userService,
         ICurrentUserService currentUser,
-        ILogger<CreateEstablishmentHandler> logger)
+        ILogger<CreateEstablishmentHandler> logger,
+        ISportsRepository sportsRepository)
     {
         _logger = logger;
         _currentUser = currentUser;
         _establishmentRepository = establishmentRepository;
         _establishmentUsersRepository = establishmentUsersRepository;
+        _sportsRepository = sportsRepository;
         _userService = userService;
     }
 
     public async Task<Result<string>> Handle(CreateEstablishmentCommand request, CancellationToken cancellationToken)
     {
+        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Sports);
+
         var address = new Address(
             request.Street,
             request.Number,
@@ -50,7 +55,8 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
             Website = request.Website,
             ImageUrl = request.ImageUrl,
             CreatedAt = DateTime.UtcNow,
-            Address = address
+            Address = address,
+            Sports = sports.ToList()
         };
 
 

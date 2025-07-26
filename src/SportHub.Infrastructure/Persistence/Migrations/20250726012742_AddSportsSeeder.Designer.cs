@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SportHub.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250726012742_AddSportsSeeder")]
+    partial class AddSportsSeeder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("CourtSport", b =>
-                {
-                    b.Property<Guid>("CourtsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("SportsId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("CourtsId", "SportsId");
-
-                    b.HasIndex("SportsId");
-
-                    b.ToTable("CourtSport");
-                });
 
             modelBuilder.Entity("Domain.Entities.Court", b =>
                 {
@@ -77,6 +65,13 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                     b.Property<int>("SlotDurationMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("SportId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SportType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("TimeZone")
                         .IsRequired()
                         .HasColumnType("text");
@@ -90,6 +85,8 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EstablishmentId");
+
+                    b.HasIndex("SportId");
 
                     b.ToTable("Courts");
                 });
@@ -135,6 +132,9 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("SportId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -146,6 +146,8 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SportId");
 
                     b.ToTable("Establishments");
                 });
@@ -302,39 +304,6 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("EstablishmentSport", b =>
-                {
-                    b.Property<Guid>("EstablishmentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("SportId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("EstablishmentId", "SportId");
-
-                    b.HasIndex("SportId");
-
-                    b.HasIndex("EstablishmentId", "SportId")
-                        .IsUnique();
-
-                    b.ToTable("EstablishmentSports", (string)null);
-                });
-
-            modelBuilder.Entity("CourtSport", b =>
-                {
-                    b.HasOne("Domain.Entities.Court", null)
-                        .WithMany()
-                        .HasForeignKey("CourtsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Sport", null)
-                        .WithMany()
-                        .HasForeignKey("SportsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Entities.Court", b =>
                 {
                     b.HasOne("Domain.Entities.Establishment", "Establishment")
@@ -343,11 +312,19 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Sport", null)
+                        .WithMany("Courts")
+                        .HasForeignKey("SportId");
+
                     b.Navigation("Establishment");
                 });
 
             modelBuilder.Entity("Domain.Entities.Establishment", b =>
                 {
+                    b.HasOne("Domain.Entities.Sport", null)
+                        .WithMany("Establishments")
+                        .HasForeignKey("SportId");
+
                     b.OwnsOne("Domain.ValueObjects.Address", "Address", b1 =>
                         {
                             b1.Property<Guid>("EstablishmentId")
@@ -409,26 +386,18 @@ namespace SportHub.Infrastructure.Persistence.Migrations
                     b.Navigation("Establishment");
                 });
 
-            modelBuilder.Entity("EstablishmentSport", b =>
-                {
-                    b.HasOne("Domain.Entities.Establishment", null)
-                        .WithMany()
-                        .HasForeignKey("EstablishmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Sport", null)
-                        .WithMany()
-                        .HasForeignKey("SportId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Entities.Establishment", b =>
                 {
                     b.Navigation("Courts");
 
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Sport", b =>
+                {
+                    b.Navigation("Courts");
+
+                    b.Navigation("Establishments");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>

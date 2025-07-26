@@ -43,6 +43,9 @@ using (var scope = app.Services.CreateScope())
 {
     var userSeeder = scope.ServiceProvider.GetRequiredService<CustomUserSeeder>();
     await userSeeder.SeedAsync();
+    
+    var sportSeeder = scope.ServiceProvider.GetRequiredService<SportSeeder>();
+    await sportSeeder.SeedAsync();
 }
 
 app.Run();

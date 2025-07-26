@@ -11,7 +11,8 @@ public record EstablishmentResponse(
     AddressResponse Address,
     string ImageUrl,
     IEnumerable<EstablishmentUserResponse> Users,
-    IEnumerable<CourtResponse> Courts
+    IEnumerable<CourtResponse> Courts,
+    IEnumerable<SportResponse> Sports
 );
 
 public record EstablishmentUserResponse(
@@ -35,9 +36,15 @@ public record AddressResponse(
 public record CourtResponse(
     Guid Id,
     string Name,
-    string SportType,
     int SlotDurationMinutes,
     int MinBookingSlots,
     int MaxBookingSlots,
-    string TimeZone
+    string TimeZone,
+    IEnumerable<SportResponse> Sports
+);
+
+public record SportResponse(
+    Guid Id,
+    string Name,
+    string Description
 );

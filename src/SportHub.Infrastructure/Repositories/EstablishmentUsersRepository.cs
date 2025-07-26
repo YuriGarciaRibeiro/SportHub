@@ -27,11 +27,11 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
             .FirstOrDefaultAsync(eu => eu.UserId == userId && eu.EstablishmentId == establishmentId);
     }
 
-    public Task<List<string>> GetByOwnerIdAsync(Guid ownerId)
+    public Task<List<Guid>> GetByOwnerIdAsync(Guid ownerId)
     {
         return _dbContext.EstablishmentUsers
             .Where(eu => eu.UserId == ownerId && eu.Role == EstablishmentRole.Owner)
-            .Select(eu => eu.EstablishmentId.ToString())
+            .Select(eu => eu.EstablishmentId)
             .ToListAsync();
     }
 

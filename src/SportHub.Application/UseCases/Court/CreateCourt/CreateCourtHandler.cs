@@ -11,18 +11,21 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
     private readonly ICurrentUserService _currentUser;
     private readonly IEstablishmentRoleService _establishmentRoleService;
     private readonly ILogger<CreateCourtHandler> _logger;
+    private readonly ISportsRepository _sportsRepository;
 
     public CreateCourtHandler(
         IEstablishmentsRepository establishmentRepository,
         ICourtsRepository courtsRepository,
         ICurrentUserService currentUser,
         IEstablishmentRoleService establishmentRoleService,
+        ISportsRepository sportsRepository,
         ILogger<CreateCourtHandler> logger)
     {
         _establishmentRepository = establishmentRepository;
         _courtsRepository = courtsRepository;
         _currentUser = currentUser;
         _establishmentRoleService = establishmentRoleService;
+        _sportsRepository = sportsRepository;
         _logger = logger;
     }
 
@@ -34,6 +37,8 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
             return Result.Fail("Establishment not found.");
         }
 
+        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Court.Sports);
+
         _logger.LogInformation($"Creating court for establishment: {request.Court.Name} in {establishmentResult.Name}");
         var court = new Domain.Entities.Court
         {
@@ -42,9 +47,8 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
             MaxBookingSlots = request.Court.MaxBookingSlots,
             MinBookingSlots = request.Court.MinBookingSlots,
             SlotDurationMinutes = request.Court.SlotDurationMinutes,
-            SportType = request.Court.SportType,
             TimeZone = request.Court.TimeZone,
-
+            Sports = sports.ToList()
         };
 
         await _courtsRepository.CreateAsync(court);

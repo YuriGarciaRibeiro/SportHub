@@ -44,6 +44,7 @@ public class CourtsRepository : ICourtsRepository
     {
         return await _dbContext.Courts
             .Where(c => c.EstablishmentId == establishmentId)
+            .Include(c => c.Sports)
             .ToListAsync();
     }
 }

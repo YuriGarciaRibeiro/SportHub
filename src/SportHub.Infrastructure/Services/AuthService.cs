@@ -43,7 +43,6 @@ public class AuthService : IAuthService
             Salt = salt,
             Role = UserRole.User,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
         };
 
         try

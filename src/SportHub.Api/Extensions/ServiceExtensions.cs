@@ -46,6 +46,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IEstablishmentUsersRepository, EstablishmentUsersRepository>();
         builder.Services.AddScoped<IUsersRepository, UsersRepository>();
         builder.Services.AddScoped<ICourtsRepository, CourtsRepository>();
+        builder.Services.AddScoped<ISportsRepository, SportsRepository>();
 
         return builder;
     }
@@ -153,6 +154,7 @@ public static class ServiceExtensions
     public static WebApplicationBuilder AddSeeders(this WebApplicationBuilder builder)
     {
         builder.Services.AddTransient<CustomUserSeeder>();
+        builder.Services.AddTransient<SportSeeder>();
         return builder;
     }
 

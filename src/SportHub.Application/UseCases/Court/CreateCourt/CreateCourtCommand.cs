@@ -13,7 +13,7 @@ public class CreateCourtCommand : ICommand
 
     public Guid EstablishmentId { get; set; }
     public CourtRequest Court { get; set; } = new CourtRequest();
-
+    
 }
 
 public class CourtRequest
@@ -24,4 +24,5 @@ public class CourtRequest
     public int MinBookingSlots { get; set; } = 1;
     public int MaxBookingSlots { get; set; } = 4;
     public string TimeZone { get; set; } = "America/Maceio";
+    public IEnumerable<Guid> Sports { get; set; } = new List<Guid>();
 }

@@ -1,8 +1,9 @@
+using Domain.Common;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class User
+public class User : AuditEntity
 {
     public Guid Id { get; set; }
     public string Email { get; set; } = null!;
@@ -11,7 +12,6 @@ public class User
     public string PasswordHash { get; set; } = null!;
     public string Salt { get; set; } = null!;
     public UserRole Role { get; set; } = UserRole.User;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
     

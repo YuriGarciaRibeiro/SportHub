@@ -13,6 +13,7 @@ public static class AppExtensions
     {
         app.MapAuthEndpoints();
         app.MapEstablishmentsEndpoints();
+        app.MapSportsEndpoints();
 
         return app;
     }

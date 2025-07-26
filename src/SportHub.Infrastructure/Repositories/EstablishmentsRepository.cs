@@ -19,6 +19,7 @@ public class EstablishmentsRepository : IEstablishmentsRepository
         return await _dbContext.Establishments
             .Include(e => e.Users)
             .Include(e => e.Courts)
+            .Include(e => e.Sports)
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
@@ -50,5 +51,16 @@ public class EstablishmentsRepository : IEstablishmentsRepository
             _dbContext.Establishments.Remove(establishment);
             await _dbContext.SaveChangesAsync();
         }
+    }
+
+    public Task<List<Establishment>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {   
+        return _dbContext.Establishments
+            .Where(e => ids.Contains(e.Id))
+            .Include(e => e.Users)
+            .Include(e => e.Courts)
+                .ThenInclude(c => c.Sports)
+            .Include(e => e.Sports)
+            .ToListAsync();
     }
 }
