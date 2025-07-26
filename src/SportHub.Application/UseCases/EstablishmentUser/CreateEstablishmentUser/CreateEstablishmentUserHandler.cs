@@ -36,31 +36,34 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
             return Result.Fail(permissionResult.Errors);
         }
 
-        var currentUser = await _userService.GetUserByIdAsync(request.UserId);
-        if (currentUser == null)
-        {
-            return Result.Fail(new NotFound($"User with ID '{request.UserId}' not found."));
-        }
+        var users = await _userService.GetByIdsAsync(request.Users.Select(u => u.UserId));
 
-        var establishmentUser = new Domain.Entities.EstablishmentUser
+        var establishmentUsers = request.Users.Select(user => new Domain.Entities.EstablishmentUser
         {
-            UserId = request.UserId,
+            UserId = user.UserId,
             EstablishmentId = request.EstablishmentId,
-            Role = request.Role
-        };
+            Role = user.Role
+        }).ToList();
 
-        await _repository.AddAsync(establishmentUser);
+        await _repository.AddManyAsync(establishmentUsers);
 
-        if (currentUser.Value.Role == UserRole.User)
+        foreach( var user in users.Value)
         {
-            var userResult = await _userService.AddRoleToUserAsync(
-                establishmentUser.UserId, 
-                UserRole.EstablishmentMember);
-
-            if (userResult.IsFailed)
-                return Result.Fail(userResult.Errors);
+            if (user.Role == UserRole.User )
+            {
+                var roleResult = await _userService.AddRoleToUserAsync(user.Id, UserRole.EstablishmentMember);
+                if (roleResult.IsFailed)
+                {
+                    return Result.Fail(roleResult.Errors);
+                }
+            }
         }
 
-        return new CreateEstablishmentUserResponse(establishmentUser.UserId, establishmentUser.EstablishmentId, establishmentUser.Role);
+        var responseUsers = establishmentUsers.Select(eu => new EstablishmentUserResponse(eu.UserId, eu.Role));
+
+        return new CreateEstablishmentUserResponse(
+            Users: responseUsers,
+            EstablishmentId: request.EstablishmentId
+        );
     }
 }

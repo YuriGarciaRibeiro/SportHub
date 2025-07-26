@@ -53,34 +53,6 @@ public class GetEstablishmentByOwnerIdHandler : IQueryHandler<GetEstablishmentBy
 
         var establishmentResponses = establishments.Value.Select(establishment =>
         {
-            var establishmentUserResponses = establishment.Users
-                .Select(eu =>
-                {
-                    var user = usersDict[eu.UserId];
-                    return new EstablishmentUserResponse(
-                        UserId: user.Id,
-                        FirstName: user.FirstName,
-                        LastName: user.LastName,
-                        Email: user.Email,
-                        Role: eu.Role.ToString()
-                    );
-                })
-                .ToList();
-
-            var courts = establishment.Courts.Select(c => new CourtResponse(
-                c.Id,
-                c.Name,
-                c.SlotDurationMinutes,
-                c.MinBookingSlots,
-                c.MaxBookingSlots,
-                c.TimeZone,
-                c.Sports.Select(s => new SportResponse(
-                    s.Id,
-                    s.Name,
-                    s.Description
-                ))
-            ));
-
             var sports = establishment.Sports.Select(s => new SportResponse(
                 s.Id,
                 s.Name,
@@ -100,8 +72,6 @@ public class GetEstablishmentByOwnerIdHandler : IQueryHandler<GetEstablishmentBy
                     establishment.Address.State,
                     establishment.Address.ZipCode),
                 establishment.ImageUrl,
-                establishmentUserResponses,
-                courts,
                 sports
             );
         }).ToList();

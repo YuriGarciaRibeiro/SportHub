@@ -6,13 +6,12 @@ public class CreateEstablishmentUserValidator : AbstractValidator<CreateEstablis
 {
     public CreateEstablishmentUserValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+        RuleFor(command => command.Users)
+            .NotEmpty().WithMessage("At least one user must be provided.")
+            .Must(users => users.All(user => user.UserId != Guid.Empty))
+            .WithMessage("User ID cannot be empty.");
 
-        RuleFor(x => x.EstablishmentId)
-            .NotEmpty().WithMessage("Establishment ID is required.");
-
-        RuleFor(x => x.Role)
-            .IsInEnum().WithMessage("Invalid role.");
+        RuleFor(command => command.EstablishmentId)
+            .NotEmpty().WithMessage("Establishment ID cannot be empty.");
     }
 }

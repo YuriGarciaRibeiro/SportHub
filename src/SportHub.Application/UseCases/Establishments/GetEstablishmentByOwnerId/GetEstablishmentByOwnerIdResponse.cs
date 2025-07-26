@@ -10,18 +10,10 @@ public record EstablishmentResponse(
     string Description,
     AddressResponse Address,
     string ImageUrl,
-    IEnumerable<EstablishmentUserResponse> Users,
-    IEnumerable<CourtResponse> Courts,
     IEnumerable<SportResponse> Sports
 );
 
-public record EstablishmentUserResponse(
-    Guid UserId,
-    string FirstName,
-    string LastName,
-    string Email,
-    string Role
-);
+
 
 public record AddressResponse(
     string Street,
@@ -31,16 +23,6 @@ public record AddressResponse(
     string City,
     string State,
     string ZipCode
-);
-
-public record CourtResponse(
-    Guid Id,
-    string Name,
-    int SlotDurationMinutes,
-    int MinBookingSlots,
-    int MaxBookingSlots,
-    string TimeZone,
-    IEnumerable<SportResponse> Sports
 );
 
 public record SportResponse(

@@ -60,4 +60,13 @@ public class UserService : IUserService
 
         return Result.Ok(user);
     }
+
+    public async Task<Result<List<User>>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var users = await _usersRepository.GetByIdsAsync(ids);
+        if (users == null || !users.Any())
+            return Result.Fail("No users found for the provided IDs.");
+
+        return Result.Ok(users);
+    }
 }

@@ -13,7 +13,6 @@ public class Establishment : AuditEntity, IEntity
     public string Website { get; set; } = null!;
     public string ImageUrl { get; set; } = null!;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public Address Address { get; set; } = null!;
 
     public ICollection<EstablishmentUser> Users { get; set; } = new List<EstablishmentUser>();

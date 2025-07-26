@@ -54,4 +54,9 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
         return _dbSet.AsQueryable();
     }
 
+    public Task AddManyAsync(IEnumerable<T> entities)
+    {
+        _dbSet.AddRange(entities);
+        return _context.SaveChangesAsync();
+    }
 }

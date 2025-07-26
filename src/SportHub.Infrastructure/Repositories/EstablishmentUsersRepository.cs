@@ -21,6 +21,12 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
         await _dbContext.SaveChangesAsync();
     }
 
+    public Task AddManyAsync(IEnumerable<EstablishmentUser> establishmentUsers)
+    {
+        _dbContext.EstablishmentUsers.AddRange(establishmentUsers);
+        return _dbContext.SaveChangesAsync();
+    }
+
     public Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId)
     {
         return _dbContext.EstablishmentUsers
