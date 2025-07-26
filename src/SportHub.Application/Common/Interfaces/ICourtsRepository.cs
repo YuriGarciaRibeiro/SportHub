@@ -1,10 +1,8 @@
 using Domain.Entities;
 
-public interface ICourtsRepository
+namespace Application.Common.Interfaces;
+
+public interface ICourtsRepository : IBaseRepository<Court>
 {
-    Task<Court?> GetByIdAsync(Guid id);
-    Task CreateAsync(Court court);
-    Task UpdateAsync(Court court);
-    Task DeleteAsync(Guid id);
     Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId);
 }

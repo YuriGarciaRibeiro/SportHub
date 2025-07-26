@@ -2,12 +2,7 @@ using Domain.Entities;
 
 namespace Application.Common.Interfaces;
 
-public interface IEstablishmentsRepository
+public interface IEstablishmentsRepository : IBaseRepository<Establishment>
 {
-    Task<Establishment?> GetByIdAsync(Guid id);
-    Task<List<Establishment>> GetAllAsync();
-    Task AddAsync(Establishment establishment);
-    Task UpdateAsync(Establishment establishment);
-    Task DeleteAsync(Guid id);
-    Task<List<Establishment>> GetByIdsAsync(IEnumerable<Guid> ids);
+    public Task<List<Establishment>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids);
 }

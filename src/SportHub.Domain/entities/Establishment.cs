@@ -3,7 +3,7 @@ using Domain.ValueObjects;
 
 namespace Domain.Entities;
 
-public class Establishment : AuditEntity
+public class Establishment : AuditEntity, IEntity
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;

@@ -47,7 +47,7 @@ public class AuthService : IAuthService
 
         try
         {
-            await _usersRepository.CreateAsync(user);
+            await _usersRepository.AddAsync(user);
 
             var (token, expiresAt) = _jwtService.GenerateToken(
                 user.Id, 

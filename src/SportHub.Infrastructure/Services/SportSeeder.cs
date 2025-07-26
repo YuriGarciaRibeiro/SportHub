@@ -21,11 +21,11 @@ public class SportSeeder
 
         foreach (var sport in sports)
         {
-            var exists = await _sportsRepository.ExistsAsync(sport.Name);
+            var exists = await _sportsRepository.ExistsByNameAsync(sport.Name);
             if (!exists)
             {
                 _logger.LogInformation($"Seeding sport: {sport.Name}");
-                await _sportsRepository.CreateAsync(sport);
+                await _sportsRepository.AddAsync(sport);
             }
         }
     }

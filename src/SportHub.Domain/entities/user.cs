@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class User : AuditEntity
+public class User : AuditEntity, IEntity
 {
     public Guid Id { get; set; }
     public string Email { get; set; } = null!;

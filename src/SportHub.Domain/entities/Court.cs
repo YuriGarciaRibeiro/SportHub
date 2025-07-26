@@ -2,7 +2,7 @@ using Domain.Common;
 
 namespace Domain.Entities;
 
-public class Court : AuditEntity
+public class Court : AuditEntity, IEntity
 {
     public Guid Id { get; set; }
     public Guid EstablishmentId { get; set; }

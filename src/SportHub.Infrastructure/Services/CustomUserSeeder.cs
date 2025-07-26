@@ -42,6 +42,6 @@ public class CustomUserSeeder
             IsActive = true,
         };
 
-        await _usersRepository.CreateAsync(adminUser);
+        await _usersRepository.AddAsync(adminUser);
     }
 }

@@ -3,7 +3,7 @@ using Domain.Enums;
 
 namespace Application.Common.Interfaces;
 
-public interface IEstablishmentUsersRepository
+public interface IEstablishmentUsersRepository 
 {
     Task AddAsync(EstablishmentUser establishmentUser);
     Task<List<Guid>> GetByOwnerIdAsync(Guid ownerId);

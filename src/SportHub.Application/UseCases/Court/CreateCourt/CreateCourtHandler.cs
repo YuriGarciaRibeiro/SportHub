@@ -51,7 +51,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
             Sports = sports.ToList()
         };
 
-        await _courtsRepository.CreateAsync(court);
+        await _courtsRepository.AddAsync(court);
         return Result.Ok();
     }
 }

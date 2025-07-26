@@ -40,7 +40,7 @@ public class EstablishmentService : IEstablishmentService
             return Result.Fail("No establishments found for the given owner ID.");
         }
 
-        var establishments = await _establishmentRepository.GetByIdsAsync(establishmentsId);
+        var establishments = await _establishmentRepository.GetByIdsWithDetailsAsync(establishmentsId);
 
         return Result.Ok(establishments);
     }
