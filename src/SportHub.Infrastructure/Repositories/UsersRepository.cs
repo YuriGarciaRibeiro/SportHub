@@ -56,4 +56,12 @@ public class UsersRepository : IUsersRepository
     {
         return await _context.Users.AnyAsync(u => u.Email == email);
     }
+
+    public Task<List<User>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return _context.Users
+            .Include(u => u.Establishments)
+            .Where(u => ids.Contains(u.Id))
+            .ToListAsync();
+    }
 }

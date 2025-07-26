@@ -28,9 +28,9 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
             var user = await _userService.GetUserByIdAsync(e.UserId);
             return new EstablishmentUserResponse(
                 UserId: e.UserId,
-                FirstName: user.FirstName,
-                LastName: user.LastName,
-                Email: user.Email,
+                FirstName: user.Value.FirstName,
+                LastName: user.Value.LastName,
+                Email: user.Value.Email,
                 Role: e.Role.ToString()
             );
         });

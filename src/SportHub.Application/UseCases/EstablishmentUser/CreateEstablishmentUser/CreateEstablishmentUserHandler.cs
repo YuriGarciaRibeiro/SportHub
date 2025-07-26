@@ -51,7 +51,7 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
         await _repository.AddAsync(establishmentUser);
 
-        if (currentUser.Role == UserRole.User)
+        if (currentUser.Value.Role == UserRole.User)
         {
             var userResult = await _userService.AddRoleToUserAsync(
                 establishmentUser.UserId, 

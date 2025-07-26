@@ -28,6 +28,8 @@ public class EstablishmentsRepository : IEstablishmentsRepository
     {
         return await _dbContext.Establishments
             .Include(e => e.Users)
+            .Include(e => e.Courts)
+            .Include(e => e.Sports)
             .ToListAsync();
     }
 

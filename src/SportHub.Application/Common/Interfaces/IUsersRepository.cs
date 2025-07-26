@@ -10,4 +10,5 @@ public interface IUsersRepository
     Task<User> UpdateAsync(User user);
     Task DeleteAsync(Guid id);
     Task<bool> EmailExistsAsync(string email);
+    Task<List<User>> GetByIdsAsync(IEnumerable<Guid> ids);
 }

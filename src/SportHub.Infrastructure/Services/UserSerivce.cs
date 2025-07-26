@@ -14,28 +14,22 @@ public class UserService : IUserService
         _usersRepository = usersRepository;
     }
 
-    public async Task<User> GetUserByIdAsync(Guid userId)
+    public async Task<Result<User>> GetUserByIdAsync(Guid userId)
     {
         var user = await _usersRepository.GetByIdAsync(userId);
 
         if (user == null)
-            throw new KeyNotFoundException("User not found.");
+            return Result.Fail("User not found.");
 
-        return user;
+        return Result.Ok(user);
     }
-    
+
     public async Task<Result<List<User>>> GetUsersByIdsAsync(List<Guid> userIds)
     {
-        var users = new List<User>();
-        
-        foreach (var userId in userIds)
-        {
-            var user = await _usersRepository.GetByIdAsync(userId);
-            if (user != null)
-            {
-                users.Add(user);
-            }
-        }
+        var users = await _usersRepository.GetByIdsAsync(userIds);
+
+        if (users == null || !users.Any())
+            return Result.Fail("No users found for the provided IDs.");
 
         return Result.Ok(users);
     }
