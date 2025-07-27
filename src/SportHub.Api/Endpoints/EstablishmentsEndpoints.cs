@@ -1,6 +1,7 @@
 using Application.Security;
 using Application.UseCases.Court.CreateCourt;
 using Application.UseCases.Court.GetCourtsByEstablishmentId;
+using Application.UseCases.Establishments.ActiveEstablishment;
 using Application.UseCases.Establishments.CreateEstablishment;
 using Application.UseCases.Establishments.DeleteEstablishment;
 using Application.UseCases.Establishments.GetEstablishmentById;
@@ -73,6 +74,24 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(PolicyNames.IsEstablishmentOwner);
+
+        // Post /establishments/{establishmentId}/activate - Activate establishment
+        group.MapPost("/{establishmentId:guid}/activate", async (
+            Guid establishmentId,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new ActiveEstablishmentCommand(establishmentId));
+
+            return result.ToIResult();
+        })
+        .WithName("ActivateEstablishment")
+        .WithSummary("Activate an establishment")
+        .WithDescription("Restores the specified establishment, making it active again in the system.")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization(PolicyNames.IsEstablishmentOwner);
