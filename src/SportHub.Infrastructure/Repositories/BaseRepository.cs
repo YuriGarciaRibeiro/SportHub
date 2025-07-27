@@ -49,7 +49,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
         return await _dbSet.AnyAsync(entity => entity.Id == id);
     }
 
-    public  IQueryable<T> QueryAsync()
+    public IQueryable<T> Query()
     {
         return _dbSet.AsQueryable();
     }

@@ -9,6 +9,6 @@ public interface IBaseRepository<T> where T : class
     Task RemoveAsync(T entity);
     Task<List<T>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<bool> ExistsAsync(Guid id);
-    IQueryable<T> QueryAsync();
+    IQueryable<T> Query();
     Task AddManyAsync(IEnumerable<T> entities);
 }

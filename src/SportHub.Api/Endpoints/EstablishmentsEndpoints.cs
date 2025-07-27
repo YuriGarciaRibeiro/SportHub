@@ -4,6 +4,7 @@ using Application.UseCases.Court.GetCourtsByEstablishmentId;
 using Application.UseCases.Establishments.CreateEstablishment;
 using Application.UseCases.Establishments.GetEstablishmentById;
 using Application.UseCases.Establishments.GetEstablishmentByOwnerId;
+using Application.UseCases.Establishments.GetEstablishments;
 using Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -18,8 +19,25 @@ public static class EstablishmentsEndpoints
         var group = routes.MapGroup("/establishments")
             .WithTags("Establishments");
 
+        // GET /establishments - List all establishments
+        group.MapGet("/", async (
+            [AsParameters] GetEstablishmentsQuery query,
+            ISender sender) =>
+        {
+            var result = await sender.Send(query);
+            return result.ToIResult();
+        })
+        .WithName("GetEstablishments")
+        .WithSummary("Get all establishments")
+        .WithDescription("Retrieves a paginated list of establishments with optional filtering capabilities.")
+        .Produces<GetEstablishmentsResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
-
+        // POST /establishments - Create new establishment
         group.MapPost("/", async (
             CreateEstablishmentCommand command,
             ISender sender) =>
@@ -30,15 +48,16 @@ public static class EstablishmentsEndpoints
         })
         .WithName("CreateEstablishment")
         .WithSummary("Create a new establishment")
-        .WithDescription("Creates a new establishment with the provided details.")
-        .RequireAuthorization()
+        .WithDescription("Creates a new sports establishment with the provided details such as name, location, and contact information.")
         .Produces<string>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
-        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization();
 
+        // GET /establishments/{id} - Get establishment by ID
         group.MapGet("/{id:guid}", async (
             Guid id,
             ISender sender) =>
@@ -48,50 +67,38 @@ public static class EstablishmentsEndpoints
             return result.ToIResult();
         })
         .WithName("GetEstablishment")
-        .WithSummary("Get an establishment by ID")
-        .WithDescription("Retrieves an establishment by its ID.")
+        .WithSummary("Get establishment by ID")
+        .WithDescription("Retrieves detailed information about a specific establishment using its unique identifier.")
         .Produces<GetEstablishmentByIdResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
-        group.MapGet("/owner", async (
+        // POST /establishments/{establishmentId}/users - Associate user with establishment
+        group.MapPost("/{establishmentId:guid}/users", async (
+            Guid establishmentId,
+            CreateEstablishmentUserRequest request,
             ISender sender) =>
         {
-            var result = await sender.Send(new GetEstablishmentByOwnerIdQuery());
+            var createCommand = new CreateEstablishmentUserCommand(request, establishmentId);
 
-            return result.ToIResult();
-        })
-        .WithName("GetEstablishmentsByOwnerId")
-        .WithSummary("Get establishments by owner ID")
-        .WithDescription("Retrieves all establishments associated with a specific owner ID.")
-        .RequireAuthorization(PolicyNames.IsOwner)
-        .Produces<GetEstablishmentsByOwnerIdResponse>(StatusCodes.Status200OK)
-        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
-        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
-
-        group.MapPost("/users", async (
-            CreateEstablishmentUserCommand command,
-            ISender sender) =>
-        {
-            var result = await sender.Send(command);
+            var result = await sender.Send(createCommand);
 
             return result.ToIResult();
         })
         .WithName("CreateEstablishmentUser")
-        .WithSummary("Create a user for an establishment")
-        .WithDescription("Creates a new user for the specified establishment.")
-        .RequireAuthorization()
+        .WithSummary("Associate a user with an establishment")
+        .WithDescription("Associates an existing user with the specified establishment, granting them appropriate roles and permissions within that establishment.")
         .Produces<CreateEstablishmentUserResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
-        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(PolicyNames.IsEstablishmentManager);
 
-        group.MapPost("/{establishmentId:guid}/courts", async (
+        // POST /establishments/{establishmentId}/courts - Create court
+        group.MapPost("/{establishmentId}/courts", async (
             Guid establishmentId,
             CourtRequest request,
             ISender sender) =>
@@ -102,7 +109,7 @@ public static class EstablishmentsEndpoints
         })
         .WithName("CreateCourt")
         .WithSummary("Create a new court")
-        .WithDescription("Creates a new court for the specified establishment.")
+        .WithDescription("Creates a new sports court within the specified establishment with details like name, sport type, and capacity.")
         .RequireAuthorization(PolicyNames.IsEstablishmentManager)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
@@ -112,7 +119,7 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
-
+        // GET /establishments/{establishmentId}/courts - Get courts by establishment
         group.MapGet("/{establishmentId:guid}/courts", async (
             Guid establishmentId,
             ISender sender) =>
@@ -123,7 +130,7 @@ public static class EstablishmentsEndpoints
         })
         .WithName("GetCourtsByEstablishmentId")
         .WithSummary("Get courts by establishment ID")
-        .WithDescription("Retrieves all courts associated with a specific establishment ID.")
+        .WithDescription("Retrieves all sports courts associated with a specific establishment, including their details and availability status.")
         .RequireAuthorization()
         .Produces<GetCourtsByEstablishmentIdResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)

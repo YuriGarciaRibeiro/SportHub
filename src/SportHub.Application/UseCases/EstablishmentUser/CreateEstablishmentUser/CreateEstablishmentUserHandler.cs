@@ -36,9 +36,9 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
             return Result.Fail(permissionResult.Errors);
         }
 
-        var users = await _userService.GetByIdsAsync(request.Users.Select(u => u.UserId));
+        var users = await _userService.GetByIdsAsync(request.Request.Users.Select(u => u.UserId));
 
-        var establishmentUsers = request.Users.Select(user => new Domain.Entities.EstablishmentUser
+        var establishmentUsers = request.Request.Users.Select(user => new Domain.Entities.EstablishmentUser
         {
             UserId = user.UserId,
             EstablishmentId = request.EstablishmentId,

@@ -4,8 +4,12 @@ using Domain.Enums;
 namespace Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 
 public record CreateEstablishmentUserCommand(
-    IEnumerable<EstablishmentUserRequest> Users,
+    CreateEstablishmentUserRequest Request,
     Guid EstablishmentId) : ICommand<CreateEstablishmentUserResponse>;
+
+public record CreateEstablishmentUserRequest(
+    IEnumerable<EstablishmentUserRequest> Users
+);
 
 public record EstablishmentUserRequest(
     Guid UserId,
