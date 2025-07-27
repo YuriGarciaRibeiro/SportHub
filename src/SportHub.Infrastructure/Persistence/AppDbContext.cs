@@ -100,6 +100,14 @@ public class ApplicationDbContext : DbContext
             {
                 entry.State = EntityState.Modified;
                 entry.Entity.MarkAsDeleted(userId);
+
+                foreach (var reference in entry.References)
+                {
+                    if (reference.TargetEntry != null && reference.TargetEntry.Metadata.IsOwned())
+                    {
+                        reference.TargetEntry.State = EntityState.Unchanged;
+                    }
+                }
             }
         }
 

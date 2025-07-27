@@ -137,7 +137,7 @@ public static class ServiceExtensions
             options.AddPolicy(PolicyNames.IsEstablishmentManager, policy =>
                 policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Manager)));
 
-            options.AddPolicy(PolicyNames.IsEstablishmentAdmin, policy =>
+            options.AddPolicy(PolicyNames.IsEstablishmentOwner, policy =>
                 policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Owner)));
         });
 

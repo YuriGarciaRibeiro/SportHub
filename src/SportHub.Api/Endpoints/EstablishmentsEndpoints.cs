@@ -2,8 +2,8 @@ using Application.Security;
 using Application.UseCases.Court.CreateCourt;
 using Application.UseCases.Court.GetCourtsByEstablishmentId;
 using Application.UseCases.Establishments.CreateEstablishment;
+using Application.UseCases.Establishments.DeleteEstablishment;
 using Application.UseCases.Establishments.GetEstablishmentById;
-using Application.UseCases.Establishments.GetEstablishmentByOwnerId;
 using Application.UseCases.Establishments.GetEstablishments;
 using Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 using MediatR;
@@ -56,6 +56,26 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization();
+
+        // Delete /establishments/{id} - Delete establishment
+        group.MapDelete("/{establishmentId:guid}", async (
+            Guid establishmentId,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new DeleteEstablishmentCommand(establishmentId));
+
+            return result.ToIResult();
+        })
+        .WithName("DeleteEstablishment")
+        .WithSummary("Delete an establishment")
+        .WithDescription("Deletes the specified establishment, removing it from the system and all associated data.")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(PolicyNames.IsEstablishmentOwner);
 
         // GET /establishments/{id} - Get establishment by ID
         group.MapGet("/{id:guid}", async (

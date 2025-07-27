@@ -27,6 +27,14 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .ToListAsync();
     }
 
+    public Task<Establishment?> GetByIdWithAddressAsync(Guid id)
+    {
+        return _dbContext.Establishments
+            .Where(e => e.Id == id)
+            .Include(e => e.Address)
+            .SingleOrDefaultAsync();
+    }
+
     public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken)
     {
         var dbQuery = _dbSet
