@@ -6,6 +6,7 @@ using Application.UseCases.Establishments.CreateEstablishment;
 using Application.UseCases.Establishments.DeleteEstablishment;
 using Application.UseCases.Establishments.GetEstablishmentById;
 using Application.UseCases.Establishments.GetEstablishments;
+using Application.UseCases.Establishments.UpdateEstablishment;
 using Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,17 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization();
+
+        // PUT /establishments/{id} - Update establishment
+        group.MapPut("/{establishmentId:guid}", async (
+            Guid establishmentId,
+            UpdateEstablishmentCommand command,
+            ISender sender) =>
+        {
+            var result = await sender.Send(command with { Id = establishmentId });
+
+            return result.ToIResult();
+        });
 
         // Delete /establishments/{id} - Delete establishment
         group.MapDelete("/{establishmentId:guid}", async (
