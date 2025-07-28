@@ -29,7 +29,6 @@ public static class ServiceExtensions
     public static WebApplicationBuilder AddServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<IJwtService, JwtService>();
-        builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IUserService, UserService>();
         builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
