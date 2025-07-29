@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Api.Behaviors;
 using Application.Behaviors;
 using Application.Common.Interfaces;
 using Application.Security;
@@ -86,6 +87,7 @@ public static class ServiceExtensions
         builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(RegisterUserCommand).Assembly));
         builder.Services.AddValidatorsFromAssemblyContaining<RegisterUserValidator>();
         builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
         return builder;
     }
