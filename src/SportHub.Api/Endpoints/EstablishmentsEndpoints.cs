@@ -68,7 +68,17 @@ public static class EstablishmentsEndpoints
             var result = await sender.Send(command with { Id = establishmentId });
 
             return result.ToIResult();
-        });
+        })
+        .WithName("UpdateEstablishment")
+        .WithSummary("Update an establishment")
+        .WithDescription("Updates the details of an existing establishment, including name, description, address, and image URL.")
+        .Produces<UpdateEstablishmentResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(PolicyNames.IsEstablishmentOwner);
 
         // Delete /establishments/{id} - Delete establishment
         group.MapDelete("/{establishmentId:guid}", async (

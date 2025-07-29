@@ -14,11 +14,13 @@ public class EstablishmentHandler
 {
     private readonly IEstablishmentRoleService _svc;
     private readonly ILogger<EstablishmentHandler> _logger;
+    private readonly IUserService _userService;
 
-    public EstablishmentHandler(IEstablishmentRoleService svc, ILogger<EstablishmentHandler> logger)
+    public EstablishmentHandler(IEstablishmentRoleService svc, ILogger<EstablishmentHandler> logger, IUserService userService)
     {
         _svc = svc;
         _logger = logger;
+        _userService = userService;
     }
 
     protected override async Task HandleRequirementAsync(
@@ -40,6 +42,27 @@ public class EstablishmentHandler
         if (subClaim is null || !Guid.TryParse(subClaim.Value, out var userId))
         {
             _logger.LogWarning("User ID not found in claims.");
+            return;
+        }
+
+        var user = await _userService.GetUserByIdAsync(userId);
+        if (user is null)
+        {
+            _logger.LogWarning($"User with ID {userId} not found.");
+            return;
+        }
+
+        if (user.Value.Role == UserRole.Admin)
+        {
+            _logger.LogInformation("User is an admin, skipping establishment role check.");
+            context.Succeed(requirement);
+            return;
+        }
+
+        if (user.Value.Role == UserRole.User)
+        {
+            _logger.LogInformation("User is a regular user, skipping establishment role check.");
+            context.Succeed(requirement);
             return;
         }
 
