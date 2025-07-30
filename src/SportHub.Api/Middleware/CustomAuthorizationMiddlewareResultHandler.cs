@@ -1,8 +1,9 @@
-using System.Text.Json;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
+using Microsoft.AspNetCore.Mvc;
 
-namespace SportHub.Api.Middleware;
+namespace Api.Middleware;
 
 public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewareResultHandler
 {
@@ -14,27 +15,39 @@ public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
         AuthorizationPolicy policy,
         PolicyAuthorizationResult authorizeResult)
     {
-        if (authorizeResult.Challenged) // 401
+        if (authorizeResult.Challenged)
         {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Unauthorized",
+                Detail = "Token faltando ou inválido.",
+                Status = StatusCodes.Status401Unauthorized,
+                Instance = context.Request.Path
+            };
+
+            problemDetails.Extensions.Add("traceId", context.TraceIdentifier);
+
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
-            var payload = JsonSerializer.Serialize(new
-            {
-                message = "Token faltando ou inválido."
-            });
-            await context.Response.WriteAsync(payload);
+            await context.Response.WriteAsJsonAsync(problemDetails);
             return;
         }
 
-        if (authorizeResult.Forbidden)  // 403
+        if (authorizeResult.Forbidden)
         {
+            var problemDetails = new ProblemDetails
+            {
+                Title = "Forbidden",
+                Detail = "You don't have permission to access this resource.",
+                Status = StatusCodes.Status403Forbidden,
+                Instance = context.Request.Path
+            };
+
+            problemDetails.Extensions.Add("traceId", context.TraceIdentifier);
+
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             context.Response.ContentType = "application/json";
-            var payload = JsonSerializer.Serialize(new
-            {
-                message = "You don't have permission to access this resource."
-            });
-            await context.Response.WriteAsync(payload);
+            await context.Response.WriteAsJsonAsync(problemDetails);
             return;
         }
 

@@ -1,5 +1,5 @@
 using Api.Document;
-using Application.Settings;
+using Api.Extensions;
 using Infrastructure.Services;
 using Scalar.AspNetCore;
 using WebAPI.Extensions;
@@ -15,13 +15,13 @@ builder.Services.AddOpenApi("v1", options =>
 builder.AddAuthentication()
         .AddServices()
         .AddRepositories()
-        .AddCustomExecptionHanlder()
+        .AddCustomExceptionHandler()
         .AddDatabase(builder.Configuration)
         .AddMediatR()
         .AddSettings()
         .AddSeeders()
         .AddSerilogLogging();
-        
+
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();

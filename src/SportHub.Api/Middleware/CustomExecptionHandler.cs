@@ -4,55 +4,52 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
-namespace WebAPI.Middleware;
+namespace Api.Middleware;
 
-public class CustomExecptionHandler
-    (ILogger<CustomExecptionHandler> logger)
-    : IExceptionHandler
+public class CustomExceptionHandler(ILogger<CustomExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
-        logger.LogError($"Error occurred: {exception.Message}, StackTrace: {exception.StackTrace}, Time: {DateTime.Now}");
+        logger.LogError(exception, "Error occurred at {Time}", DateTime.UtcNow);
 
         (string Detail, string Title, int StatusCode) details = exception switch
         {
-            ValidationException => 
-            (
+            ValidationException => (
                 exception.Message,
-                exception.GetType().Name,
-                context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity
+                "Validation Failed",
+                StatusCodes.Status422UnprocessableEntity
             ),
             DbUpdateException dbEx when dbEx.InnerException is PostgresException pgEx &&
-                pgEx.SqlState == PostgresErrorCodes.UniqueViolation =>
-            (
+                pgEx.SqlState == PostgresErrorCodes.UniqueViolation => (
                 $"Unique constraint violated: {pgEx.ConstraintName}.",
                 "Unique Constraint Violation",
                 StatusCodes.Status400BadRequest
             ),
-            _ => 
-            (
+            _ => (
                 exception.Message,
-                exception.GetType().Name,
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError
+                "Internal Server Error",
+                StatusCodes.Status500InternalServerError
             )
         };
-        
+
         var problemDetails = new ProblemDetails
         {
             Title = details.Title,
             Detail = details.Detail,
             Status = details.StatusCode,
-            Instance = context.Request.Path,
+            Instance = context.Request.Path
         };
-        
+
         problemDetails.Extensions.Add("traceId", context.TraceIdentifier);
-        
+
         if (exception is ValidationException validationException)
         {
             problemDetails.Extensions.Add("errors", validationException.Errors);
         }
-        
-         await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken: cancellationToken);
-         return true;
+
+        context.Response.StatusCode = details.StatusCode;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken: cancellationToken);
+        return true;
     }
 }

@@ -23,9 +23,17 @@ public static class EstablishmentsEndpoints
 
         // GET /establishments - List all establishments
         group.MapGet("/", async (
-            [AsParameters] GetEstablishmentsQuery query,
-            ISender sender) =>
+            ISender sender,
+            [FromQuery] string? ownerId,
+            [FromQuery] string? isAvailable,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10) =>
         {
+            Guid? parsedOwnerId = Guid.TryParse(ownerId, out var g) ? g : null;
+            bool? parsedIsAvailable = bool.TryParse(isAvailable, out var b) ? b : null;
+
+            var query = new GetEstablishmentsQuery(parsedOwnerId, parsedIsAvailable, page, pageSize);
+
             var result = await sender.Send(query);
             return result.ToIResult();
         })

@@ -19,11 +19,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using SportHub.Api.Middleware;
-using WebAPI.Middleware;
+using Api.Middleware;
 
 
-namespace WebAPI.Extensions;
+namespace Api.Extensions;
 
 public static class ServiceExtensions
 {
@@ -51,9 +50,9 @@ public static class ServiceExtensions
         return builder;
     }
 
-    public static WebApplicationBuilder AddCustomExecptionHanlder(this WebApplicationBuilder builder)
+    public static WebApplicationBuilder AddCustomExceptionHandler(this WebApplicationBuilder builder)
     {
-        builder.Services.AddExceptionHandler<CustomExecptionHandler>();
+        builder.Services.AddExceptionHandler<CustomExceptionHandler>();
         builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
         builder.Services.AddProblemDetails();
         return builder;
