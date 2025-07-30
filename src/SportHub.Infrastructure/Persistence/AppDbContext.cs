@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<EstablishmentUser> EstablishmentUsers { get; set; } = null!;
     public DbSet<Court> Courts { get; set; } = null!;
     public DbSet<Sport> Sports { get; set; } = null!;
+    public DbSet<Reservation> Reservations { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -36,6 +36,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IAuthorizationHandler, EstablishmentHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, GlobalRoleHandler>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
+        builder.Services.AddScoped<IReservationService, ReservationService>();
         return builder;
     }
 
@@ -46,6 +47,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IUsersRepository, UsersRepository>();
         builder.Services.AddScoped<ICourtsRepository, CourtsRepository>();
         builder.Services.AddScoped<ISportsRepository, SportsRepository>();
+        builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 
         return builder;
     }

@@ -14,6 +14,7 @@ public static class AppExtensions
         app.MapAuthEndpoints();
         app.MapEstablishmentsEndpoints();
         app.MapSportsEndpoints();
+        app.MapCourtsEndpoints();
 
         return app;
     }
