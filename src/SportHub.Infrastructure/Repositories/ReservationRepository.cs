@@ -15,8 +15,10 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
 
     public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day)
     {
+        var dateUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
+
         return await _context.Reservations
-            .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == day.Date)
+            .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
             .ToListAsync();
     }
 

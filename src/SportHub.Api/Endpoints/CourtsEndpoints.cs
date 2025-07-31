@@ -1,5 +1,6 @@
 using Application.UseCases.Court.GetAvailability;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
 
 namespace SportHub.Api.Endpoints;
@@ -31,8 +32,8 @@ public static class CourtsEndpoints
         .WithSummary("Get availability for a specific court on a given date")
         .WithDescription("Returns a list of available time slots for the specified court on the specified date.")
         .Produces<List<DateTime>>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
-        .Produces(StatusCodes.Status404NotFound);
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
     }
 }

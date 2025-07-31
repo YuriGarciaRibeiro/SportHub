@@ -47,6 +47,8 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
             MaxBookingSlots = request.Court.MaxBookingSlots,
             MinBookingSlots = request.Court.MinBookingSlots,
             SlotDurationMinutes = request.Court.SlotDurationMinutes,
+            OpeningTime = request.Court.OpeningTime,
+            ClosingTime = request.Court.ClosingTime,
             TimeZone = request.Court.TimeZone,
             Sports = sports.ToList()
         };
