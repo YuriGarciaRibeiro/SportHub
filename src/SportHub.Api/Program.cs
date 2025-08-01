@@ -20,7 +20,8 @@ builder.AddAuthentication()
         .AddMediatR()
         .AddSettings()
         .AddSeeders()
-        .AddSerilogLogging();
+        .AddSerilogLogging()
+        .AddCaching();
 
 builder.Services.AddHttpContextAccessor();
 

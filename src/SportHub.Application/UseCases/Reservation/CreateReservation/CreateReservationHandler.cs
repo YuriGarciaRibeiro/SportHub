@@ -1,3 +1,4 @@
+using Application.Common.Enums;
 using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Application.CQRS;
@@ -11,14 +12,16 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
     private readonly IReservationService _reservationService;
     private readonly ICurrentUserService _currentUserService;
     private readonly ICourtsRepository _courtsRepository;
+    private readonly ICacheService _cacheService;
     private readonly ILogger<CreateReservationHandler> _logger;
 
-    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtsRepository courtsRepository, ILogger<CreateReservationHandler> logger)
+    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtsRepository courtsRepository, ICacheService cacheService, ILogger<CreateReservationHandler> logger)
     {
         _logger = logger;
         _courtsRepository = courtsRepository;
         _currentUserService = currentUserService;
         _reservationService = reservationService;
+        _cacheService = cacheService;
     }
 
     public async Task<Result<CreateReservationResponse>> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
@@ -41,6 +44,9 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
         }
 
         _logger.LogInformation($"Reservation created successfully for Court ID {request.CourtId} by User ID {userId}.");
+
+        var cacheKey = _cacheService.GenerateCacheKey(CacheKeyPrefix.GetAvailability, request.CourtId, request.Reservation.StartTime.ToString("yyyy-MM-dd"));
+        await _cacheService.RemoveAsync(cacheKey, cancellationToken);
 
         return Result.Ok(new CreateReservationResponse
         {

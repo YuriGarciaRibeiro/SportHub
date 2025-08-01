@@ -20,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Api.Middleware;
+using SportHub.Infrastructure.Extensions;
 
 
 namespace Api.Extensions;
@@ -37,6 +38,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IAuthorizationHandler, GlobalRoleHandler>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IReservationService, ReservationService>();
+        builder.Services.AddScoped<ICacheService, CacheService>();
         return builder;
     }
 
@@ -118,14 +120,14 @@ public static class ServiceExtensions
                 RoleClaimType = ClaimTypes.Role
             };
 
-            
+
         });
         builder.Services.AddAuthorization(options =>
         {
             // Policies globais (verifica se tem o cargo em qualquer estabelecimento)
             options.AddPolicy(PolicyNames.IsStaff, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Staff)));
-            
+
             options.AddPolicy(PolicyNames.IsManager, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Manager)));
 
@@ -168,6 +170,13 @@ public static class ServiceExtensions
             .CreateLogger();
 
         builder.Host.UseSerilog();
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddCaching(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddRedis(builder.Configuration);
+        
         return builder;
     }
 }
