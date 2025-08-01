@@ -1,4 +1,5 @@
 using Application.UseCases.Court.GetAvailability;
+using Application.UseCases.Reservations.CreateReservation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
@@ -34,6 +35,33 @@ public static class CourtsEndpoints
         .Produces<List<DateTime>>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /courts/{courtId}/reservations
+
+        group.MapPost("/courts/{courtId:guid}/reservations", async (
+            Guid courtId,
+            ReservationRequest request,
+            ISender sender) =>
+        {
+            var command = new CreateReservationCommand
+            {
+                CourtId = courtId,
+                Reservation = request
+            };
+
+            var result = await sender.Send(command);
+
+            return result.ToIResult(StatusCodes.Status201Created);
+        })
+        .WithName("CreateCourtReservation")
+        .WithSummary("Create a reservation for a court")
+        .WithDescription("Creates a reservation for the specified court.")
+        .Produces<CreateReservationResponse>(StatusCodes.Status201Created)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization();
+
 
     }
 }

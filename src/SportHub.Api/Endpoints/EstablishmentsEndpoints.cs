@@ -54,7 +54,7 @@ public static class EstablishmentsEndpoints
         {
             var result = await sender.Send(command);
 
-            return result.ToIResult();
+            return result.ToIResult(StatusCodes.Status201Created);
         })
         .WithName("CreateEstablishment")
         .WithSummary("Create a new establishment")
@@ -152,12 +152,12 @@ public static class EstablishmentsEndpoints
 
             var result = await sender.Send(createCommand);
 
-            return result.ToIResult();
+            return result.ToIResult(StatusCodes.Status201Created);
         })
         .WithName("CreateEstablishmentUser")
         .WithSummary("Associate a user with an establishment")
         .WithDescription("Associates an existing user with the specified establishment, granting them appropriate roles and permissions within that establishment.")
-        .Produces<CreateEstablishmentUserResponse>(StatusCodes.Status200OK)
+        .Produces<CreateEstablishmentUserResponse>(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)

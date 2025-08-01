@@ -13,10 +13,13 @@ public static class ResultExtensions
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public static IResult ToIResult<T>(this Result<T> result)
+    public static IResult ToIResult<T>(this Result<T> result, int? successStatusCode = null)
     {
         if (result.IsSuccess)
-            return Results.Ok(result.Value);
+        {
+            var statusCode = successStatusCode ?? StatusCodes.Status200OK;
+            return Results.Json(result.Value, statusCode: statusCode);
+        }
 
         return BuildProblemResult(result.Errors);
     }

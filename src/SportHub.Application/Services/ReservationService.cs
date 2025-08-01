@@ -43,30 +43,39 @@ public class ReservationService : IReservationService
     }
 
 
-    public async Task<Result> ReserveAsync(Guid courtId, Guid userId, DateTime startUtc)
+    public async Task<Result<Guid>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc)
     {
-        var court = await _courtRepository.GetByIdAsync(courtId);
-        if (court == null) return Result.Fail("Court not found");
+        var opening = DateTime.SpecifyKind(startUtc.Date + court.OpeningTime.ToTimeSpan(), DateTimeKind.Utc);
+        var closing = DateTime.SpecifyKind(startUtc.Date + court.ClosingTime.ToTimeSpan(), DateTimeKind.Utc);
 
-        var duration = TimeSpan.FromMinutes(court.SlotDurationMinutes);
-        var endUtc = startUtc + duration;
+        if (startUtc < opening || endUtc > closing)
+            return Result.Fail("Reservation is outside of court operating hours");
 
-        var hasConflict = await _reservationRepository
-            .ExistsConflictAsync(courtId, startUtc, endUtc);
+        var totalDuration = endUtc - startUtc;
+        var slotDuration = TimeSpan.FromMinutes(court.SlotDurationMinutes);
 
+        if (totalDuration.TotalMinutes % slotDuration.TotalMinutes != 0) return Result.Fail("Reservation duration must be a multiple of slot duration");
+
+        var totalSlots = totalDuration.TotalMinutes / slotDuration.TotalMinutes;
+        if (totalSlots > court.MaxBookingSlots) return Result.Fail($"Reservation exceeds the maximum of {court.MaxBookingSlots} slots allowed");
+        if (totalSlots < court.MinBookingSlots) return Result.Fail($"Reservation must be at least {court.MinBookingSlots} slots");
+
+        
+        var hasConflict = await _reservationRepository.ExistsConflictAsync(court.Id, startUtc, endUtc);
         if (hasConflict)
             return Result.Fail("Time slot is already booked");
 
         var reservation = new Reservation
         {
-            Id = Guid.NewGuid(),
-            CourtId = courtId,
+            CourtId = court.Id,
             UserId = userId,
             StartTimeUtc = startUtc,
             EndTimeUtc = endUtc
         };
 
         await _reservationRepository.AddAsync(reservation);
-        return Result.Ok();
+        return Result.Ok(reservation.Id);
     }
+
+
 }
