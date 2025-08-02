@@ -1,5 +1,6 @@
 using Application.Security;
 using Application.UseCases.Court.GetAvailability;
+using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Reservations.CreateReservation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

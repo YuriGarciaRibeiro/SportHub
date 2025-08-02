@@ -1,6 +1,7 @@
 using Application.Security;
 using Application.UseCases.Court.CreateCourt;
 using Application.UseCases.Court.GetCourtsByEstablishmentId;
+using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Establishments.ActiveEstablishment;
 using Application.UseCases.Establishments.CreateEstablishment;
 using Application.UseCases.Establishments.DeleteEstablishment;
@@ -232,6 +233,26 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization(PolicyNames.IsEstablishmentManager);
+
+        // PUT /establishments/{establishmentId}/courts/{courtId} - Update court
+        group.MapPut("/{establishmentId:guid}/courts/{courtId:guid}",
+            async (
+            Guid establishmentId,
+            Guid courtId,
+            UpdateCourtRequest request,
+            ISender sender) =>
+        {
+            var command = new UpdateCourtCommand
+            {
+                Id = courtId,
+                EstablishmentId = establishmentId,
+                Request = request
+            };
+
+            var result = await sender.Send(command);
+
+            return result.ToIResult();
+        });
 
     }
 }
