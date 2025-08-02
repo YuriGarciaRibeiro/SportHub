@@ -62,27 +62,5 @@ public static class CourtsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization();
-
-        group.MapDelete("/{courtId:guid}", async (
-            Guid courtId,
-            ISender sender) =>
-        {
-            var command = new DeleteCourtCommand
-            {
-                Id = courtId
-            };
-
-            var result = await sender.Send(command);
-
-            return result.ToIResult();
-        })
-        .WithName("DeleteCourt")
-        .WithSummary("Delete a court")
-        .WithDescription("Deletes a court if there are no existing reservations for today.")
-        .Produces(StatusCodes.Status204NoContent)
-        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
-        .RequireAuthorization(PolicyNames.IsEstablishmentManager);
     }
 }

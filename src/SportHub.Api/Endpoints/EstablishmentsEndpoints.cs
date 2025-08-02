@@ -206,5 +206,32 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapDelete("/{establishmentId:guid}/courts/{courtId:guid}", async (
+            Guid establishmentId,
+            Guid courtId,
+            ISender sender) =>
+        {
+            var command = new DeleteCourtCommand
+            {
+                Id = courtId
+            };
+
+            var result = await sender.Send(command);
+
+            return result.ToIResult();
+        })
+        .WithName("DeleteCourt")
+        .WithSummary("Delete a court")
+        .WithDescription("Deletes a specific court from the establishment, removing it from the system and all associated data.")
+        .RequireAuthorization(PolicyNames.IsEstablishmentManager)
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(PolicyNames.IsEstablishmentManager);
+
     }
 }
