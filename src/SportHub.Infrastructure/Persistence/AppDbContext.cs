@@ -10,7 +10,7 @@ public class ApplicationDbContext : DbContext
 {
 
     private readonly ICurrentUserService _currentUserService;
-    
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUserService currentUserService)
         : base(options)
     {
@@ -23,6 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Court> Courts { get; set; } = null!;
     public DbSet<Sport> Sports { get; set; } = null!;
     public DbSet<Reservation> Reservations { get; set; } = null!;
+    public DbSet<Evaluation> Evaluations { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
