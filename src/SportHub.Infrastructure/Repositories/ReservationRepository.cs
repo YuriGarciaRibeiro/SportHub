@@ -27,4 +27,11 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
         return await _dbContext.Reservations
             .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
     }
+
+    public Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId)
+    {
+        return _dbContext.Reservations
+            .Where(r => r.CourtId == courtId && r.StartTimeUtc > DateTime.UtcNow)
+            .ToListAsync();
+    }
 }
