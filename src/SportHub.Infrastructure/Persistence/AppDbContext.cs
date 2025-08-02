@@ -25,62 +25,7 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-
-        builder.Entity<User>(entity =>
-        {
-            entity.HasKey(u => u.Id);
-            entity.HasIndex(u => u.Email).IsUnique();
-            entity.Property(u => u.Email).IsRequired().HasMaxLength(256);
-            entity.Property(u => u.FirstName).IsRequired().HasMaxLength(100);
-            entity.Property(u => u.LastName).IsRequired().HasMaxLength(100);
-            entity.Property(u => u.PasswordHash).IsRequired();
-            entity.Property(u => u.Salt).IsRequired();
-            entity.Property(u => u.Role).HasConversion<string>();
-        });
-
-        builder.Entity<EstablishmentUser>()
-            .HasKey(x => new { x.UserId, x.EstablishmentId });
-
-        builder.Entity<EstablishmentUser>()
-            .HasOne<User>()
-            .WithMany(u => u.Establishments)
-            .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<EstablishmentUser>()
-            .HasOne(x => x.Establishment)
-            .WithMany(e => e.Users)
-            .HasForeignKey(x => x.EstablishmentId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<EstablishmentUser>()
-            .Property(x => x.Role)
-            .HasConversion<string>();
-
-        builder.Entity<Establishment>(entity =>
-        {
-            entity.OwnsOne(e => e.Address);
-        });
-
-        builder.Entity<Establishment>()
-            .HasMany(e => e.Sports)
-            .WithMany(s => s.Establishments)
-            .UsingEntity<Dictionary<string, object>>(
-                "EstablishmentSport",
-                j => j.HasOne<Sport>()
-                    .WithMany()
-                    .HasForeignKey("SportId")
-                    .OnDelete(DeleteBehavior.Cascade),
-                j => j.HasOne<Establishment>()
-                    .WithMany()
-                    .HasForeignKey("EstablishmentId")
-                    .OnDelete(DeleteBehavior.Cascade),
-                j =>
-                {
-                    j.HasKey("EstablishmentId", "SportId");
-                    j.HasIndex(new[] { "EstablishmentId", "SportId" }).IsUnique();
-                    j.ToTable("EstablishmentSports");
-                });
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
