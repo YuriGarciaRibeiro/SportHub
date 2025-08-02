@@ -1,15 +1,16 @@
 using Application.Common.Interfaces;
 using Domain.Common;
+using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
 public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
 {
-    protected readonly DbContext _context;
+    protected readonly ApplicationDbContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    public BaseRepository(DbContext context)
+    public BaseRepository(ApplicationDbContext context)
     {
         _context = context;
         _dbSet = context.Set<T>();

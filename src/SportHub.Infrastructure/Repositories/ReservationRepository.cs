@@ -7,24 +7,24 @@ namespace Infrastructure.Repositories;
 
 public class ReservationRepository : BaseRepository<Reservation>, IReservationRepository
 {
-    private readonly ApplicationDbContext _context;
-    public ReservationRepository(ApplicationDbContext context) : base(context)
+    private readonly ApplicationDbContext _dbContext;
+    public ReservationRepository(ApplicationDbContext dbContext) : base(dbContext)
     {
-        _context = context;
+        _dbContext = dbContext;
     }
 
     public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day)
     {
         var dateUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
 
-        return await _context.Reservations
+        return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
             .ToListAsync();
     }
 
     public async Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc)
     {
-        return await _context.Reservations
+        return await _dbContext.Reservations
             .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
     }
 }

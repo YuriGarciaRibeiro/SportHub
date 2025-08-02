@@ -2,6 +2,7 @@ using Application.Common.Interfaces;
 using Domain.Common;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence;
 
@@ -9,6 +10,7 @@ public class ApplicationDbContext : DbContext
 {
 
     private readonly ICurrentUserService _currentUserService;
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentUserService currentUserService)
         : base(options)
     {
