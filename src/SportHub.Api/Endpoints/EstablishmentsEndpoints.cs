@@ -60,7 +60,7 @@ public static class EstablishmentsEndpoints
         .WithName("CreateEstablishment")
         .WithSummary("Create a new establishment")
         .WithDescription("Creates a new sports establishment with the provided details such as name, location, and contact information.")
-        .Produces<string>(StatusCodes.Status200OK)
+        .Produces<string>(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
@@ -168,7 +168,7 @@ public static class EstablishmentsEndpoints
         .RequireAuthorization(PolicyNames.IsEstablishmentManager);
 
         // POST /establishments/{establishmentId}/courts - Create court
-        group.MapPost("/{establishmentId}/courts", async (
+        group.MapPost("/{establishmentId:guid}/courts", async (
             Guid establishmentId,
             CourtRequest request,
             ISender sender) =>
@@ -181,7 +181,7 @@ public static class EstablishmentsEndpoints
         .WithSummary("Create a new court")
         .WithDescription("Creates a new sports court within the specified establishment with details like name, sport type, and capacity.")
         .RequireAuthorization(PolicyNames.IsEstablishmentManager)
-        .Produces(StatusCodes.Status204NoContent)
+        .Produces(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
@@ -225,7 +225,6 @@ public static class EstablishmentsEndpoints
         .WithName("DeleteCourt")
         .WithSummary("Delete a court")
         .WithDescription("Deletes a specific court from the establishment, removing it from the system and all associated data.")
-        .RequireAuthorization(PolicyNames.IsEstablishmentManager)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
@@ -252,7 +251,18 @@ public static class EstablishmentsEndpoints
             var result = await sender.Send(command);
 
             return result.ToIResult();
-        });
+        })
+        .WithName("UpdateCourt")
+        .WithSummary("Update a court")
+        .WithDescription("Updates the details of an existing court within the specified establishment.")
+        .RequireAuthorization(PolicyNames.IsEstablishmentManager)
+        .Produces<UpdateCourtResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 
     }
 }

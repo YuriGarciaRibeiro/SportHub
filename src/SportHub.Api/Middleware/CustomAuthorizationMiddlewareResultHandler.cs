@@ -20,7 +20,7 @@ public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
             var problemDetails = new ProblemDetails
             {
                 Title = "Unauthorized",
-                Detail = "Token faltando ou inválido.",
+                Detail = "Token missing or invalid.",
                 Status = StatusCodes.Status401Unauthorized,
                 Instance = context.Request.Path
             };

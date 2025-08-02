@@ -40,7 +40,7 @@ public static class CourtsEndpoints
 
         // POST /courts/{courtId}/reservations
 
-        group.MapPost("/courts/{courtId:guid}/reservations", async (
+        group.MapPost("/{courtId:guid}/reservations", async (
             Guid courtId,
             ReservationRequest request,
             ISender sender) =>
