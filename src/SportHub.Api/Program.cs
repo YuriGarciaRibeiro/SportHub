@@ -35,9 +35,11 @@ if (app.Environment.IsDevelopment())
     app.ExecuteMigrations();
 }
 
-app.UseEndpoints();
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseEndpoints();
 
 
 using (var scope = app.Services.CreateScope())
