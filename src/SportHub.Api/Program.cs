@@ -12,6 +12,18 @@ builder.Services.AddOpenApi("v1", options =>
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy
+          .AllowAnyOrigin()      // ou .WithOrigins("https://seu-domínio")
+          .AllowAnyMethod()      // ou .WithMethods("GET","POST",…)
+          .AllowAnyHeader();     // ou .WithHeaders("content-type",…)
+    });
+});
+
+
 builder.AddAuthentication()
         .AddServices()
         .AddRepositories()
@@ -40,6 +52,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints();
+app.UseCors("AllowAll");
+
 
 
 using (var scope = app.Services.CreateScope())
