@@ -10,4 +10,5 @@ public interface IEstablishmentUsersRepository
     Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId);
     Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole);
     Task AddManyAsync(IEnumerable<EstablishmentUser> establishmentUsers);
+    Task UpdateAsync(EstablishmentUser establishmentUser);
 }

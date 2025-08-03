@@ -9,5 +9,6 @@ public class EstablishmentUser : AuditEntity
     public Establishment Establishment { get; set; } = null!;
 
     public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public EstablishmentRole Role { get; set; } = EstablishmentRole.Owner;
 }

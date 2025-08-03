@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Court.CreateCourt;
 
-public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
+public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtResponse>
 {
     private readonly IEstablishmentsRepository _establishmentRepository;
     private readonly ICourtsRepository _courtsRepository;
@@ -29,7 +29,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
         _logger = logger;
     }
 
-    public async Task<Result> Handle(CreateCourtCommand request, CancellationToken cancellationToken)
+    public async Task<Result<GetCourtResponse>> Handle(CreateCourtCommand request, CancellationToken cancellationToken)
     {
         var establishmentResult = await _establishmentRepository.GetByIdAsync(request.EstablishmentId);
         if (establishmentResult == null)
@@ -54,6 +54,24 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
         };
 
         await _courtsRepository.AddAsync(court);
-        return Result.Ok();
+
+        var courtResponse = new GetCourtResponse
+        {
+            Id = court.Id,
+            Name = court.Name,
+            MaxBookingSlots = court.MaxBookingSlots,
+            MinBookingSlots = court.MinBookingSlots,
+            SlotDurationMinutes = court.SlotDurationMinutes,
+            OpeningTime = court.OpeningTime,
+            ClosingTime = court.ClosingTime,
+            TimeZone = court.TimeZone,
+            Sports = court.Sports.Select(s => new SportResponse
+            {
+                Id = s.Id,
+                Name = s.Name,
+                Description = s.Description
+            }).ToList()
+        };
+        return Result.Ok(courtResponse);
     }
 }

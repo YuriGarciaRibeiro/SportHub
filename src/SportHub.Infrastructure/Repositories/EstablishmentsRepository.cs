@@ -82,4 +82,13 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
 
         return (items, total);
     }
+    
+    public async Task<List<User>> GetUsersByEstablishmentId(Guid establishmentId)
+    {
+        return await _context.EstablishmentUsers
+            .Where(eu => eu.EstablishmentId == establishmentId)
+            .Include(eu => eu.User) 
+            .Select(eu => eu.User)  
+            .ToListAsync();
+    }
 }

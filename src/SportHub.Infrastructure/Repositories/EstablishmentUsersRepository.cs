@@ -46,4 +46,10 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
         return _dbContext.EstablishmentUsers
             .AnyAsync(eu => eu.UserId == userId && eu.Role >= requiredRole);
     }
+
+    public Task UpdateAsync(EstablishmentUser establishmentUser)
+    {
+        _dbContext.EstablishmentUsers.Update(establishmentUser);
+        return _dbContext.SaveChangesAsync();
+    }
 }

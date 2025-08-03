@@ -10,7 +10,7 @@ public class EstablishmentUserConfiguration : IEntityTypeConfiguration<Establish
     {
         builder.HasKey(x => new { x.UserId, x.EstablishmentId });
 
-        builder.HasOne<User>()
+        builder.HasOne(x => x.User) 
             .WithMany(u => u.Establishments)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);

@@ -28,17 +28,14 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
             return Result.Fail(new BadRequest("Court does not belong to the specified establishment."));
         }
 
-        var updatedCourt = new Domain.Entities.Court
-        {
-            Id = court.Id,
-            Name = request.Request.Name ?? court.Name,
-            SlotDurationMinutes = request.Request.SlotDurationMinutes ?? court.SlotDurationMinutes,
-            MinBookingSlots = request.Request.MinBookingSlots ?? court.MinBookingSlots,
-            MaxBookingSlots = request.Request.MaxBookingSlots ?? court.MaxBookingSlots,
-            OpeningTime = request.Request.OpeningTime ?? court.OpeningTime,
-            ClosingTime = request.Request.ClosingTime ?? court.ClosingTime,
-            TimeZone = request.Request.TimeZone ?? court.TimeZone
-        };
+        court.Name = request.Request.Name ?? court.Name;
+        court.SlotDurationMinutes = request.Request.SlotDurationMinutes ?? court.SlotDurationMinutes;
+        court.MinBookingSlots = request.Request.MinBookingSlots ?? court.MinBookingSlots;
+        court.MaxBookingSlots = request.Request.MaxBookingSlots ?? court.MaxBookingSlots;
+        court.OpeningTime = request.Request.OpeningTime ?? court.OpeningTime;
+        court.ClosingTime = request.Request.ClosingTime ?? court.ClosingTime;
+        court.TimeZone = request.Request.TimeZone ?? court.TimeZone;
+        
 
         if (request.Request.SportIds != null)
         {
@@ -48,23 +45,23 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
                 return Result.Fail(new BadRequest("One or more specified sports do not exist."));
             }
 
-            updatedCourt.Sports = sports;
+            court.Sports = sports;
         }
 
-        await _courtRepository.UpdateAsync(updatedCourt);
+        await _courtRepository.UpdateAsync(court);
 
         return Result.Ok(new UpdateCourtResponse
         {
-            Id = updatedCourt.Id,
-            Name = updatedCourt.Name,
-            SlotDurationMinutes = updatedCourt.SlotDurationMinutes,
-            MinBookingSlots = updatedCourt.MinBookingSlots,
-            MaxBookingSlots = updatedCourt.MaxBookingSlots,
-            OpeningTime = updatedCourt.OpeningTime,
-            ClosingTime = updatedCourt.ClosingTime,
-            TimeZone = updatedCourt.TimeZone,
-            CreatedAtUtc = updatedCourt.CreatedAtUtc,
-            Sports = updatedCourt.Sports
+            Id = court.Id,
+            Name = court.Name,
+            SlotDurationMinutes = court.SlotDurationMinutes,
+            MinBookingSlots = court.MinBookingSlots,
+            MaxBookingSlots = court.MaxBookingSlots,
+            OpeningTime = court.OpeningTime,
+            ClosingTime = court.ClosingTime,
+            TimeZone = court.TimeZone,
+            CreatedAtUtc = court.CreatedAtUtc,
+            Sports = court.Sports
         });
     }
 }
