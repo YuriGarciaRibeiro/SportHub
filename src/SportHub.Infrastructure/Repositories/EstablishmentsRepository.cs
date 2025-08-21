@@ -82,7 +82,14 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
 
         return (items, total);
     }
-    
+
+    public Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
+    {
+        return _context.Sports
+            .Where(s => s.Establishments.Any(e => e.Id == establishmentId))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<List<User>> GetUsersByEstablishmentId(Guid establishmentId)
     {
         return await _context.EstablishmentUsers

@@ -9,4 +9,5 @@ public interface IEstablishmentsRepository : IBaseRepository<Establishment>
     public Task<Establishment?> GetByIdWithAddressAsync(Guid id);
     Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken);
     Task<List<User>> GetUsersByEstablishmentId(Guid establishmentId);
+    Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken);
 }

@@ -12,7 +12,6 @@ public class UpdateCourtResponse
     public TimeOnly OpeningTime { get; set; }
     public TimeOnly ClosingTime { get; set; }
     public string TimeZone { get; set; } = null!;
-    public DateTime CreatedAtUtc { get; set; }
     public IEnumerable<Sport> Sports { get; set; } = null!;
 }
 

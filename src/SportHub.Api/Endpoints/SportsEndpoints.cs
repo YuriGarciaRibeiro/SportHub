@@ -17,11 +17,11 @@ public static class SportsEndpoints
         {
             var result = await sender.Send(new GetAllSportsQuery());
 
-            return result.ToIResult(StatusCodes.Status200OK);
+            return result.ToIResult();
         })
             .WithName("GetAllSports")
             .WithSummary("Get all sports")
-            .Produces<IEnumerable<SportDto>>(200);
+            .Produces<GetAllSportsResponse>(StatusCodes.Status200OK);
 
     }
 }

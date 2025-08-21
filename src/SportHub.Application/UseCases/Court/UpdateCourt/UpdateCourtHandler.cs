@@ -60,7 +60,6 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
             OpeningTime = court.OpeningTime,
             ClosingTime = court.ClosingTime,
             TimeZone = court.TimeZone,
-            CreatedAtUtc = court.CreatedAtUtc,
             Sports = court.Sports
         });
     }

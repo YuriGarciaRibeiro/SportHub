@@ -7,6 +7,7 @@ using Application.UseCases.Establishments.CreateEstablishment;
 using Application.UseCases.Establishments.DeleteEstablishment;
 using Application.UseCases.Establishments.GetEstablishmentById;
 using Application.UseCases.Establishments.GetEstablishments;
+using Application.UseCases.Establishments.GetEstablishmentSports;
 using Application.UseCases.Establishments.GetEstablishmentUsers;
 using Application.UseCases.Establishments.UpdateEstablishment;
 using Application.UseCases.Establishments.UpdateEstablishmentUserRole;
@@ -315,5 +316,24 @@ public static class EstablishmentsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization(PolicyNames.IsEstablishmentManager);
+
+        // GET /establishments/{establishmentId}/sports
+        group.MapGet("/{establishmentId:guid}/sports", async (
+            Guid establishmentId,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetEstablishmentSportsQuery { EstablishmentId = establishmentId });
+
+            return result.ToIResult();
+        })
+        .WithName("GetEstablishmentSports")
+        .WithSummary("Get sports by establishment ID")
+        .WithDescription("Retrieves a list of sports associated with the specified establishment.")
+        .Produces<GetEstablishmentSportsResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
     }
 }
