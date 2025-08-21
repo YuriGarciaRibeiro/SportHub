@@ -13,10 +13,9 @@ public class Court : AuditEntity, IEntity
     public int MinBookingSlots { get; set; } = 1;
     public int MaxBookingSlots { get; set; } = 4;
     public TimeOnly OpeningTime { get; set; } = new TimeOnly(8, 0);
-    public TimeOnly ClosingTime { get; set; } = new TimeOnly(22, 0); 
+    public TimeOnly ClosingTime { get; set; } = new TimeOnly(22, 0);
 
     public string TimeZone { get; set; } = "America/Maceio";
-    public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public IEnumerable<Sport> Sports { get; set; } = null!;
 

@@ -14,8 +14,5 @@ public class Evaluation : AuditEntity, IEntity
     public int Rating { get; set; } // 1 a 5
     public string? Comment { get; set; }
 
-    public DateTime CreatedAt { get; set; }
-
-    // Navigation (opcional)
     public User User { get; set; } = null!;
 }
