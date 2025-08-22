@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
 using Infrastructure.Persistence;
@@ -81,6 +82,29 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .ToListAsync(cancellationToken);
 
         return (items, total);
+    }
+
+    public Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken cancellationToken)
+    {
+        var query = _context.Reservations
+            .Where(r => courtIds.Contains(r.CourtId));
+
+        if (filter.StartTime.HasValue)
+        {
+            query = query.Where(r => r.StartTimeUtc >= filter.StartTime.Value);
+        }
+
+        if (filter.EndTime.HasValue)
+        {
+            query = query.Where(r => r.EndTimeUtc <= filter.EndTime.Value);
+        }
+
+        if (filter.UserId.HasValue)
+        {
+            query = query.Where(r => r.UserId == filter.UserId.Value);
+        }
+
+        return query.ToListAsync(cancellationToken);
     }
 
     public Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)

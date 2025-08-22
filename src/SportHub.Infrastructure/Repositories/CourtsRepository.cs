@@ -66,4 +66,13 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
+
+    public async Task<IEnumerable<Guid>> GetCourtIdsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Courts
+            .Where(c => c.EstablishmentId == establishmentId)
+            .AsNoTracking()
+            .Select(c => c.Id)
+            .ToListAsync(cancellationToken);
+    }
 }
