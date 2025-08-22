@@ -1,4 +1,5 @@
 using Application.Common.QueryFilters;
+using Application.Security;
 using Application.UseCases.Establishments.GetEstablishmentReservations;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +29,8 @@ public static class EstablishmentReservationsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
+        .RequireAuthorization(PolicyNames.IsEstablishmentManager);
 
         return group;
     }
