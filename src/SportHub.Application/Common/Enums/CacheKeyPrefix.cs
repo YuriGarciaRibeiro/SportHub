@@ -7,6 +7,7 @@ public static class CacheKeyPrefix
     public const string EntityCreate = "EntityCreate";
     public const string EntityUpdate = "EntityUpdate";
     public const string EntityDelete = "EntityDelete";
-    // Add more prefixes as needed
+    public const string Query = "Query";
+    public const string GetAvailability = "GetAvailability";
 
 }

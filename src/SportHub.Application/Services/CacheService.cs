@@ -57,7 +57,7 @@ public class CacheService : ICacheService
         return !string.IsNullOrWhiteSpace(value);
     }
 
-    public string GenerateCacheKey(CacheKeyPrefix prefix, params object[] args)
+    public string GenerateCacheKey(string prefix, params object[] args)
     {
         return $"{prefix}:{string.Join(":", args)}";
     }

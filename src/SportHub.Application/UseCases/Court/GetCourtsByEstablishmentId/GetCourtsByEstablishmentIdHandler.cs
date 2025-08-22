@@ -1,6 +1,4 @@
 using Application.Common.Errors;
-using Application.Common.Interfaces;
-using Application.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Court.GetCourtsByEstablishmentId;
@@ -21,7 +19,7 @@ public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByE
     public async Task<Result<GetCourtsByEstablishmentIdResponse>> Handle(GetCourtsByEstablishmentIdQuery request, CancellationToken cancellationToken)
     {
 
-        var establishment = await _establishmentService.GetEstablishmentByIdAsync(request.EstablishmentId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             _logger.LogWarning("Establishment with ID {EstablishmentId} not found.", request.EstablishmentId);
@@ -46,8 +44,8 @@ public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByE
                     Id = s.Id,
                     Name = s.Name,
                     Description = s.Description
-                }).ToList()
-            }).ToList()
+                })
+            })
         };
 
         return Result.Ok(response);

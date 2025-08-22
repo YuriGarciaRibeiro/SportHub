@@ -1,52 +1,40 @@
-using Application.Common.Interfaces;
+using Application.Common.Enums;
 using Domain.Entities;
 
 namespace Application.Services;
 
-public class EstablishmentService : IEstablishmentService
+public class EstablishmentService : BaseService<Establishment>, IEstablishmentService
 {
     private readonly IEstablishmentsRepository _establishmentRepository;
     private readonly IEstablishmentUsersRepository _establishmentUsersRepository;
 
-    public EstablishmentService(IEstablishmentsRepository establishmentRepository, IEstablishmentUsersRepository establishmentUsersRepository)
+    protected override TimeSpan DefaultTtl => TimeSpan.FromMinutes(30);
+
+    public EstablishmentService(
+        IEstablishmentsRepository establishmentRepository,
+        IEstablishmentUsersRepository establishmentUsersRepository,
+        ICacheService cacheService)
+        : base(establishmentRepository, cacheService)
     {
         _establishmentUsersRepository = establishmentUsersRepository;
         _establishmentRepository = establishmentRepository;
     }
 
-    public Task<Result> CreateEstablishmentAsync(Establishment request, CancellationToken cancellationToken)
+
+    public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId, CancellationToken ct)
     {
-        throw new NotImplementedException();
-    }
 
-    public Task<Result> DeleteEstablishmentAsync(Guid id, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
+        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Establishment), "byOwner", ownerId);
+        var cached = await _cache.GetAsync<List<Establishment>>(key, ct);
+        if (cached is not null) return Result.Ok(cached);
 
-    public async Task<Result<Establishment>> GetEstablishmentByIdAsync(Guid id, CancellationToken cancellationToken)
-    {
-        var establishment = await _establishmentRepository.GetByIdAsync(id, cancellationToken);
-        return establishment != null
-            ? Result.Ok(establishment)
-            : Result.Fail("Establishment not found.");
-    }
+        var ids = await _establishmentUsersRepository.GetByOwnerIdAsync(ownerId, ct);
+        var list = !ids?.Any() ?? true
+            ? new List<Establishment>()
+            : await _establishmentRepository.GetByIdsWithDetailsAsync(ids!, ct);
 
-    public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken)
-    {
-        var establishmentsId = await _establishmentUsersRepository.GetByOwnerIdAsync(ownerId, cancellationToken);
-        if (establishmentsId == null)
-        {
-            return Result.Fail("No establishments found for the given owner ID.");
-        }
+        await _cache.SetAsync(key, list, DefaultTtl, ct);
+        return Result.Ok(list);
 
-        var establishments = await _establishmentRepository.GetByIdsWithDetailsAsync(establishmentsId, cancellationToken);
-
-        return Result.Ok(establishments);
-    }
-
-    public Task<Result> UpdateEstablishmentAsync(Establishment request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
     }
 }
