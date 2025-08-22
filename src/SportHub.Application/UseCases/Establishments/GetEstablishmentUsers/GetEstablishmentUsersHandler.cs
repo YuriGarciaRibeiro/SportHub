@@ -16,13 +16,13 @@ public class GetEstablishmentUsersHandler : IQueryHandler<GetEstablishmentUsersQ
 
     public async Task<Result<GetEstablishmentUsersResponse>> Handle(GetEstablishmentUsersQuery request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentRepository.GetByIdWithAddressAsync(request.EstablishmentId);
+        var establishment = await _establishmentRepository.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));
         }
 
-        var users = await _establishmentRepository.GetUsersByEstablishmentId(request.EstablishmentId);
+        var users = await _establishmentRepository.GetUsersByEstablishmentId(request.EstablishmentId, cancellationToken);
 
         var response = new GetEstablishmentUsersResponse
         {

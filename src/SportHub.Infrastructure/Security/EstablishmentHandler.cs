@@ -45,7 +45,7 @@ public class EstablishmentHandler
             return;
         }
 
-        var user = await _userService.GetUserByIdAsync(userId);
+        var user = await _userService.GetUserByIdAsync(userId, CancellationToken.None);
         if (user is null)
         {
             _logger.LogWarning($"User with ID {userId} not found.");
@@ -66,7 +66,7 @@ public class EstablishmentHandler
             return;
         }
 
-        if (await _svc.HasAtLeastRoleAsync(userId, estId, requirement.RequiredRole))
+        if (await _svc.HasAtLeastRoleAsync(userId, estId, requirement.RequiredRole, CancellationToken.None))
         {
             _logger.LogInformation($"User has role {requirement.RequiredRole} in establishment {estId}");
             context.Succeed(requirement);

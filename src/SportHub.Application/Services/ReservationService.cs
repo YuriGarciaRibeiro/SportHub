@@ -13,9 +13,9 @@ public class ReservationService : IReservationService
         _courtRepository = courtRepository;
     }
 
-    public async Task<Result<List<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day)
+    public async Task<Result<List<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
     {
-        var court = await _courtRepository.GetByIdAsync(courtId);
+        var court = await _courtRepository.GetByIdAsync(courtId, cancellationToken);
         if (court == null) return Result.Fail(new NotFound("Court not found"));
 
         var startHour = new TimeSpan(court.OpeningTime.Hour, court.OpeningTime.Minute, court.OpeningTime.Second);
@@ -24,7 +24,7 @@ public class ReservationService : IReservationService
         var slotDuration = TimeSpan.FromMinutes(court.SlotDurationMinutes);
 
         var existingReservations = await _reservationRepository
-            .GetByCourtAndDayAsync(courtId, day);
+            .GetByCourtAndDayAsync(courtId, day, cancellationToken);
 
         var slots = new List<DateTime>();
         for (var time = startHour; time + slotDuration <= endHour; time += slotDuration)
@@ -43,7 +43,7 @@ public class ReservationService : IReservationService
     }
 
 
-    public async Task<Result<Guid>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc)
+    public async Task<Result<Guid>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken)
     {
         var opening = DateTime.SpecifyKind(startUtc.Date + court.OpeningTime.ToTimeSpan(), DateTimeKind.Utc);
         var closing = DateTime.SpecifyKind(startUtc.Date + court.ClosingTime.ToTimeSpan(), DateTimeKind.Utc);
@@ -61,7 +61,7 @@ public class ReservationService : IReservationService
         if (totalSlots < court.MinBookingSlots) return Result.Fail($"Reservation must be at least {court.MinBookingSlots} slots");
 
         
-        var hasConflict = await _reservationRepository.ExistsConflictAsync(court.Id, startUtc, endUtc);
+        var hasConflict = await _reservationRepository.ExistsConflictAsync(court.Id, startUtc, endUtc, cancellationToken);
         if (hasConflict)
             return Result.Fail("Time slot is already booked");
 
@@ -73,7 +73,7 @@ public class ReservationService : IReservationService
             EndTimeUtc = endUtc
         };
 
-        await _reservationRepository.AddAsync(reservation);
+        await _reservationRepository.AddAsync(reservation, cancellationToken);
         return Result.Ok(reservation.Id);
     }
 

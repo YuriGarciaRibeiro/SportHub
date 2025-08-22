@@ -13,22 +13,22 @@ public class SportsRepository : BaseRepository<Sport>, ISportsRepository
         _dbContext = dbContext;
     }
 
-    public async Task<bool> ExistsByNameAsync(string name)
+    public async Task<bool> ExistsByNameAsync(string name, CancellationToken cancellationToken)
     {
         return await _dbContext.Sports
-            .AnyAsync(s => EF.Functions.ILike(s.Name, name));
+            .AnyAsync(s => EF.Functions.ILike(s.Name, name), cancellationToken);
     }
 
-    public async Task<Sport?> GetByNameAsync(string name)
+    public async Task<Sport?> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
         return await _dbContext.Sports
-            .FirstOrDefaultAsync(s => EF.Functions.ILike(s.Name, name));
+            .FirstOrDefaultAsync(s => EF.Functions.ILike(s.Name, name), cancellationToken);
     }
 
-    public async Task<IEnumerable<Sport>> GetSportsByIdsAsync(IEnumerable<Guid> ids)
+    public async Task<IEnumerable<Sport>> GetSportsByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         return await _dbContext.Sports
             .Where(s => ids.Contains(s.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 }

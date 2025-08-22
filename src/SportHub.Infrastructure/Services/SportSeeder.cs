@@ -15,17 +15,17 @@ public class SportSeeder
         _logger = logger;
     }
 
-    public async Task SeedAsync()
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         var sports = GetDefaultSports();
 
         foreach (var sport in sports)
         {
-            var exists = await _sportsRepository.ExistsByNameAsync(sport.Name);
+            var exists = await _sportsRepository.ExistsByNameAsync(sport.Name, cancellationToken);
             if (!exists)
             {
                 _logger.LogInformation($"Seeding sport: {sport.Name}");
-                await _sportsRepository.AddAsync(sport);
+                await _sportsRepository.AddAsync(sport, cancellationToken);
             }
         }
     }

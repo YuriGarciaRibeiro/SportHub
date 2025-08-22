@@ -16,7 +16,7 @@ public class DeleteUserHandler : IRequestHandler<DeleteUserCommand, Result>
 
     public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(request.UserId);
+        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         var currentUser = _currentUserService.UserId;
         
         if (user == null)
@@ -34,7 +34,7 @@ public class DeleteUserHandler : IRequestHandler<DeleteUserCommand, Result>
             return Result.Fail(new Conflict("User account is already deleted."));
         }
 
-        await _userRepository.RemoveAsync(user);
+        await _userRepository.RemoveAsync(user, cancellationToken);
 
         return Result.Ok();
     }

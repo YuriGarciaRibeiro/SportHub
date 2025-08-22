@@ -22,9 +22,9 @@ public class CustomUserSeeder
         _adminSettings = adminSettings.Value;
     }
 
-    public async Task SeedAsync()
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        var existingAdmin = await _usersRepository.GetByEmailAsync(_adminSettings.Email);
+        var existingAdmin = await _usersRepository.GetByEmailAsync(_adminSettings.Email, cancellationToken);
         if (existingAdmin != null)
             return;
 
@@ -42,6 +42,6 @@ public class CustomUserSeeder
             IsActive = true,
         };
 
-        await _usersRepository.AddAsync(adminUser);
+        await _usersRepository.AddAsync(adminUser, cancellationToken);
     }
 }

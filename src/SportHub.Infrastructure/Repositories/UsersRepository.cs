@@ -13,14 +13,14 @@ public class UsersRepository : BaseRepository<User>, IUsersRepository
         _dbContext = dbContext;
     }
 
-    public async Task<User?> GetByEmailAsync(string email)
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken)
     {
         return await _dbContext.Users
             .Include(u => u.Establishments)
-            .FirstOrDefaultAsync(u => u.Email == email);
+            .FirstOrDefaultAsync(u => u.Email == email, cancellationToken);
     }
-    public async Task<bool> EmailExistsAsync(string email)
+    public async Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken)
     {
-        return await _dbContext.Users.AnyAsync(u => u.Email == email);
+        return await _dbContext.Users.AnyAsync(u => u.Email == email, cancellationToken);
     }
 }

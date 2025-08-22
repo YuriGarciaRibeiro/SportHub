@@ -13,25 +13,25 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
         _dbContext = dbContext;
     }
 
-    public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day)
+    public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
     {
         var dateUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
 
         return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc)
+    public async Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken)
     {
         return await _dbContext.Reservations
-            .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
+            .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc, cancellationToken);
     }
 
-    public Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId)
+    public Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
     {
         return _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc > DateTime.UtcNow)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 }

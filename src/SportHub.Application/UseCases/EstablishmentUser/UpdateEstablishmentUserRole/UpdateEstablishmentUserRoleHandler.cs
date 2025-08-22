@@ -15,14 +15,14 @@ public class UpdateEstablishmentUserRoleHandler : ICommandHandler<UpdateEstablis
 
     public async Task<Result> Handle(UpdateEstablishmentUserRoleCommand request, CancellationToken cancellationToken)
     {
-        var establishmentUser = await _establishmentUsersRepository.GetAsync(request.EstablishmentId, request.UserId);
+        var establishmentUser = await _establishmentUsersRepository.GetAsync(request.EstablishmentId, request.UserId, cancellationToken);
         if (establishmentUser == null)
         {
             return Result.Fail(new NotFound("Establishment user not found."));
         }
 
         establishmentUser.Role = request.Request.Role;
-        await _establishmentUsersRepository.UpdateAsync(establishmentUser);
+        await _establishmentUsersRepository.UpdateAsync(establishmentUser, cancellationToken);
 
         return Result.Ok();
     }

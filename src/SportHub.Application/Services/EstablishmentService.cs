@@ -14,38 +14,38 @@ public class EstablishmentService : IEstablishmentService
         _establishmentRepository = establishmentRepository;
     }
 
-    public Task<Result> CreateEstablishmentAsync(Establishment request)
+    public Task<Result> CreateEstablishmentAsync(Establishment request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Result> DeleteEstablishmentAsync(Guid id)
+    public Task<Result> DeleteEstablishmentAsync(Guid id, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<Result<Establishment>> GetEstablishmentByIdAsync(Guid id)
+    public async Task<Result<Establishment>> GetEstablishmentByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentRepository.GetByIdAsync(id);
+        var establishment = await _establishmentRepository.GetByIdAsync(id, cancellationToken);
         return establishment != null
             ? Result.Ok(establishment)
             : Result.Fail("Establishment not found.");
     }
 
-    public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId)
+    public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken)
     {
-        var establishmentsId = await _establishmentUsersRepository.GetByOwnerIdAsync(ownerId);
+        var establishmentsId = await _establishmentUsersRepository.GetByOwnerIdAsync(ownerId, cancellationToken);
         if (establishmentsId == null)
         {
             return Result.Fail("No establishments found for the given owner ID.");
         }
 
-        var establishments = await _establishmentRepository.GetByIdsWithDetailsAsync(establishmentsId);
+        var establishments = await _establishmentRepository.GetByIdsWithDetailsAsync(establishmentsId, cancellationToken);
 
         return Result.Ok(establishments);
     }
 
-    public Task<Result> UpdateEstablishmentAsync(Establishment request)
+    public Task<Result> UpdateEstablishmentAsync(Establishment request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

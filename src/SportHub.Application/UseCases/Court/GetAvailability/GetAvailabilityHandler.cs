@@ -26,7 +26,7 @@ public class GetAvailabilityHandler : IQueryHandler<GetAvailabilityQuery, GetAva
             return Result.Ok(cachedResponse);
         }
 
-        var availableSlots = await reservationService.GetAvailableSlotsAsync(request.CourtId, request.Date);
+        var availableSlots = await reservationService.GetAvailableSlotsAsync(request.CourtId, request.Date, cancellationToken);
         if (availableSlots.IsFailed)
         {
             return Result.Fail(availableSlots.Errors);

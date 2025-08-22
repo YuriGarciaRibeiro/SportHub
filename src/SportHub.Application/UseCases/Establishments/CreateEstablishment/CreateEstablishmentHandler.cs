@@ -34,7 +34,7 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
 
     public async Task<Result<string>> Handle(CreateEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Sports);
+        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Sports, cancellationToken);
 
         var address = new Address(
             request.Street,
@@ -66,13 +66,13 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
             Role = EstablishmentRole.Owner,
         };
 
-        await _establishmentRepository.AddAsync(establishment);
-        await _establishmentUsersRepository.AddAsync(newEstablishmentUser);
+        await _establishmentRepository.AddAsync(establishment, cancellationToken);
+        await _establishmentUsersRepository.AddAsync(newEstablishmentUser, cancellationToken);
 
-        var currentUser = await _userService.GetUserByIdAsync(_currentUser.UserId);
+        var currentUser = await _userService.GetUserByIdAsync(_currentUser.UserId, cancellationToken);
         if (currentUser.Value.Role == UserRole.User)
         {
-            await _userService.AddRoleToUserAsync(_currentUser.UserId, UserRole.EstablishmentMember);
+            await _userService.AddRoleToUserAsync(_currentUser.UserId, UserRole.EstablishmentMember, cancellationToken);
         }
 
         return Result.Ok(establishment.Id.ToString());

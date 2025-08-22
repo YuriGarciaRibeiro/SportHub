@@ -14,7 +14,7 @@ public class GetAllSportsHandler : IQueryHandler<GetAllSportsQuery, GetAllSports
 
     public async Task<Result<GetAllSportsResponse>> Handle(GetAllSportsQuery request, CancellationToken cancellationToken)
     {
-        var sports = await _sportsRepository.GetAllAsync();
+        var sports = await _sportsRepository.GetAllAsync(cancellationToken);
         var response = new GetAllSportsResponse { Sports = sports.Select(s => new SportDto { Id = s.Id, Name = s.Name, Description = s.Description }) };
 
         return Result.Ok(response);

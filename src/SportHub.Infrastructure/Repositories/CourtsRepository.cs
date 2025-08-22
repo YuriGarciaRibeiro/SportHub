@@ -15,7 +15,7 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId)
+    public async Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
     {
         return await _dbContext.Courts
             .Where(c => c.EstablishmentId == establishmentId)
@@ -25,7 +25,7 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Court>> GetByFilterAsync(CourtQueryFilter filter)
+    public async Task<IEnumerable<Court>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken cancellationToken)
     {
         var query = _dbContext.Courts.AsQueryable();
 
@@ -55,5 +55,15 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
                     .AsSplitQuery()
                     .AsNoTracking()
                     .ToListAsync();
+    }
+
+    public Task<Court?> GetCompleteByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return _dbContext.Courts
+            .Include(c => c.Sports)
+            .Include(c => c.Establishment)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 }

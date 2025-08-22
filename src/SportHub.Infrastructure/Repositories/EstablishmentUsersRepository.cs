@@ -15,41 +15,41 @@ public class EstablishmentUsersRepository : IEstablishmentUsersRepository
         _dbContext = dbContext;
     }
 
-    public async Task AddAsync(EstablishmentUser establishmentUser)
+    public async Task AddAsync(EstablishmentUser establishmentUser, CancellationToken cancellationToken)
     {
-        await _dbContext.EstablishmentUsers.AddAsync(establishmentUser);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.EstablishmentUsers.AddAsync(establishmentUser, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task AddManyAsync(IEnumerable<EstablishmentUser> establishmentUsers)
+    public Task AddManyAsync(IEnumerable<EstablishmentUser> establishmentUsers, CancellationToken cancellationToken)
     {
         _dbContext.EstablishmentUsers.AddRange(establishmentUsers);
-        return _dbContext.SaveChangesAsync();
+        return _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId)
+    public Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId, CancellationToken cancellationToken)
     {
         return _dbContext.EstablishmentUsers
-            .FirstOrDefaultAsync(eu => eu.UserId == userId && eu.EstablishmentId == establishmentId);
+            .FirstOrDefaultAsync(eu => eu.UserId == userId && eu.EstablishmentId == establishmentId, cancellationToken);
     }
 
-    public Task<List<Guid>> GetByOwnerIdAsync(Guid ownerId)
+    public Task<List<Guid>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken)
     {
         return _dbContext.EstablishmentUsers
             .Where(eu => eu.UserId == ownerId && eu.Role == EstablishmentRole.Owner)
             .Select(eu => eu.EstablishmentId)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole)
+    public Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole, CancellationToken cancellationToken)
     {
         return _dbContext.EstablishmentUsers
-            .AnyAsync(eu => eu.UserId == userId && eu.Role >= requiredRole);
+            .AnyAsync(eu => eu.UserId == userId && eu.Role >= requiredRole, cancellationToken);
     }
 
-    public Task UpdateAsync(EstablishmentUser establishmentUser)
+    public Task UpdateAsync(EstablishmentUser establishmentUser, CancellationToken cancellationToken)
     {
         _dbContext.EstablishmentUsers.Update(establishmentUser);
-        return _dbContext.SaveChangesAsync();
+        return _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

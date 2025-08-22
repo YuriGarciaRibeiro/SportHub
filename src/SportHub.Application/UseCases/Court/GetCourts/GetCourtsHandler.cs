@@ -15,7 +15,7 @@ public class GetCourtsHandler : ICommandHandler<GetCourtsQuery, GetCourtsRespons
 
     public async Task<Result<GetCourtsResponse>> Handle(GetCourtsQuery request, CancellationToken cancellationToken)
     {
-        var courts = await _courtRepository.GetByFilterAsync(request.Filter);
+        var courts = await _courtRepository.GetByFilterAsync(request.Filter, cancellationToken);
         var courtDtos = courts.Select(c => new CourtDto
         {
             Id = c.Id,

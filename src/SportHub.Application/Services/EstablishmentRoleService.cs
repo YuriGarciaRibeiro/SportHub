@@ -10,27 +10,27 @@ public class EstablishmentRoleService : IEstablishmentRoleService
     public EstablishmentRoleService(IEstablishmentUsersRepository repo)
         => _repo = repo;
 
-    public async Task<EstablishmentRole?> GetRoleAsync(Guid userId, Guid estId)
+    public async Task<EstablishmentRole?> GetRoleAsync(Guid userId, Guid estId, CancellationToken cancellationToken)
     {
-        var ue = await _repo.GetAsync(userId, estId);
+        var ue = await _repo.GetAsync(userId, estId, cancellationToken);
         return ue?.Role;
     }
 
     public async Task<bool> HasAtLeastRoleAsync(
-        Guid userId, Guid estId, EstablishmentRole required)
+        Guid userId, Guid estId, EstablishmentRole required, CancellationToken cancellationToken)
     {
-        var actual = await GetRoleAsync(userId, estId);
+        var actual = await GetRoleAsync(userId, estId, cancellationToken);
         return actual.HasValue && actual.Value >= required;
     }
 
-    public Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole)
+    public Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole, CancellationToken cancellationToken)
     {
-        return _repo.HasRoleAnywhereAsync(userId, requiredRole);
+        return _repo.HasRoleAnywhereAsync(userId, requiredRole, cancellationToken);
     }
 
-    public async Task<Result> ValidateUserPermissionAsync(Guid userId, Guid establishmentId, EstablishmentRole minimumRole)
+    public async Task<Result> ValidateUserPermissionAsync(Guid userId, Guid establishmentId, EstablishmentRole minimumRole, CancellationToken cancellationToken)
     {
-        var hasPermission = await HasAtLeastRoleAsync(userId, establishmentId, minimumRole);
+        var hasPermission = await HasAtLeastRoleAsync(userId, establishmentId, minimumRole, cancellationToken);
 
         return hasPermission
             ? Result.Ok()

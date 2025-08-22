@@ -4,6 +4,6 @@ namespace Application.Common.Interfaces;
 
 public interface IUsersRepository : IBaseRepository<User>
 {
-    Task<User?> GetByEmailAsync(string email);
-    Task<bool> EmailExistsAsync(string email);
+    Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken);
+    Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken);
 }

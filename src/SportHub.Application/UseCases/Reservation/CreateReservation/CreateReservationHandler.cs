@@ -28,14 +28,19 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
     {
         var userId = _currentUserService.UserId;
         
-        var court = await _courtsRepository.GetByIdAsync(request.CourtId);
+        var court = await _courtsRepository.GetByIdAsync(request.CourtId, cancellationToken);
         if (court == null)
         {
             _logger.LogWarning($"Court with ID {request.CourtId} not found.");
             return Result.Fail(new NotFound($"Court with ID {request.CourtId} not found."));
         }
 
-        var reservationResult = await _reservationService.ReserveAsync(court, userId, request.Reservation.StartTime.ToUniversalTime(), request.Reservation.EndTime.ToUniversalTime());
+        var reservationResult = await _reservationService.ReserveAsync(
+            court,
+            userId,
+            request.Reservation.StartTime.ToUniversalTime(),
+            request.Reservation.EndTime.ToUniversalTime(),
+            cancellationToken);
 
         if (reservationResult.IsFailed)
         {

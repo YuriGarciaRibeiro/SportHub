@@ -5,10 +5,10 @@ namespace Application.Common.Interfaces;
 
 public interface IEstablishmentUsersRepository
 {
-    Task AddAsync(EstablishmentUser establishmentUser);
-    Task<List<Guid>> GetByOwnerIdAsync(Guid ownerId);
-    Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId);
-    Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole);
-    Task AddManyAsync(IEnumerable<EstablishmentUser> establishmentUsers);
-    Task UpdateAsync(EstablishmentUser establishmentUser);
+    Task AddAsync(EstablishmentUser establishmentUser, CancellationToken cancellationToken);
+    Task<List<Guid>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken);
+    Task<EstablishmentUser?> GetAsync(Guid userId, Guid establishmentId, CancellationToken cancellationToken);
+    Task<bool> HasRoleAnywhereAsync(Guid userId, EstablishmentRole requiredRole, CancellationToken cancellationToken);
+    Task AddManyAsync(IEnumerable<EstablishmentUser> establishmentUsers, CancellationToken cancellationToken);
+    Task UpdateAsync(EstablishmentUser establishmentUser, CancellationToken cancellationToken);
 }

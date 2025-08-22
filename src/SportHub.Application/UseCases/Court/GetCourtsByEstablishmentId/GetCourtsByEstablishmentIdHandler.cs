@@ -21,14 +21,14 @@ public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByE
     public async Task<Result<GetCourtsByEstablishmentIdResponse>> Handle(GetCourtsByEstablishmentIdQuery request, CancellationToken cancellationToken)
     {
 
-        var establishment = await _establishmentService.GetEstablishmentByIdAsync(request.EstablishmentId);
+        var establishment = await _establishmentService.GetEstablishmentByIdAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             _logger.LogWarning("Establishment with ID {EstablishmentId} not found.", request.EstablishmentId);
             return Result.Fail(new NotFound($"Establishment with ID {request.EstablishmentId} not found."));
         }
 
-        var courts = await _courtsRepository.GetByEstablishmentIdAsync(request.EstablishmentId);
+        var courts = await _courtsRepository.GetByEstablishmentIdAsync(request.EstablishmentId, cancellationToken);
 
         var response = new GetCourtsByEstablishmentIdResponse
         {

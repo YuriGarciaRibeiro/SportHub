@@ -29,14 +29,15 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
         var permissionResult = await _establishmentRoleService.ValidateUserPermissionAsync(
             _currentUserService.UserId, 
             request.EstablishmentId, 
-            EstablishmentRole.Staff);
+            EstablishmentRole.Staff,
+            cancellationToken);
             
         if (permissionResult.IsFailed)
         {
             return Result.Fail(permissionResult.Errors);
         }
 
-        var users = await _userService.GetByIdsAsync(request.Request.Users.Select(u => u.UserId));
+        var users = await _userService.GetByIdsAsync(request.Request.Users.Select(u => u.UserId), cancellationToken);
 
         var establishmentUsers = request.Request.Users.Select(user => new Domain.Entities.EstablishmentUser
         {
@@ -45,13 +46,13 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
             Role = user.Role
         }).ToList();
 
-        await _repository.AddManyAsync(establishmentUsers);
+        await _repository.AddManyAsync(establishmentUsers, cancellationToken);
 
         foreach( var user in users.Value)
         {
             if (user.Role == UserRole.User )
             {
-                var roleResult = await _userService.AddRoleToUserAsync(user.Id, UserRole.EstablishmentMember);
+                var roleResult = await _userService.AddRoleToUserAsync(user.Id, UserRole.EstablishmentMember, cancellationToken);
                 if (roleResult.IsFailed)
                 {
                     return Result.Fail(roleResult.Errors);

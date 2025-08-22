@@ -24,7 +24,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
 
     public async Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        if (await _usersRepository.EmailExistsAsync(request.Email))
+        if (await _usersRepository.EmailExistsAsync(request.Email, cancellationToken))
             return Result.Fail(new Conflict($"E-mail '{request.Email}' is already in use."));
 
         if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
@@ -44,7 +44,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
             IsActive = true
         };
 
-        await _usersRepository.AddAsync(user);
+        await _usersRepository.AddAsync(user, cancellationToken);
 
         var (token, expiresAt) = _jwtService.GenerateToken(
             user.Id, user.FullName, user.Role.ToString(), user.Email);

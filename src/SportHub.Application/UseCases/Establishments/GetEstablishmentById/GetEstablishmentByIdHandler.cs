@@ -17,7 +17,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
 
     public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentRepository.GetByIdAsync(request.Id);
+        var establishment = await _establishmentRepository.GetByIdAsync(request.Id, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound($"Establishment with ID '{request.Id}' not found."));
@@ -25,7 +25,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
 
         var userTasks = establishment.Users.Select(async e =>
         {
-            var user = await _userService.GetUserByIdAsync(e.UserId);
+            var user = await _userService.GetUserByIdAsync(e.UserId, cancellationToken);
             return new EstablishmentUserResponse(
                 UserId: e.UserId,
                 FirstName: user.Value.FirstName,

@@ -17,7 +17,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
 
     public async Task<Result<UpdateCourtResponse>> Handle(UpdateCourtCommand request, CancellationToken cancellationToken)
     {
-        var court = await _courtRepository.GetByIdAsync(request.Id);
+        var court = await _courtRepository.GetByIdAsync(request.Id, cancellationToken);
         if (court == null)
         {
             return Result.Fail(new NotFound($"Court with ID '{request.Id}' not found."));
@@ -39,7 +39,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
 
         if (request.Request.SportIds != null)
         {
-            var sports = await _sportRepository.GetByIdsAsync(request.Request.SportIds);
+            var sports = await _sportRepository.GetByIdsAsync(request.Request.SportIds, cancellationToken);
             if (sports.Count != request.Request.SportIds.Count())
             {
                 return Result.Fail(new BadRequest("One or more specified sports do not exist."));
@@ -48,7 +48,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
             court.Sports = sports;
         }
 
-        await _courtRepository.UpdateAsync(court);
+        await _courtRepository.UpdateAsync(court, cancellationToken);
 
         return Result.Ok(new UpdateCourtResponse
         {

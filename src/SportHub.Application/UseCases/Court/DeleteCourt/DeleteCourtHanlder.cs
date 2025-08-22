@@ -14,19 +14,19 @@ public class DeleteCourtHandler : ICommandHandler<DeleteCourtCommand>
 
     public async Task<Result> Handle(DeleteCourtCommand command, CancellationToken cancellationToken)
     {
-        var court = await _courtRepository.GetByIdAsync(command.Id);
+        var court = await _courtRepository.GetByIdAsync(command.Id, cancellationToken);
         if (court == null)
         {
             return Result.Fail("Court not found.");
         }
 
-        var reservations = await _reservationRepository.GetFutureReservationsByCourtAsync(court.Id);
+        var reservations = await _reservationRepository.GetFutureReservationsByCourtAsync(court.Id, cancellationToken);
         if (reservations.Any())
         {
             return Result.Fail("Cannot delete court with existing reservations.");
         }
 
-        await _courtRepository.RemoveAsync(court);
+        await _courtRepository.RemoveAsync(court, cancellationToken);
         return Result.Ok();
     }
 }

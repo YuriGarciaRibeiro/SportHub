@@ -31,13 +31,13 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtRe
 
     public async Task<Result<GetCourtResponse>> Handle(CreateCourtCommand request, CancellationToken cancellationToken)
     {
-        var establishmentResult = await _establishmentRepository.GetByIdAsync(request.EstablishmentId);
+        var establishmentResult = await _establishmentRepository.GetByIdAsync(request.EstablishmentId, cancellationToken);
         if (establishmentResult == null)
         {
             return Result.Fail("Establishment not found.");
         }
 
-        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Court.Sports);
+        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Court.Sports, cancellationToken);
 
         _logger.LogInformation($"Creating court for establishment: {request.Court.Name} in {establishmentResult.Name}");
         var court = new Domain.Entities.Court
@@ -53,7 +53,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtRe
             Sports = sports.ToList()
         };
 
-        await _courtsRepository.AddAsync(court);
+        await _courtsRepository.AddAsync(court, cancellationToken);
 
         var courtResponse = new GetCourtResponse
         {

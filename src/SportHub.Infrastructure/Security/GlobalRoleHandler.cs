@@ -30,7 +30,7 @@ public class GlobalRoleHandler : AuthorizationHandler<GlobalRoleRequirement>
             return;
         }
 
-        var hasRole = await _svc.HasRoleAnywhereAsync(userId, requirement.RequiredRole);
+        var hasRole = await _svc.HasRoleAnywhereAsync(userId, requirement.RequiredRole, CancellationToken.None);
         if (hasRole)
         {
             _logger.LogInformation($"User has global role: {requirement.RequiredRole}");

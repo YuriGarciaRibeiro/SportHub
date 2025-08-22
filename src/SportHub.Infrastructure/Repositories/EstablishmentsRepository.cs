@@ -14,7 +14,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         _dbContext = dbContext;
     }
 
-    public async Task<List<Establishment>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids)
+    public async Task<List<Establishment>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         return await _dbContext.Establishments
             .Where(e => ids.Contains(e.Id))
@@ -24,15 +24,15 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .Include(e => e.Sports)
             .AsSplitQuery()
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public Task<Establishment?> GetByIdWithAddressAsync(Guid id)
+    public Task<Establishment?> GetByIdWithAddressAsync(Guid id, CancellationToken cancellationToken)
     {
         return _dbContext.Establishments
             .Where(e => e.Id == id)
             .Include(e => e.Address)
-            .SingleOrDefaultAsync();
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken)
@@ -90,12 +90,12 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<User>> GetUsersByEstablishmentId(Guid establishmentId)
+    public async Task<List<User>> GetUsersByEstablishmentId(Guid establishmentId, CancellationToken cancellationToken)
     {
         return await _context.EstablishmentUsers
             .Where(eu => eu.EstablishmentId == establishmentId)
-            .Include(eu => eu.User) 
-            .Select(eu => eu.User)  
-            .ToListAsync();
+            .Include(eu => eu.User)
+            .Select(eu => eu.User)
+            .ToListAsync(cancellationToken);
     }
 }
