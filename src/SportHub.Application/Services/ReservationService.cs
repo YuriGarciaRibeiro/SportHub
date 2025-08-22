@@ -1,20 +1,26 @@
+using Application.Common.Enums;
 using Application.Common.Errors;
-using Application.Common.Interfaces;
+using Application.Services;
 using Domain.Entities;
 
-public class ReservationService : IReservationService
+public class ReservationService : BaseService<Reservation>, IReservationService
 {
     private readonly IReservationRepository _reservationRepository;
     private readonly ICourtsRepository _courtRepository;
 
-    public ReservationService(IReservationRepository reservationRepository, ICourtsRepository courtRepository)
+    public ReservationService(IReservationRepository reservationRepository, ICourtsRepository courtRepository, ICacheService cacheService)
+        : base(reservationRepository, cacheService)
     {
         _reservationRepository = reservationRepository;
         _courtRepository = courtRepository;
     }
 
-    public async Task<Result<List<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
     {
+        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "availableSlots", courtId, day);
+        var cached = await _cache.GetAsync<IEnumerable<DateTime>>(key, cancellationToken);
+        if (cached != null) return Result.Ok(cached);
+
         var court = await _courtRepository.GetByIdAsync(courtId, cancellationToken);
         if (court == null) return Result.Fail(new NotFound("Court not found"));
 
@@ -83,8 +89,11 @@ public class ReservationService : IReservationService
         };
 
         await _reservationRepository.AddAsync(reservation, cancellationToken);
+
+        var day = startUtc.Date;
+        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "availableSlots", court.Id, day);
+        await _cache.RemoveAsync(key, cancellationToken);
+
         return Result.Ok(reservation.Id);
     }
-
-
 }

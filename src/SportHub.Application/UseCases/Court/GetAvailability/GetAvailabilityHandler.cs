@@ -18,13 +18,7 @@ public class GetAvailabilityHandler : IQueryHandler<GetAvailabilityQuery, GetAva
     }
 
     public async Task<Result<GetAvailabilityResponse>> Handle(GetAvailabilityQuery request, CancellationToken cancellationToken)
-    {   
-        var cacheKey = cacheService.GenerateCacheKey(CacheKeyPrefix.GetAvailability, request.CourtId, request.Date.ToString("yyyy-MM-dd"));
-        var cachedResponse = await cacheService.GetAsync<GetAvailabilityResponse>(cacheKey, cancellationToken);
-        if (cachedResponse != null)
-        {
-            return Result.Ok(cachedResponse);
-        }
+    {
 
         var availableSlots = await reservationService.GetAvailableSlotsAsync(request.CourtId, request.Date, cancellationToken);
         if (availableSlots.IsFailed)
@@ -37,8 +31,7 @@ public class GetAvailabilityHandler : IQueryHandler<GetAvailabilityQuery, GetAva
             Date = request.Date,
             AvailableSlotsUtc = availableSlots.Value
         };
-
-        await cacheService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(30), cancellationToken);
+        
         return Result.Ok(response);
     }
 }

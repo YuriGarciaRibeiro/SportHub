@@ -6,5 +6,5 @@ public class GetAvailabilityResponse
 {
     public DateTime Date { get; set; }
 
-    public List<DateTime> AvailableSlotsUtc { get; set; } = new();
+    public IEnumerable<DateTime> AvailableSlotsUtc { get; set; } = new List<DateTime>();
 }

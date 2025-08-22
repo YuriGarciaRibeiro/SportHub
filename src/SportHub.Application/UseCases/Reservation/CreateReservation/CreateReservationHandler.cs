@@ -50,9 +50,6 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
 
         _logger.LogInformation($"Reservation created successfully for Court ID {request.CourtId} by User ID {userId}.");
 
-        var cacheKey = _cacheService.GenerateCacheKey(CacheKeyPrefix.GetAvailability, request.CourtId, request.Reservation.StartTime.ToString("yyyy-MM-dd"));
-        await _cacheService.RemoveAsync(cacheKey, cancellationToken);
-
         return Result.Ok(new CreateReservationResponse
         {
             ReservationId = reservationResult.Value
