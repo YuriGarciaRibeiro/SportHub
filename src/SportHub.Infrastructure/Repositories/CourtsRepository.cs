@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.QueryFilters;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -22,5 +23,37 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
             .AsSplitQuery()
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Court>> GetByFilterAsync(CourtQueryFilter filter)
+    {
+        var query = _dbContext.Courts.AsQueryable();
+
+        if (!string.IsNullOrEmpty(filter.Name))
+        {
+            query = query.Where(c => c.Name.Contains(filter.Name));
+        }
+
+        if (filter.OpeningTime.HasValue)
+        {
+            query = query.Where(c => c.OpeningTime == filter.OpeningTime.Value);
+        }
+
+        if (filter.ClosingTime.HasValue)
+        {
+            query = query.Where(c => c.ClosingTime == filter.ClosingTime.Value);
+        }
+
+        if (filter.SportIds != null && filter.SportIds.Any())
+        {
+            query = query.Where(c => c.Sports.Any(s => filter.SportIds.Contains(s.Id)));
+        }
+
+        return await query
+                    .Include(c => c.Sports)
+                    .Include(c => c.Establishment)
+                    .AsSplitQuery()
+                    .AsNoTracking()
+                    .ToListAsync();
     }
 }

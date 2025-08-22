@@ -1,5 +1,7 @@
+using Application.Common.QueryFilters;
 using Application.Security;
 using Application.UseCases.Court.GetAvailability;
+using Application.UseCases.Court.GetCourts;
 using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Reservations.CreateReservation;
 using MediatR;
@@ -14,6 +16,23 @@ public static class CourtsEndpoints
     {
         var group = routes.MapGroup("/courts")
             .WithTags("Courts");
+
+        group.MapGet("/", async (ISender sender, [AsParameters] CourtQueryFilter filter) =>
+        {
+            var query = new GetCourtsQuery
+            {
+                Filter = filter
+            };
+
+            var result = await sender.Send(query);
+
+            return result.ToIResult();
+        })
+        .WithName("GetCourts")
+        .WithSummary("Get a list of courts")
+        .WithDescription("Returns a list of courts based on the provided filter.")
+        .Produces<GetCourtsResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
 
         group.MapGet("/{courtId}/availability/{date:datetime}", async (
             ISender sender,
