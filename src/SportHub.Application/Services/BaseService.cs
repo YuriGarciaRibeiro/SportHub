@@ -26,25 +26,25 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
     protected virtual string CacheKeyAll() =>
         _cache is null ? string.Empty : _cache.GenerateCacheKey(CacheKeyPrefix.EntityAll, typeof(T).Name);
 
-    public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public virtual async Task<T?> GetByIdAsync(Guid id, TimeSpan? ttl = null, CancellationToken ct = default)
     {
         
         var key = CacheKeyById(id);
         var cached = await _cache.GetAsync<T>(key, ct);
         if (cached is not null) return cached;
         var entity = await _repo.GetByIdAsync(id, ct);
-        if (entity is not null) await _cache.SetAsync(key, entity, DefaultTtl, ct);
+        if (entity is not null) await _cache.SetAsync(key, entity, ttl ?? DefaultTtl, ct);
         return entity;
     }
 
-    public virtual async Task<List<T>> GetAllAsync(CancellationToken ct = default)
+    public virtual async Task<List<T>> GetAllAsync(TimeSpan? ttl = null, CancellationToken ct = default)
     {
         
         var key = CacheKeyAll();
         var cached = await _cache.GetAsync<List<T>>(key, ct);
         if (cached is not null) return cached;
         var list = await _repo.GetAllAsync(ct);
-        await _cache.SetAsync(key, list, DefaultTtl, ct);
+        await _cache.SetAsync(key, list, ttl ?? DefaultTtl, ct);
         return list;
         
     }
