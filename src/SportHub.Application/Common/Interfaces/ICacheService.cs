@@ -8,5 +8,5 @@ public interface ICacheService
     Task SetAsync<T>(string key, T value, TimeSpan? absoluteExpiration = null, CancellationToken cancellationToken = default) where T : class;
     Task RemoveAsync(string key, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default);
-    string GenerateCacheKey(CacheKeyPrefix prefix, params object[] args);
+    string GenerateCacheKey(string prefix, params object[] args);
 }
