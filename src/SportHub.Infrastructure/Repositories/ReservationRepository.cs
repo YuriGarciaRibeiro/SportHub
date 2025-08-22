@@ -28,10 +28,24 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
             .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc, cancellationToken);
     }
 
-    public Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
+    public async Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
     {
-        return _dbContext.Reservations
+        return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc > DateTime.UtcNow)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> IsReservationOwnerAsync(Guid reservationId, Guid userId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Reservations
+            .AnyAsync(r => r.Id == reservationId && r.UserId == userId, cancellationToken);
+    }
+
+    public async Task<Guid?> GetEstablishmentIdByReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Reservations
+            .Where(r => r.Id == reservationId)
+            .Select(r => r.Court.EstablishmentId)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

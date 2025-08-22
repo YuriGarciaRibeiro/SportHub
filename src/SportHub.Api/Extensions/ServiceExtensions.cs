@@ -39,6 +39,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IReservationService, ReservationService>();
         builder.Services.AddScoped<ICacheService, CacheService>();
+        builder.Services.AddScoped<IAuthorizationHandler, ReservationOwnerHandler>();
         return builder;
     }
 
@@ -143,6 +144,10 @@ public static class ServiceExtensions
 
             options.AddPolicy(PolicyNames.IsEstablishmentOwner, policy =>
                 policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Owner)));
+
+            options.AddPolicy(PolicyNames.IsReservationOwner, policy =>
+                policy.Requirements.Add(new ReservationOwnerRequirement()));
+
         });
 
         return builder;

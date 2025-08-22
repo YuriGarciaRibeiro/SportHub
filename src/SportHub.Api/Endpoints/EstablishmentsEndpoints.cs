@@ -12,7 +12,6 @@ using Application.UseCases.Establishments.GetEstablishmentUsers;
 using Application.UseCases.Establishments.UpdateEstablishment;
 using Application.UseCases.Establishments.UpdateEstablishmentUserRole;
 using Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
-using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;

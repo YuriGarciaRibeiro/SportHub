@@ -42,6 +42,15 @@ public class ReservationService : IReservationService
         return slots;
     }
 
+    public Task<Guid?> GetEstablishmentIdByReservationAsync(Guid reservationId, CancellationToken cancellationToken)
+    {
+        return _reservationRepository.GetEstablishmentIdByReservationAsync(reservationId, cancellationToken);
+    }
+
+    public Task<bool> IsReservationOwnerAsync(Guid reservationId, Guid userId, CancellationToken cancellationToken)
+    {
+        return _reservationRepository.IsReservationOwnerAsync(reservationId, userId, cancellationToken);
+    }
 
     public async Task<Result<Guid>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc, CancellationToken cancellationToken)
     {
