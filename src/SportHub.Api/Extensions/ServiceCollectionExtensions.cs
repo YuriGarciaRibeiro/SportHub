@@ -4,6 +4,7 @@ using Api.Extensions.Configuration;
 using Api.Extensions.Database;
 using Api.Extensions.DependencyInjection;
 using Api.Extensions.MediatR;
+using Api.Extensions.Security;
 
 namespace Api.Extensions;
 
@@ -38,6 +39,9 @@ public static class ServiceCollectionExtensions
         builder.AddAuthentication();
         builder.AddAuthorization();
 
+        // Segurança
+        builder.AddRateLimit();
+
         // Seeders
         builder.AddSeeders();
 
@@ -54,6 +58,9 @@ public static class ServiceCollectionExtensions
 
         // Middlewares
         app.UseCustomMiddlewares();
+
+        // Rate Limiting (deve vir antes dos endpoints)
+        app.UseRateLimit();
 
         // Endpoints
         app.UseApiEndpoints();
