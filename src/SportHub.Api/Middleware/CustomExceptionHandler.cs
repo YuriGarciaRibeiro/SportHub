@@ -6,7 +6,7 @@ using Npgsql;
 
 namespace Api.Middleware;
 
-public class CustomExceptionHandler(ILogger<CustomExceptionHandler> logger) : IExceptionHandler
+public class CustomExceptionHandler(ILogger<CustomExceptionHandler> logger, IWebHostEnvironment env) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
@@ -26,7 +26,7 @@ public class CustomExceptionHandler(ILogger<CustomExceptionHandler> logger) : IE
                 StatusCodes.Status400BadRequest
             ),
             _ => (
-                exception.Message,
+                env.IsDevelopment() ? exception.Message : "An unexpected error occurred.",
                 "Internal Server Error",
                 StatusCodes.Status500InternalServerError
             )
