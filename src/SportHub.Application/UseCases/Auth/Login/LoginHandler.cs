@@ -6,23 +6,23 @@ namespace Application.UseCases.Auth.Login;
 
 public class LoginHandler : ICommandHandler<LoginCommand, AuthResponse>
 {
-    private readonly IUsersRepository _usersRepository;
+    private readonly IUserService _userService;
     private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
 
     public LoginHandler(
-        IUsersRepository usersRepository,
+        IUserService userService,
         IPasswordService passwordService,
         IJwtService jwtService)
     {
-        _usersRepository = usersRepository;
+        _userService = userService;
         _passwordService = passwordService;
         _jwtService = jwtService;
     }
 
     public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await _usersRepository.GetByEmailAsync(request.Email, cancellationToken);
+        var user = await _userService.GetUserByEmailAsync(request.Email, cancellationToken);
         if (user is null || !user.IsActive)
             return Result.Fail(new Unauthorized("Invalid credentials."));
 
@@ -33,7 +33,7 @@ public class LoginHandler : ICommandHandler<LoginCommand, AuthResponse>
             return Result.Fail(new Conflict("User account is deleted."));
 
         user.LastLoginAt = DateTime.UtcNow;
-        await _usersRepository.UpdateAsync(user, cancellationToken);
+        await _userService.UpdateAsync(user, cancellationToken);
 
         var (token, expiresAt) = _jwtService.GenerateToken(
             user.Id,

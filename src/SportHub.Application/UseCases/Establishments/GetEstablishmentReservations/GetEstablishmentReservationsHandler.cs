@@ -5,20 +5,20 @@ namespace Application.UseCases.Establishments.GetEstablishmentReservations;
 
 public class GetEstablishmentReservationsHandler : IQueryHandler<GetEstablishmentReservationsQuery, GetEstablishmentReservationsResponse>
 {
-    private readonly IEstablishmentsRepository _establishmentRepository;
-    private readonly ICourtsRepository _courtsRepository;
+    private readonly IEstablishmentService _establishmentService;
+    private readonly ICourtService _courtService;
 
-    public GetEstablishmentReservationsHandler(IEstablishmentsRepository establishmentRepository, ICourtsRepository courtsRepository)
+    public GetEstablishmentReservationsHandler(IEstablishmentService establishmentService, ICourtService courtService)
     {
-        _establishmentRepository = establishmentRepository;
-        _courtsRepository = courtsRepository;
+        _establishmentService = establishmentService;
+        _courtService = courtService;
     }
 
     public async Task<Result<GetEstablishmentReservationsResponse>> Handle(GetEstablishmentReservationsQuery request, CancellationToken cancellationToken)
     {
-        var courtIds = await _courtsRepository.GetCourtIdsByEstablishmentIdAsync(request.EstablishmentId, cancellationToken);
+        var courtIds = await _courtService.GetCourtIdsByEstablishmentIdAsync(request.EstablishmentId, cancellationToken);
 
-        var reservations = await _establishmentRepository.GetReservationsByCourtsIdAsync(courtIds, request.Filter, cancellationToken);
+        var reservations = await _establishmentService.GetReservationsByCourtsIdAsync(courtIds, request.Filter, cancellationToken);
 
         var response = new GetEstablishmentReservationsResponse
         {

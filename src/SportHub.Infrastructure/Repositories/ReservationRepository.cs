@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.QueryFilters;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -47,5 +48,35 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
             .Where(r => r.Id == reservationId)
             .Select(r => r.Court.EstablishmentId)
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
+    {
+        var query = _dbContext.Reservations.AsQueryable();
+
+        if (courtIds != null && courtIds.Any())
+        {
+            query = query.Where(r => courtIds.Contains(r.CourtId));
+        }
+
+        if (filter != null)
+        {
+            if (filter.StartTime.HasValue)
+            {
+                query = query.Where(r => r.StartTimeUtc >= filter.StartTime.Value);
+            }
+
+            if (filter.EndTime.HasValue)
+            {
+                query = query.Where(r => r.EndTimeUtc <= filter.EndTime.Value);
+            }
+
+            if (filter.UserId.HasValue)
+            {
+                query = query.Where(r => r.UserId == filter.UserId.Value);
+            }
+        }
+
+        return query.ToListAsync(ct);
     }
 }

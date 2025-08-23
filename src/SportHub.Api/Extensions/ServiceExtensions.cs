@@ -31,9 +31,13 @@ public static class ServiceExtensions
     {
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-        builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IUserService, Application.Services.UserService>();
         builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
         builder.Services.AddScoped<IEstablishmentRoleService, EstablishmentRoleService>();
+        builder.Services.AddScoped<IEstablishmentUserService, EstablishmentUserService>();
+        builder.Services.AddScoped<ICourtService, CourtService>();
+        builder.Services.AddScoped<ISportService, SportService>();
+        builder.Services.AddScoped<IEvaluationService, EvaluationService>();
         builder.Services.AddScoped<IAuthorizationHandler, EstablishmentHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, GlobalRoleHandler>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
@@ -51,6 +55,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<ICourtsRepository, CourtsRepository>();
         builder.Services.AddScoped<ISportsRepository, SportsRepository>();
         builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+        builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
 
         return builder;
     }

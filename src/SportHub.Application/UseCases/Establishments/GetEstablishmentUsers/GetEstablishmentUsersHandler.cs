@@ -6,23 +6,22 @@ namespace Application.UseCases.Establishments.GetEstablishmentUsers;
 
 public class GetEstablishmentUsersHandler : IQueryHandler<GetEstablishmentUsersQuery, GetEstablishmentUsersResponse>
 {
+    private readonly IEstablishmentService _establishmentService;
 
-    private readonly IEstablishmentsRepository _establishmentRepository;
-
-    public GetEstablishmentUsersHandler(IEstablishmentsRepository establishmentRepository)
+    public GetEstablishmentUsersHandler(IEstablishmentService establishmentService)
     {
-        _establishmentRepository = establishmentRepository;
+        _establishmentService = establishmentService;
     }
 
     public async Task<Result<GetEstablishmentUsersResponse>> Handle(GetEstablishmentUsersQuery request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentRepository.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));
         }
 
-        var users = await _establishmentRepository.GetUsersByEstablishmentId(request.EstablishmentId, cancellationToken);
+        var users = await _establishmentService.GetUsersByEstablishmentIdAsync(request.EstablishmentId, cancellationToken);
 
         var response = new GetEstablishmentUsersResponse
         {

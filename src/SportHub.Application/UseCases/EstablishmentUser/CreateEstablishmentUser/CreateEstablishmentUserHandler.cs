@@ -7,18 +7,18 @@ namespace Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 
 public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmentUserCommand, CreateEstablishmentUserResponse>
 {
-    private readonly IEstablishmentUsersRepository _repository;
+    private readonly IEstablishmentUserService _establishmentUserService;
     private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IEstablishmentRoleService _establishmentRoleService;
 
     public CreateEstablishmentUserHandler(
-        IEstablishmentUsersRepository repository, 
+        IEstablishmentUserService establishmentUserService, 
         IUserService userService,
         ICurrentUserService currentUserService,
         IEstablishmentRoleService establishmentRoleService)
     {
-        _repository = repository;
+        _establishmentUserService = establishmentUserService;
         _userService = userService;
         _currentUserService = currentUserService;
         _establishmentRoleService = establishmentRoleService;
@@ -46,7 +46,7 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
             Role = user.Role
         }).ToList();
 
-        await _repository.AddManyAsync(establishmentUsers, cancellationToken);
+        await _establishmentUserService.AddManyAsync(establishmentUsers, cancellationToken);
 
         foreach( var user in users.Value)
         {

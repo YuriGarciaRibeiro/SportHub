@@ -9,32 +9,32 @@ namespace Application.UseCases.Establishments.CreateEstablishment;
 
 public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCommand, string>
 {
-    private readonly IEstablishmentsRepository _establishmentRepository;
-    private readonly IEstablishmentUsersRepository _establishmentUsersRepository;
+    private readonly IEstablishmentService _establishmentService;
+    private readonly IEstablishmentUserService _establishmentUserService;
     private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUser;
-    private readonly ISportsRepository _sportsRepository;
+    private readonly ISportService _sportService;
     private readonly ILogger<CreateEstablishmentHandler> _logger;
 
     public CreateEstablishmentHandler(
-        IEstablishmentsRepository establishmentRepository,
-        IEstablishmentUsersRepository establishmentUsersRepository,
+        IEstablishmentService establishmentService,
+        IEstablishmentUserService establishmentUserService,
         IUserService userService,
         ICurrentUserService currentUser,
         ILogger<CreateEstablishmentHandler> logger,
-        ISportsRepository sportsRepository)
+        ISportService sportService)
     {
         _logger = logger;
         _currentUser = currentUser;
-        _establishmentRepository = establishmentRepository;
-        _establishmentUsersRepository = establishmentUsersRepository;
-        _sportsRepository = sportsRepository;
+        _establishmentService = establishmentService;
+        _establishmentUserService = establishmentUserService;
+        _sportService = sportService;
         _userService = userService;
     }
 
     public async Task<Result<string>> Handle(CreateEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Sports, cancellationToken);
+        var sports = await _sportService.GetSportsByIdsAsync(request.Sports, cancellationToken);
 
         var address = new Address(
             request.Street,
@@ -66,8 +66,8 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
             Role = EstablishmentRole.Owner,
         };
 
-        await _establishmentRepository.AddAsync(establishment, cancellationToken);
-        await _establishmentUsersRepository.AddAsync(newEstablishmentUser, cancellationToken);
+        await _establishmentService.CreateAsync(establishment, cancellationToken);
+        await _establishmentUserService.CreateAsync(newEstablishmentUser, ct: cancellationToken);
 
         var currentUser = await _userService.GetUserByIdAsync(_currentUser.UserId, cancellationToken);
         if (currentUser.Value.Role == UserRole.User)

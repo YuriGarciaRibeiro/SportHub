@@ -6,16 +6,16 @@ namespace Application.UseCases.Court.GetCourts;
 
 public class GetCourtsHandler : ICommandHandler<GetCourtsQuery, GetCourtsResponse>
 {
-    private readonly ICourtsRepository _courtRepository;
+    private readonly ICourtService _courtService;
 
-    public GetCourtsHandler(ICourtsRepository courtRepository)
+    public GetCourtsHandler(ICourtService courtService)
     {
-        _courtRepository = courtRepository;
+        _courtService = courtService;
     }
 
     public async Task<Result<GetCourtsResponse>> Handle(GetCourtsQuery request, CancellationToken cancellationToken)
     {
-        var courts = await _courtRepository.GetByFilterAsync(request.Filter, cancellationToken);
+        var courts = await _courtService.GetByFilterAsync(request.Filter, cancellationToken);
         var courtDtos = courts.Select(c => new CourtDto
         {
             Id = c.Id,

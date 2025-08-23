@@ -6,16 +6,16 @@ namespace Application.UseCases.Establishments.DeleteEstablishment;
 
 public class DeleteEstablishmentHandler : ICommandHandler<DeleteEstablishmentCommand>
 {
-    private readonly IEstablishmentsRepository _repository;
+    private readonly IEstablishmentService _establishmentService;
 
-    public DeleteEstablishmentHandler(IEstablishmentsRepository repository)
+    public DeleteEstablishmentHandler(IEstablishmentService establishmentService)
     {
-        _repository = repository;
+        _establishmentService = establishmentService;
     }
 
     public async Task<Result> Handle(DeleteEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var establishment = await _repository.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));
@@ -25,7 +25,7 @@ public class DeleteEstablishmentHandler : ICommandHandler<DeleteEstablishmentCom
             return Result.Fail(new Conflict("Establishment is already deleted."));
         }
 
-        await _repository.RemoveAsync(establishment, cancellationToken);
+        await _establishmentService.DeleteAsync(establishment.Id, cancellationToken);
 
         return Result.Ok();
     }

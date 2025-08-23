@@ -6,38 +6,38 @@ namespace Application.UseCases.Court.CreateCourt;
 
 public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtResponse>
 {
-    private readonly IEstablishmentsRepository _establishmentRepository;
-    private readonly ICourtsRepository _courtsRepository;
+    private readonly IEstablishmentService _establishmentService;
+    private readonly ICourtService _courtService;
     private readonly ICurrentUserService _currentUser;
     private readonly IEstablishmentRoleService _establishmentRoleService;
     private readonly ILogger<CreateCourtHandler> _logger;
-    private readonly ISportsRepository _sportsRepository;
+    private readonly ISportService _sportService;
 
     public CreateCourtHandler(
-        IEstablishmentsRepository establishmentRepository,
-        ICourtsRepository courtsRepository,
+        IEstablishmentService establishmentService,
+        ICourtService courtService,
         ICurrentUserService currentUser,
         IEstablishmentRoleService establishmentRoleService,
-        ISportsRepository sportsRepository,
+        ISportService sportService,
         ILogger<CreateCourtHandler> logger)
     {
-        _establishmentRepository = establishmentRepository;
-        _courtsRepository = courtsRepository;
+        _establishmentService = establishmentService;
+        _courtService = courtService;
         _currentUser = currentUser;
         _establishmentRoleService = establishmentRoleService;
-        _sportsRepository = sportsRepository;
+        _sportService = sportService;
         _logger = logger;
     }
 
     public async Task<Result<GetCourtResponse>> Handle(CreateCourtCommand request, CancellationToken cancellationToken)
     {
-        var establishmentResult = await _establishmentRepository.GetByIdAsync(request.EstablishmentId, cancellationToken);
+        var establishmentResult = await _establishmentService.GetByIdAsync(request.EstablishmentId, ct: cancellationToken);
         if (establishmentResult == null)
         {
             return Result.Fail("Establishment not found.");
         }
 
-        var sports = await _sportsRepository.GetSportsByIdsAsync(request.Court.Sports, cancellationToken);
+        var sports = await _sportService.GetSportsByIdsAsync(request.Court.Sports, cancellationToken);
 
         _logger.LogInformation($"Creating court for establishment: {request.Court.Name} in {establishmentResult.Name}");
         var court = new Domain.Entities.Court
@@ -53,7 +53,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtRe
             Sports = sports.ToList()
         };
 
-        await _courtsRepository.AddAsync(court, cancellationToken);
+        await _courtService.CreateAsync(court, cancellationToken);
 
         var courtResponse = new GetCourtResponse
         {

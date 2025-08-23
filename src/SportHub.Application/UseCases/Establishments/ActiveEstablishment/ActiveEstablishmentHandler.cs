@@ -6,16 +6,16 @@ namespace Application.UseCases.Establishments.ActiveEstablishment;
 
 public class ActiveEstablishmentHandler : ICommandHandler<ActiveEstablishmentCommand>
 {
-    private readonly IEstablishmentsRepository _establishmentsRepository;
+    private readonly IEstablishmentService _establishmentService;
 
-    public ActiveEstablishmentHandler(IEstablishmentsRepository establishmentsRepository)
+    public ActiveEstablishmentHandler(IEstablishmentService establishmentService)
     {
-        _establishmentsRepository = establishmentsRepository;
+        _establishmentService = establishmentService;
     }
 
     public async Task<Result> Handle(ActiveEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentsRepository.GetByIdWithAddressAsync(request.UserId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdWithAddressAsync(request.UserId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));
@@ -27,7 +27,7 @@ public class ActiveEstablishmentHandler : ICommandHandler<ActiveEstablishmentCom
         }
 
         establishment.Restore();
-        await _establishmentsRepository.UpdateAsync(establishment, cancellationToken);
+        await _establishmentService.UpdateAsync(establishment, cancellationToken);
 
         return Result.Ok();
     }

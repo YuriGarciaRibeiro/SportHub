@@ -11,14 +11,14 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
 {
     private readonly IReservationService _reservationService;
     private readonly ICurrentUserService _currentUserService;
-    private readonly ICourtsRepository _courtsRepository;
+    private readonly ICourtService _courtService;
     private readonly ICacheService _cacheService;
     private readonly ILogger<CreateReservationHandler> _logger;
 
-    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtsRepository courtsRepository, ICacheService cacheService, ILogger<CreateReservationHandler> logger)
+    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtService courtService, ICacheService cacheService, ILogger<CreateReservationHandler> logger)
     {
         _logger = logger;
-        _courtsRepository = courtsRepository;
+        _courtService = courtService;
         _currentUserService = currentUserService;
         _reservationService = reservationService;
         _cacheService = cacheService;
@@ -28,7 +28,7 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
     {
         var userId = _currentUserService.UserId;
         
-        var court = await _courtsRepository.GetByIdAsync(request.CourtId, cancellationToken);
+        var court = await _courtService.GetByIdAsync(request.CourtId, ct: cancellationToken);
         if (court == null)
         {
             _logger.LogWarning($"Court with ID {request.CourtId} not found.");

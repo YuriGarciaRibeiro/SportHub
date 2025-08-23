@@ -1,5 +1,6 @@
 // Application/Services/BaseService.cs
 using Application.Common.Enums;
+using Application.Common.Interfaces;
 using Domain.Common;
 
 namespace Application.Services;

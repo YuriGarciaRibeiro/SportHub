@@ -5,13 +5,13 @@ namespace Application.UseCases.Court.GetCourtsByEstablishmentId;
 
 public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByEstablishmentIdQuery, GetCourtsByEstablishmentIdResponse>
 {
-    private readonly ICourtsRepository _courtsRepository;
+    private readonly ICourtService _courtService;
     private readonly IEstablishmentService _establishmentService;
     private readonly ILogger<GetCourtsByEstablishmentIdQueryHandler> _logger;
 
-    public GetCourtsByEstablishmentIdQueryHandler(ICourtsRepository courtsRepository, ILogger<GetCourtsByEstablishmentIdQueryHandler> logger, IEstablishmentService establishmentService)
+    public GetCourtsByEstablishmentIdQueryHandler(ICourtService courtService, ILogger<GetCourtsByEstablishmentIdQueryHandler> logger, IEstablishmentService establishmentService)
     {
-        _courtsRepository = courtsRepository;
+        _courtService = courtService;
         _logger = logger;
         _establishmentService = establishmentService;
     }
@@ -19,14 +19,14 @@ public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByE
     public async Task<Result<GetCourtsByEstablishmentIdResponse>> Handle(GetCourtsByEstablishmentIdQuery request, CancellationToken cancellationToken)
     {
 
-        var establishment = await _establishmentService.GetByIdAsync(request.EstablishmentId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdAsync(request.EstablishmentId, ct: cancellationToken);
         if (establishment == null)
         {
             _logger.LogWarning("Establishment with ID {EstablishmentId} not found.", request.EstablishmentId);
             return Result.Fail(new NotFound($"Establishment with ID {request.EstablishmentId} not found."));
         }
 
-        var courts = await _courtsRepository.GetByEstablishmentIdAsync(request.EstablishmentId, cancellationToken);
+        var courts = await _courtService.GetCourtsByEstablishmentIdAsync(request.EstablishmentId, cancellationToken);
 
         var response = new GetCourtsByEstablishmentIdResponse
         {

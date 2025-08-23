@@ -8,23 +8,23 @@ namespace Application.UseCases.Auth.Register;
 
 public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResponse>
 {
-    private readonly IUsersRepository _usersRepository;
+    private readonly IUserService _userService;
     private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
 
     public RegisterUserHandler(
-        IUsersRepository usersRepository,
+        IUserService userService,
         IPasswordService passwordService,
         IJwtService jwtService)
     {
-        _usersRepository = usersRepository;
+        _userService = userService;
         _passwordService = passwordService;
         _jwtService = jwtService;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        if (await _usersRepository.EmailExistsAsync(request.Email, cancellationToken))
+        if (await _userService.EmailExistsAsync(request.Email, cancellationToken))
             return Result.Fail(new Conflict($"E-mail '{request.Email}' is already in use."));
 
         if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
@@ -44,7 +44,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
             IsActive = true
         };
 
-        await _usersRepository.AddAsync(user, cancellationToken);
+        await _userService.CreateAsync(user, cancellationToken);
 
         var (token, expiresAt) = _jwtService.GenerateToken(
             user.Id, user.FullName, user.Role.ToString(), user.Email);

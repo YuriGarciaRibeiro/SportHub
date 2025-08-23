@@ -1,5 +1,6 @@
 using Application.Common.Enums;
 using Application.Common.Errors;
+using Application.Common.QueryFilters;
 using Application.Services;
 using Domain.Entities;
 
@@ -95,5 +96,29 @@ public class ReservationService : BaseService<Reservation>, IReservationService
         await _cache.RemoveAsync(key, cancellationToken);
 
         return Result.Ok(reservation.Id);
+    }
+
+    public async Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
+    {
+        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "futureByCourt", courtId);
+        var cached = await _cache.GetAsync<List<Reservation>>(key, cancellationToken);
+        if (cached is not null) return cached;
+
+        var reservations = await _reservationRepository.GetFutureReservationsByCourtAsync(courtId, cancellationToken);
+        var reservationsList = reservations.ToList();
+        await _cache.SetAsync(key, reservationsList, TimeSpan.FromMinutes(5), cancellationToken);
+        
+        return reservationsList;
+    }
+
+    public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
+    {
+        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "byCourtsId", string.Join(",", courtIds), filter);
+        var cached = await _cache.GetAsync<List<Reservation>>(key, ct);
+        if (cached is not null) return cached;
+
+        var reservations = await _reservationRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
+        await _cache.SetAsync(key, reservations, TimeSpan.FromMinutes(5), ct);
+        return reservations;
     }
 }

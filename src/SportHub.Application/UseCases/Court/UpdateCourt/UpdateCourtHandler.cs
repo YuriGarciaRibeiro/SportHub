@@ -6,18 +6,18 @@ namespace Application.UseCases.Court.UpdateCourt;
 
 public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCourtResponse>
 {
-    private readonly ICourtsRepository _courtRepository;
-    private readonly ISportsRepository _sportRepository;
+    private readonly ICourtService _courtService;
+    private readonly ISportService _sportService;
 
-    public UpdateCourtHandler(ICourtsRepository courtRepository, ISportsRepository sportRepository)
+    public UpdateCourtHandler(ICourtService courtService, ISportService sportService)
     {
-        _courtRepository = courtRepository;
-        _sportRepository = sportRepository;
+        _courtService = courtService;
+        _sportService = sportService;
     }
 
     public async Task<Result<UpdateCourtResponse>> Handle(UpdateCourtCommand request, CancellationToken cancellationToken)
     {
-        var court = await _courtRepository.GetByIdAsync(request.Id, cancellationToken);
+        var court = await _courtService.GetByIdAsync(request.Id, ct: cancellationToken);
         if (court == null)
         {
             return Result.Fail(new NotFound($"Court with ID '{request.Id}' not found."));
@@ -39,7 +39,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
 
         if (request.Request.SportIds != null)
         {
-            var sports = await _sportRepository.GetByIdsAsync(request.Request.SportIds, cancellationToken);
+            var sports = await _sportService.GetSportsByIdsAsync(request.Request.SportIds, cancellationToken);
             if (sports.Count != request.Request.SportIds.Count())
             {
                 return Result.Fail(new BadRequest("One or more specified sports do not exist."));
@@ -48,7 +48,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
             court.Sports = sports;
         }
 
-        await _courtRepository.UpdateAsync(court, cancellationToken);
+        await _courtService.UpdateAsync(court, cancellationToken);
 
         return Result.Ok(new UpdateCourtResponse
         {

@@ -6,16 +6,16 @@ namespace Application.UseCases.Court.GetCourt;
 
 public class GetCourtHandler : IQueryHandler<GetCourtQuery, GetCourtResponse>
 {   
-    private readonly ICourtsRepository _courtRepository;
+    private readonly ICourtService _courtService;
 
-    public GetCourtHandler(ICourtsRepository courtRepository)
+    public GetCourtHandler(ICourtService courtService)
     {
-        _courtRepository = courtRepository;
+        _courtService = courtService;
     }
 
     public async Task<Result<GetCourtResponse>> Handle(GetCourtQuery request, CancellationToken cancellationToken)
     {
-        var court = await _courtRepository.GetCompleteByIdAsync(request.CourtId, cancellationToken);
+        var court = await _courtService.GetCompleteByIdAsync(request.CourtId, cancellationToken);
         if (court == null)
         {
             return Result.Fail(new NotFound($"Court with ID {request.CourtId} not found."));

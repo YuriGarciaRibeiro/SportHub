@@ -6,23 +6,23 @@ namespace Application.UseCases.Establishments.UpdateEstablishmentUserRole;
 
 public class UpdateEstablishmentUserRoleHandler : ICommandHandler<UpdateEstablishmentUserRoleCommand>
 {
-    public readonly IEstablishmentUsersRepository _establishmentUsersRepository;
+    private readonly IEstablishmentUserService _establishmentUserService;
 
-    public UpdateEstablishmentUserRoleHandler(IEstablishmentUsersRepository establishmentUsersRepository)
+    public UpdateEstablishmentUserRoleHandler(IEstablishmentUserService establishmentUserService)
     {
-        _establishmentUsersRepository = establishmentUsersRepository;
+        _establishmentUserService = establishmentUserService;
     }
 
     public async Task<Result> Handle(UpdateEstablishmentUserRoleCommand request, CancellationToken cancellationToken)
     {
-        var establishmentUser = await _establishmentUsersRepository.GetAsync(request.EstablishmentId, request.UserId, cancellationToken);
+        var establishmentUser = await _establishmentUserService.GetAsync(request.UserId, request.EstablishmentId, cancellationToken);
         if (establishmentUser == null)
         {
             return Result.Fail(new NotFound("Establishment user not found."));
         }
 
         establishmentUser.Role = request.Request.Role;
-        await _establishmentUsersRepository.UpdateAsync(establishmentUser, cancellationToken);
+        await _establishmentUserService.UpdateAsync(establishmentUser, ct: cancellationToken);
 
         return Result.Ok();
     }

@@ -5,18 +5,18 @@ namespace SportHub.Application.UseCases.Auth.DeleteUser;
 
 public class DeleteUserHandler : IRequestHandler<DeleteUserCommand, Result>
 {
-    private readonly IUsersRepository _userRepository;
+    private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUserService;
 
-    public DeleteUserHandler(IUsersRepository userRepository, ICurrentUserService currentUserService)
+    public DeleteUserHandler(IUserService userService, ICurrentUserService currentUserService)
     {
         _currentUserService = currentUserService;
-        _userRepository = userRepository;
+        _userService = userService;
     }
 
     public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        var user = await _userService.GetByIdAsync(request.UserId, ct: cancellationToken);
         var currentUser = _currentUserService.UserId;
         
         if (user == null)
@@ -34,7 +34,7 @@ public class DeleteUserHandler : IRequestHandler<DeleteUserCommand, Result>
             return Result.Fail(new Conflict("User account is already deleted."));
         }
 
-        await _userRepository.RemoveAsync(user, cancellationToken);
+        await _userService.DeleteAsync(user.Id, cancellationToken);
 
         return Result.Ok();
     }

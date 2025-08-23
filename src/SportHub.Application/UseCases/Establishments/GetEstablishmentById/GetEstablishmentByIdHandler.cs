@@ -6,18 +6,18 @@ namespace Application.UseCases.Establishments.GetEstablishmentById;
 
 public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQuery, GetEstablishmentByIdResponse>
 {
-    private readonly IEstablishmentsRepository _establishmentRepository;
+    private readonly IEstablishmentService _establishmentService;
     private readonly IUserService _userService;
 
-    public GetEstablishmentByIdHandler(IEstablishmentsRepository establishmentRepository, IUserService userService)
+    public GetEstablishmentByIdHandler(IEstablishmentService establishmentService, IUserService userService)
     {
-        _establishmentRepository = establishmentRepository;
+        _establishmentService = establishmentService;
         _userService = userService;
     }
 
     public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentRepository.GetByIdAsync(request.Id, cancellationToken);
+        var establishment = await _establishmentService.GetByIdAsync(request.Id, ct: cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound($"Establishment with ID '{request.Id}' not found."));
