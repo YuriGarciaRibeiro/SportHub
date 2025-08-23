@@ -17,4 +17,7 @@ TestResults/
 *.DS_Store
 node_modules/
 coverage/
-ENDPOINTS.md
+
+# Ignorar todos os arquivos .md exceto README.md
+*.md
+!README.md
