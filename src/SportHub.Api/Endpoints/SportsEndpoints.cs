@@ -1,6 +1,6 @@
 using Application.UseCases.Sports.GetAllSports;
 using MediatR;
-using WebApi.Extensions.ResultExtensions;
+using Api.Extensions.Results;
 
 namespace SportHub.Api.Endpoints;
 

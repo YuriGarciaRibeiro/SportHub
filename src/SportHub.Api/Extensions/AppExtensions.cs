@@ -1,20 +1,27 @@
 using SportHub.Api.Endpoints;
 
-namespace WebAPI.Extensions;
+namespace Api.Extensions.Application;
 
-public static class AppExtensions
+public static class ApplicationExtensions
 {
-    public static WebApplication UseMiddlewares(this WebApplication app)
+    public static WebApplication UseCustomMiddlewares(this WebApplication app)
     {
+        app.UseExceptionHandler();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        
         return app;
     }
 
-    public static WebApplication UseEndpoints(this WebApplication app)
+    public static WebApplication UseApiEndpoints(this WebApplication app)
     {
-        app.MapAuthEndpoints();
-        app.MapEstablishmentsEndpoints();
-        app.MapSportsEndpoints();
-        app.MapCourtsEndpoints();
+        var apiGroup = app.MapGroup("/api/v1")
+            .WithOpenApi();
+
+        apiGroup.MapAuthEndpoints();
+        apiGroup.MapEstablishmentsEndpoints();
+        apiGroup.MapSportsEndpoints();
+        apiGroup.MapCourtsEndpoints();
 
         return app;
     }

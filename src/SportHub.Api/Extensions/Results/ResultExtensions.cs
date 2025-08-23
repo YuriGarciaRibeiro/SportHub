@@ -2,7 +2,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebApi.Extensions.ResultExtensions;
+namespace Api.Extensions.Results;
 
 public static class ResultExtensions
 {
@@ -18,7 +18,7 @@ public static class ResultExtensions
         if (result.IsSuccess)
         {
             var statusCode = successStatusCode ?? StatusCodes.Status200OK;
-            return Results.Json(result.Value, statusCode: statusCode);
+            return Microsoft.AspNetCore.Http.Results.Json(result.Value, statusCode: statusCode);
         }
 
         return BuildProblemResult(result.Errors);
@@ -27,7 +27,7 @@ public static class ResultExtensions
     public static IResult ToIResult(this Result result)
     {
         if (result.IsSuccess)
-            return Results.NoContent();
+            return Microsoft.AspNetCore.Http.Results.NoContent();
 
         return BuildProblemResult(result.Errors);
     }
@@ -39,10 +39,27 @@ public static class ResultExtensions
         var traceId = context?.TraceIdentifier;
 
         var firstError = errors.FirstOrDefault();
-        var statusCode = firstError?.Metadata.TryGetValue("StatusCode", out var codeObj) == true && codeObj is int code
-            ? code
-            : 400;
+        var statusCode = GetErrorStatusCode(firstError);
 
+        var problem = CreateProblemDetails(errors, statusCode, path, traceId);
+
+        return Microsoft.AspNetCore.Http.Results.Problem(
+            problem.Detail, 
+            statusCode: statusCode, 
+            title: problem.Title, 
+            extensions: problem.Extensions
+        );
+    }
+
+    private static int GetErrorStatusCode(IError? error)
+    {
+        return error?.Metadata.TryGetValue("StatusCode", out var codeObj) == true && codeObj is int code
+            ? code
+            : StatusCodes.Status400BadRequest;
+    }
+
+    private static ProblemDetails CreateProblemDetails(IReadOnlyList<IError> errors, int statusCode, string path, string? traceId)
+    {
         var problem = new ProblemDetails
         {
             Status = statusCode,
@@ -62,6 +79,6 @@ public static class ResultExtensions
             Metadata = e.Metadata
         }).ToList();
 
-        return Results.Problem(problem.Detail, statusCode: statusCode, title: problem.Title, extensions: problem.Extensions);
+        return problem;
     }
 }

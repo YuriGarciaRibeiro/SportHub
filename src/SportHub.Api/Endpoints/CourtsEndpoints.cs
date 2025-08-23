@@ -7,7 +7,7 @@ using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Reservations.CreateReservation;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Extensions.ResultExtensions;
+using Api.Extensions.Results;
 
 namespace SportHub.Api.Endpoints;
 

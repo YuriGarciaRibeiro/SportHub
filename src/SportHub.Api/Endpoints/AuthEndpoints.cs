@@ -3,7 +3,7 @@ using Application.UseCases.Auth;
 using FluentResults;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Extensions.ResultExtensions;
+using Api.Extensions.Results;
 using Application.UseCases.Auth.Login;
 
 namespace SportHub.Api.Endpoints;

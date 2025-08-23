@@ -3,7 +3,7 @@ using Application.Security;
 using Application.UseCases.Establishments.GetEstablishmentReservations;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Extensions.ResultExtensions;
+using Api.Extensions.Results;
 
 namespace SportHub.Api.Endpoints.Establishments;
 

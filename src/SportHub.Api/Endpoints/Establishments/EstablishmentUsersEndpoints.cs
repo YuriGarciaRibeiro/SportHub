@@ -4,7 +4,7 @@ using Application.UseCases.Establishments.UpdateEstablishmentUserRole;
 using Application.UseCases.EstablishmentUser.CreateEstablishmentUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Extensions.ResultExtensions;
+using Api.Extensions.Results;
 
 namespace SportHub.Api.Endpoints.Establishments;
 

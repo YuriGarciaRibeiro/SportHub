@@ -7,7 +7,7 @@ using Application.UseCases.Establishments.GetEstablishments;
 using Application.UseCases.Establishments.UpdateEstablishment;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Extensions.ResultExtensions;
+using Api.Extensions.Results;
 
 namespace SportHub.Api.Endpoints.Establishments;
 
