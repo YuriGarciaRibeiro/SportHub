@@ -1,7 +1,7 @@
 using Api.Document;
 using Api.Extensions;
 using Api.Extensions.Results;
-using Infrastructure.Services;
+using Infrastructure.Persistence.Seeders;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,14 +44,11 @@ app.UseCors("AllowAll");
 // Configura a aplicação
 app.ConfigureApplication();
 
-// Seed dos dados
+// Seed all data using the new seeding system
 using (var scope = app.Services.CreateScope())
 {
-    var userSeeder = scope.ServiceProvider.GetRequiredService<CustomUserSeeder>();
-    await userSeeder.SeedAsync();
-    
-    var sportSeeder = scope.ServiceProvider.GetRequiredService<SportSeeder>();
-    await sportSeeder.SeedAsync();
+    var dataSeederService = scope.ServiceProvider.GetRequiredService<DataSeederService>();
+    await dataSeederService.SeedAllAsync();
 }
 
 app.Run();

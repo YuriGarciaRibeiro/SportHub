@@ -1,5 +1,4 @@
 using Application.Settings;
-using Infrastructure.Services;
 using Serilog;
 
 namespace Api.Extensions.Configuration;
@@ -11,13 +10,6 @@ public static class ConfigurationExtensions
         builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
         builder.Services.Configure<AdminUserSettings>(builder.Configuration.GetSection("AdminUser"));
 
-        return builder;
-    }
-
-    public static WebApplicationBuilder AddSeeders(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddTransient<CustomUserSeeder>();
-        builder.Services.AddTransient<SportSeeder>();
         return builder;
     }
 
