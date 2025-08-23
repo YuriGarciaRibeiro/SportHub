@@ -7,7 +7,8 @@ public static class CacheKeyPrefix
     public const string EntityCreate = "EntityCreate";
     public const string EntityUpdate = "EntityUpdate";
     public const string EntityDelete = "EntityDelete";
+    public const string EntityPaged = "EntityPaged";
+    public const string EntityCount = "EntityCount";
     public const string Query = "Query";
     public const string GetAvailability = "GetAvailability";
-
 }
