@@ -22,16 +22,10 @@ public class UserService : BaseService<User>, IUserService
 
     public async Task<Result<User>> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await GetByIdAsync(userId, ct: cancellationToken);
+        var user = await GetByIdNoTrackingAsync(userId, cancellationToken);
         return user is not null 
             ? Result.Ok(user) 
             : Result.Fail(new NotFound($"User with ID {userId} not found."));
-    }
-
-    public async Task<Result<List<User>>> GetUsersByIdsAsync(List<Guid> userIds, CancellationToken cancellationToken)
-    {
-        var users = await _userRepository.GetByIdsAsync(userIds, cancellationToken);
-        return Result.Ok(users.ToList());
     }
 
     public async Task<Result<User>> AddRoleToUserAsync(Guid userId, UserRole role, CancellationToken cancellationToken)
@@ -51,7 +45,6 @@ public class UserService : BaseService<User>, IUserService
         if (user is null)
             return Result.Fail(new NotFound($"User with ID {userId} not found."));
 
-        // Remove role logic - set to default User role if removing current role
         if (user.Role == role)
             user.Role = UserRole.User;
 
@@ -59,35 +52,13 @@ public class UserService : BaseService<User>, IUserService
         return Result.Ok(user);
     }
 
-    public async Task<Result<List<User>>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
-    {
-        var users = await _userRepository.GetByIdsAsync(ids, cancellationToken);
-        return Result.Ok(users.ToList());
-    }
-
     public async Task<User?> GetUserByEmailAsync(string email, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(User), "byEmail", email);
-        var cached = await _cache.GetAsync<User>(key, ct);
-        if (cached is not null) return cached;
-
-        var user = await _userRepository.GetByEmailAsync(email, ct);
-        if (user is not null)
-            await _cache.SetAsync(key, user, DefaultTtl, ct);
-
-        return user;
+        return await _userRepository.GetByEmailAsync(email, ct);
     }
 
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(User), "emailExists", email);
-        var cached = await _cache.GetAsync<string>(key, ct);
-        if (cached is not null && bool.TryParse(cached, out var cachedResult)) 
-            return cachedResult;
-
-        var exists = await _userRepository.EmailExistsAsync(email, ct);
-        await _cache.SetAsync(key, exists.ToString(), TimeSpan.FromMinutes(10), ct); // Cache por menos tempo
-        
-        return exists;
+        return await _userRepository.EmailExistsAsync(email, ct);
     }
 }

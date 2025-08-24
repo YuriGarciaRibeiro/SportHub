@@ -19,6 +19,14 @@ public class SportsRepository : BaseRepository<Sport>, ISportsRepository
             .AnyAsync(s => EF.Functions.ILike(s.Name, name), cancellationToken);
     }
 
+    public async Task<IEnumerable<Sport>> GetByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Sports
+            .Where(s => s.Establishments.Any(e => e.Id == establishmentId))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Sport?> GetByNameAsync(string name, CancellationToken cancellationToken)
     {
         return await _dbContext.Sports

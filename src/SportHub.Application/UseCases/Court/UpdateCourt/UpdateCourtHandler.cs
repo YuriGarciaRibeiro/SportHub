@@ -39,7 +39,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
 
         if (request.Request.SportIds != null)
         {
-            var sports = await _sportService.GetSportsByIdsAsync(request.Request.SportIds, cancellationToken);
+            var sports = await _sportService.GetByIdsAsync(request.Request.SportIds, cancellationToken);
             if (sports.Count != request.Request.SportIds.Count())
             {
                 return Result.Fail(new BadRequest("One or more specified sports do not exist."));

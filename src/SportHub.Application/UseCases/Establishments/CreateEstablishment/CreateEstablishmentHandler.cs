@@ -34,7 +34,7 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
 
     public async Task<Result<string>> Handle(CreateEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var sports = await _sportService.GetSportsByIdsAsync(request.Sports, cancellationToken);
+        var sports = await _sportService.GetByIdsAsync(request.Sports, cancellationToken);
 
         var address = new Address(
             request.Street,

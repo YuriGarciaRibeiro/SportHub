@@ -1,4 +1,3 @@
-using Application.Common.Enums;
 using Application.Common.Errors;
 using Application.Common.QueryFilters;
 using Application.Services;
@@ -9,6 +8,9 @@ public class ReservationService : BaseService<Reservation>, IReservationService
     private readonly IReservationRepository _reservationRepository;
     private readonly ICourtsRepository _courtRepository;
 
+    protected override TimeSpan DefaultTtl => TimeSpan.FromMinutes(10);
+    private readonly TimeSpan _availabilityTtl = TimeSpan.FromMinutes(5);
+
     public ReservationService(IReservationRepository reservationRepository, ICourtsRepository courtRepository, ICacheService cacheService)
         : base(reservationRepository, cacheService)
     {
@@ -18,11 +20,11 @@ public class ReservationService : BaseService<Reservation>, IReservationService
 
     public async Task<Result<IEnumerable<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "availableSlots", courtId, day);
+        var key = _cache.GenerateCacheKey("AvailableSlots", $"{courtId}_{day:yyyy-MM-dd}");
         var cached = await _cache.GetAsync<IEnumerable<DateTime>>(key, cancellationToken);
         if (cached != null) return Result.Ok(cached);
 
-        var court = await _courtRepository.GetByIdAsync(courtId, cancellationToken);
+        var court = await _courtRepository.GetByIdAsNoTrackingAsync(courtId, cancellationToken);
         if (court == null) return Result.Fail(new NotFound("Court not found"));
 
         var startHour = new TimeSpan(court.OpeningTime.Hour, court.OpeningTime.Minute, court.OpeningTime.Second);
@@ -45,6 +47,8 @@ public class ReservationService : BaseService<Reservation>, IReservationService
             if (!conflict)
                 slots.Add(slotStart);
         }
+
+        await _cache.SetAsync(key, slots, _availabilityTtl, cancellationToken);
 
         return slots;
     }
@@ -92,7 +96,7 @@ public class ReservationService : BaseService<Reservation>, IReservationService
         await _reservationRepository.AddAsync(reservation, cancellationToken);
 
         var day = startUtc.Date;
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "availableSlots", court.Id, day);
+        var key = _cache.GenerateCacheKey("AvailableSlots", $"{court.Id}_{day:yyyy-MM-dd}");
         await _cache.RemoveAsync(key, cancellationToken);
 
         return Result.Ok(reservation.Id);
@@ -100,25 +104,20 @@ public class ReservationService : BaseService<Reservation>, IReservationService
 
     public async Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "futureByCourt", courtId);
+        var key = _cache.GenerateCacheKey("FutureReservations", courtId.ToString());
         var cached = await _cache.GetAsync<List<Reservation>>(key, cancellationToken);
         if (cached is not null) return cached;
 
         var reservations = await _reservationRepository.GetFutureReservationsByCourtAsync(courtId, cancellationToken);
         var reservationsList = reservations.ToList();
-        await _cache.SetAsync(key, reservationsList, TimeSpan.FromMinutes(5), cancellationToken);
+        await _cache.SetAsync(key, reservationsList, _availabilityTtl, cancellationToken);
         
         return reservationsList;
     }
 
     public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Reservation), "byCourtsId", string.Join(",", courtIds), filter);
-        var cached = await _cache.GetAsync<List<Reservation>>(key, ct);
-        if (cached is not null) return cached;
-
         var reservations = await _reservationRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
-        await _cache.SetAsync(key, reservations, TimeSpan.FromMinutes(5), ct);
-        return reservations;
+        return reservations.ToList();
     }
 }

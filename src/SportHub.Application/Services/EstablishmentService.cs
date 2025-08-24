@@ -1,4 +1,3 @@
-using Application.Common.Enums;
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
@@ -22,11 +21,9 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         _establishmentRepository = establishmentRepository;
     }
 
-
     public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId, CancellationToken ct)
     {
-
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Establishment), "byOwner", ownerId);
+        var key = _cache.GenerateCacheKey("EstablishmentsByOwner", ownerId.ToString());
         var cached = await _cache.GetAsync<List<Establishment>>(key, ct);
         if (cached is not null) return Result.Ok(cached);
 
@@ -37,7 +34,6 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 
         await _cache.SetAsync(key, list, DefaultTtl, ct);
         return Result.Ok(list);
-
     }
 
     public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken)
@@ -47,7 +43,7 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 
     public async Task<Establishment?> GetByIdWithAddressAsync(Guid id, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.EntityById, nameof(Establishment), "withAddress", id);
+        var key = _cache.GenerateCacheKey("EstablishmentWithAddress", id.ToString());
         var cached = await _cache.GetAsync<Establishment>(key, ct);
         if (cached is not null) return cached;
 
@@ -60,30 +56,31 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 
     public async Task<List<User>> GetUsersByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.EntityById, nameof(Establishment), "users", establishmentId);
+        var key = _cache.GenerateCacheKey("EstablishmentUsers", establishmentId.ToString());
         var cached = await _cache.GetAsync<List<User>>(key, ct);
         if (cached is not null) return cached;
 
         var users = await _establishmentRepository.GetUsersByEstablishmentId(establishmentId, ct);
-        await _cache.SetAsync(key, users, TimeSpan.FromMinutes(30), ct);
+        await _cache.SetAsync(key, users, TimeSpan.FromMinutes(15), ct); // Cache mais curto
         
         return users;
     }
 
     public async Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.EntityById, nameof(Establishment), "sports", establishmentId);
+        var key = _cache.GenerateCacheKey("EstablishmentSports", establishmentId.ToString());
         var cached = await _cache.GetAsync<List<Sport>>(key, ct);
         if (cached is not null) return cached;
 
         var sports = await _establishmentRepository.GetSportsByEstablishmentIdAsync(establishmentId, ct);
-        await _cache.SetAsync(key, sports, TimeSpan.FromMinutes(60), ct);
+        await _cache.SetAsync(key, sports, TimeSpan.FromHours(1), ct); // Cache longo
         
         return sports;
     }
-
+    
     public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
+        // Reservations mudam constantemente, sem cache
         return await _establishmentRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
     }
 }

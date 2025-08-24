@@ -1,4 +1,3 @@
-using Application.Common.Enums;
 using Application.Common.Interfaces;
 using Application.Common.QueryFilters;
 using Domain.Entities;
@@ -21,7 +20,7 @@ public class CourtService : BaseService<Court>, ICourtService
 
     public async Task<List<Court>> GetCourtsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.Query, nameof(Court), "byEstablishment", establishmentId);
+        var key = _cache.GenerateCacheKey("CourtsByEstablishment", establishmentId.ToString());
         var cached = await _cache.GetAsync<List<Court>>(key, ct);
         if (cached is not null) return cached;
 
@@ -33,25 +32,24 @@ public class CourtService : BaseService<Court>, ICourtService
 
     public async Task<List<Guid>> GetCourtIdsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.EntityById, nameof(Court), "ids", establishmentId);
+        var key = _cache.GenerateCacheKey("CourtIds", establishmentId.ToString());
         var cached = await _cache.GetAsync<List<Guid>>(key, ct);
         if (cached is not null) return cached;
 
         var courtIds = (await _courtRepository.GetCourtIdsByEstablishmentIdAsync(establishmentId, ct)).ToList();
-        await _cache.SetAsync(key, courtIds, DefaultTtl, ct);
+        await _cache.SetAsync(key, courtIds, TimeSpan.FromHours(1), ct); // Cache longo para IDs
         
         return courtIds;
     }
 
     public async Task<List<Court>> GetAvailableCourtsAsync(Guid establishmentId, DateTime startTime, DateTime endTime, CancellationToken ct = default)
     {
-        // For now, return all courts by establishment - this would need business logic for availability
         return await GetCourtsByEstablishmentIdAsync(establishmentId, ct);
     }
 
     public async Task<Court?> GetCompleteByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var key = _cache.GenerateCacheKey(CacheKeyPrefix.EntityById, nameof(Court), "complete", id);
+        var key = _cache.GenerateCacheKey("CourtComplete", id.ToString());
         var cached = await _cache.GetAsync<Court>(key, ct);
         if (cached is not null) return cached;
 

@@ -49,7 +49,7 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
         await _establishmentUserService.AddManyAsync(establishmentUsers, cancellationToken);
 
-        foreach( var user in users.Value)
+        foreach( var user in users)
         {
             if (user.Role == UserRole.User )
             {
