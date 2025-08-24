@@ -14,7 +14,7 @@ public class DeleteCourtHandler : ICommandHandler<DeleteCourtCommand>
 
     public async Task<Result> Handle(DeleteCourtCommand command, CancellationToken cancellationToken)
     {
-        var court = await _courtService.GetByIdAsync(command.Id, ct: cancellationToken);
+        var court = await _courtService.GetByIdNoTrackingAsync(command.Id, ct: cancellationToken);
         if (court == null)
         {
             return Result.Fail("Court not found.");
@@ -26,7 +26,7 @@ public class DeleteCourtHandler : ICommandHandler<DeleteCourtCommand>
             return Result.Fail("Cannot delete court with existing reservations.");
         }
 
-        await _courtService.DeleteAsync(court.Id, cancellationToken);
+        await _courtService.DeleteAsync(court, cancellationToken);
         return Result.Ok();
     }
 }

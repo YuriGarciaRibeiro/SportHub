@@ -17,6 +17,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
 
     public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
     {
+        // TODO: Testar retorno - n ta pegando tudo em tese
         var establishment = await _establishmentService.GetByIdAsync(request.Id, ct: cancellationToken);
         if (establishment == null)
         {

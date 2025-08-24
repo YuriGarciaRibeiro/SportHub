@@ -104,13 +104,14 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             query = query.Where(r => r.UserId == filter.UserId.Value);
         }
 
-        return query.ToListAsync(cancellationToken);
+        return query.AsNoTracking().ToListAsync(cancellationToken);
     }
 
     public Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
     {
         return _context.Sports
             .Where(s => s.Establishments.Any(e => e.Id == establishmentId))
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
@@ -120,6 +121,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .Where(eu => eu.EstablishmentId == establishmentId)
             .Include(eu => eu.User)
             .Select(eu => eu.User)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 }

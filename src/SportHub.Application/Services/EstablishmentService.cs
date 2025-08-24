@@ -42,7 +42,6 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 
     public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken)
     {
-        // Direct call without cache due to complex return type
         return await _establishmentRepository.GetFilteredAsync(query, cancellationToken);
     }
 
@@ -85,7 +84,6 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 
     public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
-        // Due to complex filter parameters, direct repository call without cache
         return await _establishmentRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
     }
 }

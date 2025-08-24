@@ -15,7 +15,7 @@ public class DeleteEstablishmentHandler : ICommandHandler<DeleteEstablishmentCom
 
     public async Task<Result> Handle(DeleteEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentService.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));
@@ -25,7 +25,7 @@ public class DeleteEstablishmentHandler : ICommandHandler<DeleteEstablishmentCom
             return Result.Fail(new Conflict("Establishment is already deleted."));
         }
 
-        await _establishmentService.DeleteAsync(establishment.Id, cancellationToken);
+        await _establishmentService.DeleteAsync(establishment, cancellationToken);
 
         return Result.Ok();
     }

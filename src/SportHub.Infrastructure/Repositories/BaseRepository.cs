@@ -54,7 +54,6 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    // Otimizado: converte para HashSet para melhor performance na consulta
     public async Task<List<T>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         var idSet = ids.ToHashSet();

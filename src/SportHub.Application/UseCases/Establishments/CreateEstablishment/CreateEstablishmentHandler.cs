@@ -47,7 +47,6 @@ public class CreateEstablishmentHandler : ICommandHandler<CreateEstablishmentCom
 
         var establishment = new Establishment
         {
-            Id = Guid.NewGuid(),
             Name = request.Name,
             Description = request.Description,
             PhoneNumber = request.PhoneNumber,

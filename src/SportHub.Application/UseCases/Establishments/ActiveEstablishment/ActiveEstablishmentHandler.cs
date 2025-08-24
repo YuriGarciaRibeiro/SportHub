@@ -15,7 +15,7 @@ public class ActiveEstablishmentHandler : ICommandHandler<ActiveEstablishmentCom
 
     public async Task<Result> Handle(ActiveEstablishmentCommand request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentService.GetByIdWithAddressAsync(request.UserId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdAsync(request.UserId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));

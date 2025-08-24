@@ -15,7 +15,7 @@ public class GetEstablishmentUsersHandler : IQueryHandler<GetEstablishmentUsersQ
 
     public async Task<Result<GetEstablishmentUsersResponse>> Handle(GetEstablishmentUsersQuery request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentService.GetByIdWithAddressAsync(request.EstablishmentId, cancellationToken);
+        var establishment = await _establishmentService.GetByIdNoTrackingAsync(request.EstablishmentId, cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound("Establishment not found."));

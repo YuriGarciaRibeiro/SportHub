@@ -64,7 +64,6 @@ public class CourtService : BaseService<Court>, ICourtService
 
     public async Task<List<Court>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken ct = default)
     {
-        // Direct call to repository for now
         var courts = await _courtRepository.GetByFilterAsync(filter, ct);
         return courts.ToList();
     }

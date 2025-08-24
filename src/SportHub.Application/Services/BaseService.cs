@@ -33,7 +33,7 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
         _cache is null ? string.Empty : _cache.GenerateCacheKey(CacheKeyPrefix.EntityCount, typeof(T).Name);
 
 
-    public virtual async Task<T?> GetByIdAsync(Guid id, TimeSpan? ttl = null, CancellationToken ct = default)
+    public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         return await _repo.GetByIdAsync(id, ct);
     }
@@ -48,7 +48,7 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
         return entity;
     }
 
-    public virtual async Task<List<T>> GetAllAsync(TimeSpan? ttl = null, CancellationToken ct = default)
+    public virtual async Task<List<T>> GetAllAsync( CancellationToken ct = default)
     {
         return await _repo.GetAllAsync(ct);
     }
@@ -109,10 +109,8 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
     {
         await _repo.AddAsync(entity, ct);
         
-        // Invalida caches relacionados
         await InvalidateCacheAsync(ct: ct);
         
-        // Adiciona a nova entidade no cache
         await _cache.SetAsync(CacheKeyById(entity.Id), entity, DefaultTtl, ct);
         return entity;
     }
@@ -121,37 +119,29 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
     {
         await _repo.UpdateAsync(entity, ct);
         
-        // Invalida caches relacionados
         await InvalidateCacheAsync(entity.Id, ct);
         
-        // Atualiza o cache com a nova versão
         await _cache.SetAsync(CacheKeyById(entity.Id), entity, DefaultTtl, ct);
     }
 
-    public virtual async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public virtual async Task DeleteAsync(T entity, CancellationToken ct = default)
     {
-        var entity = await _repo.GetByIdAsync(id, ct);
         if (entity is null) return;
 
         await _repo.RemoveAsync(entity, ct);
 
-        // Invalida caches relacionados
-        await InvalidateCacheAsync(id, ct);
+        await InvalidateCacheAsync(entity.Id, ct);
     }
 
-    // ✅ NOVO: Remoção em lote otimizada
     public virtual async Task DeleteManyAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
     {
         var idList = ids.ToList();
         if (!idList.Any()) return;
 
-        // Usa o método otimizado de bulk delete
         await _repo.RemoveByIdsAsync(idList, ct);
 
-        // Invalida todos os caches relacionados
         await InvalidateCacheAsync(ct: ct);
         
-        // Remove itens específicos do cache
         foreach (var id in idList)
         {
             await _cache.RemoveAsync(CacheKeyById(id), ct);
@@ -163,32 +153,28 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
         var list = entities as IList<T> ?? entities.ToList();
         await _repo.AddManyAsync(list, ct);
 
-        // Invalida caches de listagem
         await InvalidateCacheAsync(ct: ct);
 
-        // Adiciona cada entidade no cache
         foreach (var e in list)
             await _cache.SetAsync(CacheKeyById(e.Id), e, DefaultTtl, ct);
 
         return list.ToList();
     }
 
-    // ✅ NOVO: Utilitário para invalidar cache
     public virtual async Task InvalidateCacheAsync(Guid? id = null, CancellationToken ct = default)
     {
-        // Remove cache específico se ID fornecido
         if (id.HasValue)
         {
             await _cache.RemoveAsync(CacheKeyById(id.Value), ct);
         }
 
-        // Remove caches de listagem (sempre que há mudanças)
         await _cache.RemoveAsync(CacheKeyAll(), ct);
+
         await _cache.RemoveAsync(CacheKeyCount(), ct);
         
-        // Remove caches paginados (padrão comum)
         var commonPageSizes = new[] { 10, 20, 50, 100 };
-        for (int i = 0; i < 5; i++) // Primeiras 5 páginas
+
+        for (int i = 0; i < 5; i++)
         {
             foreach (var pageSize in commonPageSizes)
             {

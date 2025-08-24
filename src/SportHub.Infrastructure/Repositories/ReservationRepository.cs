@@ -20,6 +20,7 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
 
         return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
@@ -33,6 +34,7 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
     {
         return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc > DateTime.UtcNow)
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
