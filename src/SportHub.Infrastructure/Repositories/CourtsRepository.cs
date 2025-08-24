@@ -27,7 +27,11 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
 
     public async Task<IEnumerable<Court>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken cancellationToken)
     {
-        var query = _dbContext.Courts.AsQueryable();
+        var query = _dbContext.Courts
+                    .Include(c => c.Sports)
+                    .Include(c => c.Establishment)
+                    .AsSplitQuery()
+                    .AsQueryable();
 
         if (!string.IsNullOrEmpty(filter.Name))
         {
@@ -50,11 +54,8 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
         }
 
         return await query
-                    .Include(c => c.Sports)
-                    .Include(c => c.Establishment)
-                    .AsSplitQuery()
                     .AsNoTracking()
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
     }
 
     public Task<Court?> GetCompleteByIdAsync(Guid id, CancellationToken cancellationToken)
