@@ -2,6 +2,8 @@ using Application.Common.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.ValueObjects;
+using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Persistence.Seeders;
@@ -11,16 +13,19 @@ public class EstablishmentSeeder : BaseSeeder
     private readonly IEstablishmentsRepository _establishmentsRepository;
     private readonly IEstablishmentUsersRepository _establishmentUsersRepository;
     private readonly ISportsRepository _sportsRepository;
+    private readonly ApplicationDbContext _dbContext;
 
     public EstablishmentSeeder(
         IEstablishmentsRepository establishmentsRepository,
         IEstablishmentUsersRepository establishmentUsersRepository,
         ISportsRepository sportsRepository,
+        ApplicationDbContext dbContext,
         ILogger<EstablishmentSeeder> logger) : base(logger)
     {
         _establishmentsRepository = establishmentsRepository;
         _establishmentUsersRepository = establishmentUsersRepository;
         _sportsRepository = sportsRepository;
+        _dbContext = dbContext;
     }
 
     public override int Order => 3; // Terceiro a ser executado (após Users e Sports)
@@ -55,13 +60,30 @@ public class EstablishmentSeeder : BaseSeeder
             await _establishmentUsersRepository.AddAsync(establishmentUser, cancellationToken);
             LogInfo($"Assigned owner to establishment: {estData.Establishment.Name}");
 
-            // Associar esportes
+            // Associar esportes usando DbContext diretamente para evitar conflitos de tracking
             if (estData.SportIds.Any())
             {
-                var sports = await _sportsRepository.GetByIdsAsync(estData.SportIds, cancellationToken);
-                estData.Establishment.Sports = sports;
-                await _establishmentsRepository.UpdateAsync(estData.Establishment, cancellationToken);
-                LogInfo($"Associated {sports.Count} sports to establishment: {estData.Establishment.Name}");
+                // Use raw SQL or direct DbContext operations to avoid tracking conflicts
+                var existingSports = await _dbContext.Sports
+                    .Where(s => estData.SportIds.Contains(s.Id))
+                    .ToListAsync(cancellationToken);
+
+                var establishment = await _dbContext.Establishments
+                    .Include(e => e.Sports)
+                    .FirstOrDefaultAsync(e => e.Id == estData.Establishment.Id, cancellationToken);
+
+                if (establishment != null)
+                {
+                    // Clear existing sports (if any) and add new ones
+                    establishment.Sports.Clear();
+                    foreach (var sport in existingSports)
+                    {
+                        establishment.Sports.Add(sport);
+                    }
+
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    LogInfo($"Associated {existingSports.Count} sports to establishment: {estData.Establishment.Name}");
+                }
             }
         }
 
