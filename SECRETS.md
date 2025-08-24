@@ -19,7 +19,7 @@ dotnet user-secrets init
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=SportHubDb;Username=postgres;Password=postgres"
 
 # Secret key for JWT (IMPORTANT: Use a strong key in production)
-dotnet user-secrets set "JwtSettings:SecretKey" "your-very-long-and-secure-secret-key"
+dotnet user-secrets set "Jwt:Key" "your-very-long-and-secure-secret-key"
 
 # Default admin user password
 dotnet user-secrets set "AdminUser:Password" "YourSecurePassword123!"
@@ -45,7 +45,7 @@ The following secrets must be configured:
 | Key | Description | Example |
 |-----|-------------|---------|
 | `ConnectionStrings:DefaultConnection` | PostgreSQL connection string | `Host=localhost;Port=5432;Database=SportHubDb;Username=postgres;Password=postgres` |
-| `JwtSettings:SecretKey` | Key to sign JWT tokens | `a-very-long-and-secure-key-with-at-least-256-bits` |
+| `Jwt:Key` | Key to sign JWT tokens | `a-very-long-and-secure-key-with-at-least-256-bits` |
 | `AdminUser:Password` | Administrator user password | `MySecurePassword123!` |
 
 ## For Production
