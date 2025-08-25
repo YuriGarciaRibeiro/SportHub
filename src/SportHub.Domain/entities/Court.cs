@@ -17,8 +17,7 @@ public class Court : AuditEntity, IEntity
 
     public string TimeZone { get; set; } = "America/Maceio";
 
-    public IEnumerable<Sport> Sports { get; set; } = null!;
+    public ICollection<Sport> Sports { get; set; } = new List<Sport>();
 
-    // Navegação
     public Establishment Establishment { get; set; } = null!;
 }
