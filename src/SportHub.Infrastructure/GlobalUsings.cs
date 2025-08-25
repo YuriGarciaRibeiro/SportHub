@@ -6,7 +6,3 @@ global using Application.Common.Interfaces.Reservations;
 global using Application.Common.Interfaces.Security;
 global using Application.Common.Interfaces.Sports;
 global using Application.Common.Interfaces.Users;
-global using Application.CQRS;
-global using MediatR;
-global using FluentResults;
-global using FluentValidation;

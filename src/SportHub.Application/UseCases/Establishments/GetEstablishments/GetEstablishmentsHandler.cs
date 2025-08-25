@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.CQRS;
 using Microsoft.Extensions.Logging;
 

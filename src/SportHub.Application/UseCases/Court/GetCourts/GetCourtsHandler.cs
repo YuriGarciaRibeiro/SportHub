@@ -1,5 +1,4 @@
 
-using Application.Common.Interfaces;
 using Application.Common.QueryFilters;
 
 namespace Application.UseCases.Court.GetCourts;

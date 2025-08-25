@@ -1,6 +1,6 @@
 using Domain.Enums;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Establishments;
 
 public interface IEstablishmentRoleService
 {

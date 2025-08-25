@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
@@ -13,6 +12,53 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
     public EstablishmentsRepository(ApplicationDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
+    {
+        return _dbContext.Establishments
+            .AsNoTracking()
+            .Where(e => e.Id == id)
+            .Select(e => new EstablishmentCompleteDto(
+                e.Id,
+                e.Name,
+                e.Description,
+                new AddressDto(
+                    e.Address.Street,
+                    e.Address.Number,
+                    e.Address.Complement,
+                    e.Address.Neighborhood,
+                    e.Address.City,
+                    e.Address.State,
+                    e.Address.ZipCode
+                ),
+                e.ImageUrl,
+                e.Sports.Select(s => new SportDto(
+                    s.Id,
+                    s.Name,
+                    s.Description
+                )),
+                e.Users.Select(eu => new EstablishmentUserDto(
+                    eu.UserId,
+                    $"{eu.User.FirstName} {eu.User.LastName}",
+                    eu.User.Email,
+                    eu.Role
+                )),
+                e.Courts.Select(c => new CourtDto(
+                    c.Id,
+                    c.Name,
+                    c.MinBookingSlots,
+                    c.MaxBookingSlots,
+                    c.SlotDurationMinutes,
+                    c.TimeZone,
+                    c.Sports.Select(s => new SportDto(
+                        s.Id,
+                        s.Name,
+                        s.Description
+                    ))
+                ))
+            ))
+            .SingleOrDefaultAsync(ct);
     }
 
     public async Task<List<Establishment>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
@@ -125,3 +171,42 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .ToListAsync(cancellationToken);
     }
 }
+
+public record EstablishmentCompleteResponse(
+    Guid Id,
+    string Name,
+    string Description,
+    AddressResponse Address,
+    string? ImageUrl,
+    IEnumerable<SportResponse> Sports,
+    IEnumerable<UserCompleteResponse> Users,
+    IEnumerable<CourtCompleteResponse> Courts
+);
+
+public record AddressCompleteResponse(
+    string Street,
+    string Number,
+    string? Complement,
+    string Neighborhood,
+    string City,
+    string State,
+    string ZipCode
+);
+
+public record SportCompleteResponse(
+    Guid Id,
+    string Name,
+    string Description
+);
+
+public record UserCompleteResponse(
+    Guid Id,
+    string Name,
+    string Email
+);
+
+public record CourtCompleteResponse(
+    Guid Id,
+    string Name,
+    string Location
+);

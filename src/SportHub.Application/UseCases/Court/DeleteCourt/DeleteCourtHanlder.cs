@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.CQRS;
 
 public class DeleteCourtHandler : ICommandHandler<DeleteCourtCommand>

@@ -1,7 +1,6 @@
 
 using System.Text.Json;
 using Application.Common.Enums;
-using Application.Common.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 

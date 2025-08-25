@@ -1,6 +1,6 @@
 using Domain.Entities;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Users;
 
 public interface IUsersRepository : IBaseRepository<User>
 {

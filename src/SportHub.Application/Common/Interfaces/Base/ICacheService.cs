@@ -1,6 +1,6 @@
 using Application.Common.Enums;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Base;
 
 public interface ICacheService
 {

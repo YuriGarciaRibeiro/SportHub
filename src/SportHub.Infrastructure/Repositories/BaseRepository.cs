@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Domain.Common;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

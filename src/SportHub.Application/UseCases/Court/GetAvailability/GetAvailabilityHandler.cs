@@ -1,7 +1,6 @@
 
 
 using Application.Common.Enums;
-using Application.Common.Interfaces;
 using Application.CQRS;
 
 namespace Application.UseCases.Court.GetAvailability;

@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.Common.Errors;
 using Application.CQRS;
 
@@ -17,8 +16,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
 
     public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Testar retorno - n ta pegando tudo em tese
-        var establishment = await _establishmentService.GetByIdAsync(request.Id, ct: cancellationToken);
+        var establishment = await _establishmentService.GetByIdCompleteAsync(request.Id, ct: cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound($"Establishment with ID '{request.Id}' not found."));

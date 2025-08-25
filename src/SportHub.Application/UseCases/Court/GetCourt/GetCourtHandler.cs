@@ -1,6 +1,5 @@
 
 using Application.Common.Errors;
-using Application.Common.Interfaces;
 
 namespace Application.UseCases.Court.GetCourt;
 

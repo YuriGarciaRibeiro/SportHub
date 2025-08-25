@@ -1,6 +1,5 @@
 // Application/Services/BaseService.cs
 using Application.Common.Enums;
-using Application.Common.Interfaces;
 using Domain.Common;
 
 namespace Application.Services;
@@ -32,6 +31,8 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
     protected virtual string CacheKeyCount() =>
         _cache is null ? string.Empty : _cache.GenerateCacheKey(CacheKeyPrefix.EntityCount, typeof(T).Name);
 
+    protected virtual string CacheKeyByIdComplete(Guid id) =>
+        _cache is null ? string.Empty : _cache.GenerateCacheKey(CacheKeyPrefix.EntityByIdComplete, typeof(T).Name, id);
 
     public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
@@ -166,6 +167,7 @@ public class BaseService<T> : IBaseService<T> where T : class, IEntity
         if (id.HasValue)
         {
             await _cache.RemoveAsync(CacheKeyById(id.Value), ct);
+            await _cache.RemoveAsync(CacheKeyByIdComplete(id.Value), ct);
         }
 
         await _cache.RemoveAsync(CacheKeyAll(), ct);

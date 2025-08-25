@@ -1,7 +1,7 @@
 using Domain.Entities;
 using Domain.Enums;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Evaluations;
 
 public interface IEvaluationRepository : IBaseRepository<Evaluation>
 {

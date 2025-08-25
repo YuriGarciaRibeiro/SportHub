@@ -1,6 +1,5 @@
 using Application.Common.Enums;
 using Application.Common.Errors;
-using Application.Common.Interfaces;
 using Application.CQRS;
 using FluentResults;
 using Microsoft.Extensions.Logging;

@@ -1,6 +1,5 @@
 using Application.Common.Enums;
 using Application.Common.Errors;
-using Application.Common.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 

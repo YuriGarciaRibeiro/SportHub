@@ -1,8 +1,7 @@
-using Application.Common.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Evaluations;
 
 public interface IEvaluationService : IBaseService<Evaluation>
 {

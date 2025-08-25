@@ -1,5 +1,4 @@
 
-using Application.Common.Interfaces;
 
 namespace Application.UseCases.Establishments.GetEstablishmentReservations;
 

@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Application.Common.Interfaces;
 using Application.Security;
 using Microsoft.Extensions.Logging;
 

@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.Settings;
 using Domain.Entities;
 using Domain.Enums;

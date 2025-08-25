@@ -1,7 +1,7 @@
 // Application/Common/Interfaces/IBaseService.cs
 using Domain.Common;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Base;
 
 public interface IBaseService<T> where T : class, IEntity
 {

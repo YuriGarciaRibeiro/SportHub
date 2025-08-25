@@ -1,7 +1,6 @@
-using Application.Common.Interfaces;
 using Domain.Entities;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Sports;
 
 public interface ISportService : IBaseService<Sport>
 {

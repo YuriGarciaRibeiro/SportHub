@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Application.Common.Interfaces;
 
 namespace Infrastructure.Security;
 

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Application.Common.Interfaces;
 using Application.Security;
 using Domain.Enums;
 using Microsoft.Extensions.Logging;

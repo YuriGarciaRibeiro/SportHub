@@ -1,5 +1,4 @@
 using Application.Common.Errors;
-using Application.Common.Interfaces;
 using Application.CQRS;
 
 namespace Application.UseCases.Establishments.UpdateEstablishmentUserRole;

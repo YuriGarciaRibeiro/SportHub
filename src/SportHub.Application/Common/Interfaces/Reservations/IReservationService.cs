@@ -1,7 +1,7 @@
 using Application.Common.QueryFilters;
 using Domain.Entities;
 
-namespace Application.Common.Interfaces;
+namespace Application.Common.Interfaces.Reservations;
 
 public interface IReservationService : IBaseService<Reservation>
 {

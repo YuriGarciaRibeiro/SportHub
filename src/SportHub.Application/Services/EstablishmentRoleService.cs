@@ -1,5 +1,4 @@
 using Application.Common.Errors;
-using Application.Common.Interfaces;
 using Domain.Enums;
 
 namespace Application.Services;

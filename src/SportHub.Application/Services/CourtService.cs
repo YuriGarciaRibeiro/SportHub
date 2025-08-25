@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.Common.QueryFilters;
 using Domain.Entities;
 

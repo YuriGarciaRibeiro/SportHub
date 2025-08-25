@@ -1,3 +1,5 @@
+using Application.Common.Interfaces.Base;
+using Application.Common.Interfaces.Establishments;
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
@@ -61,7 +63,7 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         if (cached is not null) return cached;
 
         var users = await _establishmentRepository.GetUsersByEstablishmentId(establishmentId, ct);
-        await _cache.SetAsync(key, users, TimeSpan.FromMinutes(15), ct); // Cache mais curto
+        await _cache.SetAsync(key, users, TimeSpan.FromMinutes(15), ct);
         
         return users;
     }
@@ -73,14 +75,26 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         if (cached is not null) return cached;
 
         var sports = await _establishmentRepository.GetSportsByEstablishmentIdAsync(establishmentId, ct);
-        await _cache.SetAsync(key, sports, TimeSpan.FromHours(1), ct); // Cache longo
+        await _cache.SetAsync(key, sports, TimeSpan.FromHours(1), ct);
         
         return sports;
     }
     
     public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
-        // Reservations mudam constantemente, sem cache
         return await _establishmentRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
+    }
+
+    public async Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
+    {
+        var key = CacheKeyByIdComplete(id);
+        var cached = await _cache.GetAsync<EstablishmentCompleteDto>(key, ct);
+        if (cached is not null) return cached;
+
+        var establishment = await _establishmentRepository.GetByIdCompleteAsync(id, ct);
+        if (establishment is not null)
+            await _cache.SetAsync(key, establishment, TimeSpan.FromMinutes(10), ct);
+
+        return establishment;
     }
 }

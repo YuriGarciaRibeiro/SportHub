@@ -1,4 +1,3 @@
-using Application.Common.Interfaces;
 using Application.CQRS;
 
 namespace Application.UseCases.Sports.GetAllSports;

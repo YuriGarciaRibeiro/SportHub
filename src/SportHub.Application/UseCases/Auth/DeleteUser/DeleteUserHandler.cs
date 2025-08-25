@@ -1,5 +1,4 @@
 using Application.Common.Errors;
-using Application.Common.Interfaces;
 
 namespace SportHub.Application.UseCases.Auth.DeleteUser;
 
