@@ -16,7 +16,7 @@ public class SportService : BaseService<Sport>, ISportService
         _sportRepository = sportRepository;
     }
 
-    public async Task<IEnumerable<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
+    public async Task<IEnumerable<SportSummaryDto>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
         return await _sportRepository.GetByEstablishmentIdAsync(establishmentId, ct);
     }

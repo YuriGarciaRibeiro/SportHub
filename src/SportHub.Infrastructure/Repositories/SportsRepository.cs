@@ -1,6 +1,7 @@
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using SportDtos = Application.Common.Interfaces.Sports;
 
 namespace Infrastructure.Repositories;
 
@@ -18,10 +19,15 @@ public class SportsRepository : BaseRepository<Sport>, ISportsRepository
             .AnyAsync(s => EF.Functions.ILike(s.Name, name), cancellationToken);
     }
 
-    public async Task<IEnumerable<Sport>> GetByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
+    public async Task<IEnumerable<SportDtos.SportSummaryDto>> GetByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
     {
         return await _dbContext.Sports
             .Where(s => s.Establishments.Any(e => e.Id == establishmentId))
+            .Select(s => new SportDtos.SportSummaryDto(
+                s.Id,
+                s.Name,
+                s.Description
+            ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -32,10 +38,16 @@ public class SportsRepository : BaseRepository<Sport>, ISportsRepository
             .FirstOrDefaultAsync(s => EF.Functions.ILike(s.Name, name), cancellationToken);
     }
 
-    public async Task<IEnumerable<Sport>> GetSportsByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    public async Task<IEnumerable<SportDtos.SportBulkDto>> GetSportsByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         return await _dbContext.Sports
             .Where(s => ids.Contains(s.Id))
+            .Select(s => new SportDtos.SportBulkDto(
+                s.Id,
+                s.Name,
+                s.Description
+            ))
+            .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 }

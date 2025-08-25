@@ -2,6 +2,7 @@ using Application.Common.QueryFilters;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using ReservationDtos = Application.Common.Interfaces.Reservations;
 
 namespace Infrastructure.Repositories;
 
@@ -13,12 +14,19 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
         _dbContext = dbContext;
     }
 
-    public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
+    public async Task<List<ReservationDtos.ReservationDayDto>> GetByCourtAndDayAsync(Guid courtId, DateTime day, CancellationToken cancellationToken)
     {
         var dateUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
 
         return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
+            .Select(r => new ReservationDtos.ReservationDayDto(
+                r.Id,
+                r.UserId,
+                r.CourtId,
+                r.StartTimeUtc,
+                r.EndTimeUtc
+            ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -29,10 +37,18 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
             .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc, cancellationToken);
     }
 
-    public async Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
+    public async Task<List<ReservationDtos.FutureReservationDto>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
     {
         return await _dbContext.Reservations
             .Where(r => r.CourtId == courtId && r.StartTimeUtc > DateTime.UtcNow)
+            .Select(r => new ReservationDtos.FutureReservationDto(
+                r.Id,
+                r.UserId,
+                r.CourtId,
+                r.Court.Name,
+                r.StartTimeUtc,
+                r.EndTimeUtc
+            ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
@@ -51,7 +67,7 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
+    public Task<List<ReservationDtos.ReservationSummaryDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
         var query = _dbContext.Reservations.AsQueryable();
 
@@ -78,6 +94,15 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
             }
         }
 
-        return query.ToListAsync(ct);
+        return query
+            .Select(r => new ReservationDtos.ReservationSummaryDto(
+                r.Id,
+                r.UserId,
+                r.CourtId,
+                r.StartTimeUtc,
+                r.EndTimeUtc
+            ))
+            .AsNoTracking()
+            .ToListAsync(ct);
     }
 }

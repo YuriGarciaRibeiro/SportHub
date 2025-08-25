@@ -17,10 +17,10 @@ public class CourtService : BaseService<Court>, ICourtService
         _courtRepository = courtRepository;
     }
 
-    public async Task<List<Court>> GetCourtsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
+    public async Task<List<CourtWithSportsDto>> GetCourtsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
         var key = _cache.GenerateCacheKey("CourtsByEstablishment", establishmentId.ToString());
-        var cached = await _cache.GetAsync<List<Court>>(key, ct);
+        var cached = await _cache.GetAsync<List<CourtWithSportsDto>>(key, ct);
         if (cached is not null) return cached;
 
         var courts = await _courtRepository.GetByEstablishmentIdAsync(establishmentId, ct);
@@ -41,15 +41,27 @@ public class CourtService : BaseService<Court>, ICourtService
         return courtIds;
     }
 
-    public async Task<List<Court>> GetAvailableCourtsAsync(Guid establishmentId, DateTime startTime, DateTime endTime, CancellationToken ct = default)
+    public async Task<List<CourtFilterResultDto>> GetAvailableCourtsAsync(Guid establishmentId, DateTime startTime, DateTime endTime, CancellationToken ct = default)
     {
-        return await GetCourtsByEstablishmentIdAsync(establishmentId, ct);
+        var courts = await GetCourtsByEstablishmentIdAsync(establishmentId, ct);
+        return courts.Select(c => new CourtFilterResultDto(
+            c.Id, 
+            c.Name, 
+            c.MinBookingSlots, 
+            c.MaxBookingSlots, 
+            c.SlotDurationMinutes, 
+            c.OpeningTime, 
+            c.ClosingTime, 
+            c.TimeZone,
+            new Common.Interfaces.Courts.EstablishmentSummaryDto(establishmentId, string.Empty, string.Empty, string.Empty),
+            c.Sports
+        )).ToList();
     }
 
-    public async Task<Court?> GetCompleteByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<CourtCompleteDto?> GetCompleteByIdAsync(Guid id, CancellationToken ct = default)
     {
         var key = _cache.GenerateCacheKey("CourtComplete", id.ToString());
-        var cached = await _cache.GetAsync<Court>(key, ct);
+        var cached = await _cache.GetAsync<CourtCompleteDto>(key, ct);
         if (cached is not null) return cached;
 
         var court = await _courtRepository.GetCompleteByIdAsync(id, ct);
@@ -59,7 +71,7 @@ public class CourtService : BaseService<Court>, ICourtService
         return court;
     }
 
-    public async Task<List<Court>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken ct = default)
+    public async Task<List<CourtFilterResultDto>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken ct = default)
     {
         var courts = await _courtRepository.GetByFilterAsync(filter, ct);
         return courts.ToList();

@@ -102,10 +102,10 @@ public class ReservationService : BaseService<Reservation>, IReservationService
         return Result.Ok(reservation.Id);
     }
 
-    public async Task<List<Reservation>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
+    public async Task<List<FutureReservationDto>> GetFutureReservationsByCourtAsync(Guid courtId, CancellationToken cancellationToken)
     {
         var key = _cache.GenerateCacheKey("FutureReservations", courtId.ToString());
-        var cached = await _cache.GetAsync<List<Reservation>>(key, cancellationToken);
+        var cached = await _cache.GetAsync<List<FutureReservationDto>>(key, cancellationToken);
         if (cached is not null) return cached;
 
         var reservations = await _reservationRepository.GetFutureReservationsByCourtAsync(courtId, cancellationToken);
@@ -115,7 +115,7 @@ public class ReservationService : BaseService<Reservation>, IReservationService
         return reservationsList;
     }
 
-    public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
+    public async Task<List<ReservationSummaryDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
         var reservations = await _reservationRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
         return reservations.ToList();

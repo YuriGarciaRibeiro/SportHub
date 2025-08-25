@@ -2,6 +2,7 @@ using Application.Common.QueryFilters;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using CourtDtos = Application.Common.Interfaces.Courts;
 
 namespace Infrastructure.Repositories;
 
@@ -14,17 +15,30 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
+    public async Task<IEnumerable<CourtDtos.CourtWithSportsDto>> GetByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
     {
         return await _dbContext.Courts
             .Where(c => c.EstablishmentId == establishmentId)
-            .Include(c => c.Sports)
-            .AsSplitQuery()
+            .Select(c => new CourtDtos.CourtWithSportsDto(
+                c.Id,
+                c.Name,
+                c.MinBookingSlots,
+                c.MaxBookingSlots,
+                c.SlotDurationMinutes,
+                c.OpeningTime,
+                c.ClosingTime,
+                c.TimeZone,
+                c.Sports.Select(s => new CourtDtos.SportDto(
+                    s.Id,
+                    s.Name,
+                    s.Description
+                ))
+            ))
             .AsNoTracking()
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Court>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken cancellationToken)
+    public async Task<IEnumerable<CourtDtos.CourtFilterResultDto>> GetByFilterAsync(CourtQueryFilter filter, CancellationToken cancellationToken)
     {
         var query = _dbContext.Courts.AsQueryable();
 
@@ -49,21 +63,58 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
         }
 
         return await query
-                    .Include(c => c.Sports)
-                    .Include(c => c.Establishment)
-                    .AsSplitQuery()
-                    .AsNoTracking()
-                    .ToListAsync(cancellationToken);
+            .Select(c => new CourtDtos.CourtFilterResultDto(
+                c.Id,
+                c.Name,
+                c.MinBookingSlots,
+                c.MaxBookingSlots,
+                c.SlotDurationMinutes,
+                c.OpeningTime,
+                c.ClosingTime,
+                c.TimeZone,
+                new CourtDtos.EstablishmentSummaryDto(
+                    c.Establishment.Id,
+                    c.Establishment.Name,
+                    c.Establishment.Description,
+                    c.Establishment.ImageUrl
+                ),
+                c.Sports.Select(s => new CourtDtos.SportDto(
+                    s.Id,
+                    s.Name,
+                    s.Description
+                ))
+            ))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
     }
 
-    public Task<Court?> GetCompleteByIdAsync(Guid id, CancellationToken cancellationToken)
+    public Task<CourtDtos.CourtCompleteDto?> GetCompleteByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return _dbContext.Courts
-            .Include(c => c.Sports)
-            .Include(c => c.Establishment)
-            .AsSplitQuery()
+            .Where(c => c.Id == id)
+            .Select(c => new CourtCompleteDto(
+                c.Id,
+                c.Name,
+                c.MinBookingSlots,
+                c.MaxBookingSlots,
+                c.SlotDurationMinutes,
+                c.OpeningTime,
+                c.ClosingTime,
+                c.TimeZone,
+                new CourtDtos.EstablishmentSummaryDto(
+                    c.Establishment.Id,
+                    c.Establishment.Name,
+                    c.Establishment.Description,
+                    c.Establishment.ImageUrl
+                ),
+                c.Sports.Select(s => new CourtDtos.SportDto(
+                    s.Id,
+                    s.Name,
+                    s.Description
+                ))
+            ))
             .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Guid>> GetCourtIdsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)

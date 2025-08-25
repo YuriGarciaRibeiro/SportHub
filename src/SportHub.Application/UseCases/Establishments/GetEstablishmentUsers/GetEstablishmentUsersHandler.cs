@@ -27,7 +27,7 @@ public class GetEstablishmentUsersHandler : IQueryHandler<GetEstablishmentUsersQ
             EstablishmentId = request.EstablishmentId,
             Users = users.Select(u => new EstablishmentUserResponse
             {
-                UserId = u.Id,
+                UserId = u.UserId,
                 UserName = u.FullName,
                 Role = u.Role.ToString()
             }).ToList()

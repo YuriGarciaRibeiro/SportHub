@@ -1,5 +1,6 @@
 using Domain.Entities;
 using Domain.Enums;
+using Application.Common.Interfaces.Users;
 
 namespace Application.Common.Interfaces.Users;
 

@@ -3,6 +3,9 @@ using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using EstablishmentDtos = Application.Common.Interfaces.Establishments;
+using ReservationDtos = Application.Common.Interfaces.Reservations;
+using SportDtos = Application.Common.Interfaces.Sports;
 
 namespace Infrastructure.Repositories;
 
@@ -14,16 +17,16 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         _dbContext = dbContext;
     }
 
-    public Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
+    public Task<EstablishmentDtos.EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
     {
         return _dbContext.Establishments
             .AsNoTracking()
             .Where(e => e.Id == id)
-            .Select(e => new EstablishmentCompleteDto(
+            .Select(e => new EstablishmentDtos.EstablishmentCompleteDto(
                 e.Id,
                 e.Name,
                 e.Description,
-                new AddressDto(
+                new EstablishmentDtos.AddressDto(
                     e.Address.Street,
                     e.Address.Number,
                     e.Address.Complement,
@@ -33,25 +36,25 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     e.Address.ZipCode
                 ),
                 e.ImageUrl,
-                e.Sports.Select(s => new SportDto(
+                e.Sports.Select(s => new EstablishmentDtos.SportDto(
                     s.Id,
                     s.Name,
                     s.Description
                 )),
-                e.Users.Select(eu => new EstablishmentUserDto(
+                e.Users.Select(eu => new EstablishmentDtos.EstablishmentUserDto(
                     eu.UserId,
                     $"{eu.User.FirstName} {eu.User.LastName}",
                     eu.User.Email,
                     eu.Role
                 )),
-                e.Courts.Select(c => new CourtDto(
+                e.Courts.Select(c => new EstablishmentDtos.CourtDto(
                     c.Id,
                     c.Name,
                     c.MinBookingSlots,
                     c.MaxBookingSlots,
                     c.SlotDurationMinutes,
                     c.TimeZone,
-                    c.Sports.Select(s => new SportDto(
+                    c.Sports.Select(s => new EstablishmentDtos.SportDto(
                         s.Id,
                         s.Name,
                         s.Description
@@ -61,24 +64,73 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .SingleOrDefaultAsync(ct);
     }
 
-    public async Task<List<Establishment>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    public async Task<List<EstablishmentDtos.EstablishmentWithDetailsDto>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         return await _dbContext.Establishments
             .Where(e => ids.Contains(e.Id))
-            .Include(e => e.Courts)
-                .ThenInclude(c => c.Sports)
-            .Include(e => e.Users)
-            .Include(e => e.Sports)
-            .AsSplitQuery()
+            .Select(e => new EstablishmentDtos.EstablishmentWithDetailsDto(
+                e.Id,
+                e.Name,
+                e.Description,
+                new EstablishmentDtos.AddressDto(
+                    e.Address.Street,
+                    e.Address.Number,
+                    e.Address.Complement,
+                    e.Address.Neighborhood,
+                    e.Address.City,
+                    e.Address.State,
+                    e.Address.ZipCode
+                ),
+                e.ImageUrl,
+                e.Sports.Select(s => new EstablishmentDtos.SportDto(
+                    s.Id,
+                    s.Name,
+                    s.Description
+                )),
+                e.Users.Select(eu => new EstablishmentDtos.EstablishmentUserDto(
+                    eu.UserId,
+                    $"{eu.User.FirstName} {eu.User.LastName}",
+                    eu.User.Email,
+                    eu.Role
+                )),
+                e.Courts.Select(c => new EstablishmentDtos.CourtDto(
+                    c.Id,
+                    c.Name,
+                    c.MinBookingSlots,
+                    c.MaxBookingSlots,
+                    c.SlotDurationMinutes,
+                    c.TimeZone,
+                    c.Sports.Select(s => new EstablishmentDtos.SportDto(
+                        s.Id,
+                        s.Name,
+                        s.Description
+                    ))
+                ))
+            ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
-    public Task<Establishment?> GetByIdWithAddressAsync(Guid id, CancellationToken cancellationToken)
+    public Task<EstablishmentDtos.EstablishmentWithAddressDto?> GetByIdWithAddressAsync(Guid id, CancellationToken cancellationToken)
     {
         return _dbContext.Establishments
             .Where(e => e.Id == id)
-            .Include(e => e.Address)
+            .Select(e => new EstablishmentDtos.EstablishmentWithAddressDto(
+                e.Id,
+                e.Name,
+                e.Description,
+                new EstablishmentDtos.AddressDto(
+                    e.Address.Street,
+                    e.Address.Number,
+                    e.Address.Complement,
+                    e.Address.Neighborhood,
+                    e.Address.City,
+                    e.Address.State,
+                    e.Address.ZipCode
+                ),
+                e.ImageUrl
+            ))
+            .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -130,43 +182,75 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         return (items, total);
     }
 
-    public Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken cancellationToken)
+    public Task<List<ReservationDtos.ReservationWithDetailsDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken cancellationToken)
     {
-        var query = _context.Reservations
-            .Where(r => courtIds.Contains(r.CourtId));
+        var query = _dbContext.Reservations.AsQueryable();
 
-        if (filter.StartTime.HasValue)
+        if (courtIds != null && courtIds.Any())
         {
-            query = query.Where(r => r.StartTimeUtc >= filter.StartTime.Value);
+            query = query.Where(r => courtIds.Contains(r.CourtId));
         }
 
-        if (filter.EndTime.HasValue)
+        if (filter != null)
         {
-            query = query.Where(r => r.EndTimeUtc <= filter.EndTime.Value);
+            if (filter.StartTime.HasValue)
+            {
+                query = query.Where(r => r.StartTimeUtc >= filter.StartTime.Value);
+            }
+
+            if (filter.EndTime.HasValue)
+            {
+                query = query.Where(r => r.EndTimeUtc <= filter.EndTime.Value);
+            }
+
+            if (filter.UserId.HasValue)
+            {
+                query = query.Where(r => r.UserId == filter.UserId.Value);
+            }
         }
 
-        if (filter.UserId.HasValue)
-        {
-            query = query.Where(r => r.UserId == filter.UserId.Value);
-        }
-
-        return query.AsNoTracking().ToListAsync(cancellationToken);
-    }
-
-    public Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
-    {
-        return _context.Sports
-            .Where(s => s.Establishments.Any(e => e.Id == establishmentId))
+        return query
+            .Include(r => r.User)
+            .Include(r => r.Court)
+            .Select(r => new ReservationWithDetailsDto(
+                r.Id,
+                r.UserId,
+                r.User.FullName,
+                r.User.Email,
+                r.CourtId,
+                r.Court.Name,
+                r.StartTimeUtc,
+                r.EndTimeUtc
+            ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<User>> GetUsersByEstablishmentId(Guid establishmentId, CancellationToken cancellationToken)
+    public Task<List<SportSummaryDto>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken)
+    {
+        return _context.Sports
+            .Where(s => s.Establishments.Any(e => e.Id == establishmentId))
+            .Select(s => new SportSummaryDto(
+                s.Id,
+                s.Name,
+                s.Description
+            ))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<EstablishmentUserSummaryDto>> GetUsersByEstablishmentId(Guid establishmentId, CancellationToken cancellationToken)
     {
         return await _context.EstablishmentUsers
             .Where(eu => eu.EstablishmentId == establishmentId)
-            .Include(eu => eu.User)
-            .Select(eu => eu.User)
+            .Select(eu => new EstablishmentUserSummaryDto(
+                eu.UserId,
+                eu.User.FirstName,
+                eu.User.LastName,
+                eu.User.Email,
+                eu.User.Email,
+                eu.Role
+            ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }

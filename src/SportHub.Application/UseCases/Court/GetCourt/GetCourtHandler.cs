@@ -38,7 +38,7 @@ public class GetCourtHandler : IQueryHandler<GetCourtQuery, GetCourtResponse>
                 Id = court.Establishment.Id,
                 Name = court.Establishment.Name,
                 Description = court.Establishment.Description,
-                ImageUrl = court.Establishment.ImageUrl,
+                ImageUrl = court.Establishment.ImageUrl
             }
         };
 

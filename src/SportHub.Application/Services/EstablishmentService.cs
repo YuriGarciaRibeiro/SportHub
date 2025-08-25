@@ -30,9 +30,18 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         if (cached is not null) return Result.Ok(cached);
 
         var ids = await _establishmentUsersRepository.GetByOwnerIdAsync(ownerId, ct);
-        var list = !ids?.Any() ?? true
+        var dtoList = !ids?.Any() ?? true
             ? new List<Establishment>()
-            : await _establishmentRepository.GetByIdsWithDetailsAsync(ids!, ct);
+            : await _establishmentRepository.GetByIdsAsync(ids!, ct);
+
+        // Convert to entities for legacy compatibility
+        var list = dtoList.Select(dto => new Establishment 
+        { 
+            Id = dto.Id, 
+            Name = dto.Name, 
+            Description = dto.Description, 
+            ImageUrl = dto.ImageUrl 
+        }).ToList();
 
         await _cache.SetAsync(key, list, DefaultTtl, ct);
         return Result.Ok(list);
@@ -43,10 +52,10 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         return await _establishmentRepository.GetFilteredAsync(query, cancellationToken);
     }
 
-    public async Task<Establishment?> GetByIdWithAddressAsync(Guid id, CancellationToken ct = default)
+    public async Task<EstablishmentWithAddressDto?> GetByIdWithAddressAsync(Guid id, CancellationToken ct = default)
     {
         var key = _cache.GenerateCacheKey("EstablishmentWithAddress", id.ToString());
-        var cached = await _cache.GetAsync<Establishment>(key, ct);
+        var cached = await _cache.GetAsync<EstablishmentWithAddressDto>(key, ct);
         if (cached is not null) return cached;
 
         var establishment = await _establishmentRepository.GetByIdWithAddressAsync(id, ct);
@@ -56,10 +65,10 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         return establishment;
     }
 
-    public async Task<List<User>> GetUsersByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
+    public async Task<List<EstablishmentUserSummaryDto>> GetUsersByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
         var key = _cache.GenerateCacheKey("EstablishmentUsers", establishmentId.ToString());
-        var cached = await _cache.GetAsync<List<User>>(key, ct);
+        var cached = await _cache.GetAsync<List<EstablishmentUserSummaryDto>>(key, ct);
         if (cached is not null) return cached;
 
         var users = await _establishmentRepository.GetUsersByEstablishmentId(establishmentId, ct);
@@ -68,10 +77,10 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         return users;
     }
 
-    public async Task<List<Sport>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
+    public async Task<List<SportSummaryDto>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken ct = default)
     {
         var key = _cache.GenerateCacheKey("EstablishmentSports", establishmentId.ToString());
-        var cached = await _cache.GetAsync<List<Sport>>(key, ct);
+        var cached = await _cache.GetAsync<List<SportSummaryDto>>(key, ct);
         if (cached is not null) return cached;
 
         var sports = await _establishmentRepository.GetSportsByEstablishmentIdAsync(establishmentId, ct);
@@ -80,9 +89,10 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         return sports;
     }
     
-    public async Task<List<Reservation>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
+    public async Task<List<ReservationWithDetailsDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken ct = default)
     {
-        return await _establishmentRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
+        var reservations = await _establishmentRepository.GetReservationsByCourtsIdAsync(courtIds, filter, ct);
+        return reservations;
     }
 
     public async Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)

@@ -28,14 +28,14 @@ public class GetEstablishmentReservationsHandler : IQueryHandler<GetEstablishmen
                 StartTimeUtc = r.StartTimeUtc,
                 Court = new CourtDto
                 {
-                    Id = r.Court.Id,
-                    Name = r.Court.Name
+                    Id = r.CourtId,
+                    Name = r.CourtName
                 },
                 User = new UserDto
                 {
-                    Id = r.User.Id,
-                    Name = r.User.FullName,
-                    Email = r.User.Email
+                    Id = r.UserId,
+                    Name = r.UserName,
+                    Email = r.UserEmail
                 }
 
             })
