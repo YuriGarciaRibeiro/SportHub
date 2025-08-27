@@ -26,6 +26,9 @@ public static class ServiceCollectionExtensions
         builder.AddDatabase(builder.Configuration);
         builder.AddCaching();
 
+        // Health Checks
+        builder.Services.AddHealthChecks();
+
         // Serviços de aplicação
         builder.AddApplicationServices();
         builder.AddInfrastructureServices();
@@ -64,6 +67,9 @@ public static class ServiceCollectionExtensions
 
         // Endpoints
         app.UseApiEndpoints();
+
+        // Health Check endpoint
+        app.MapHealthChecks("/health");
 
         return app;
     }
