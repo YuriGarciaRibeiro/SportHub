@@ -4,8 +4,11 @@ public record GetEstablishmentByIdResponse(
     Guid Id,
     string Name,
     string Description,
+    string PhoneNumber,
+    string Email,
+    string Website,
     AddressResponse Address,
-    string ImageUrl,
+    string? ImageUrl,
     IEnumerable<EstablishmentUserResponse> Users,
     IEnumerable<CourtResponse> Courts,
     IEnumerable<SportResponse> Sports

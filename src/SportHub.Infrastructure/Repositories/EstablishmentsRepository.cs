@@ -17,16 +17,19 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         _dbContext = dbContext;
     }
 
-    public Task<EstablishmentDtos.EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
+    public Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
     {
         return _dbContext.Establishments
             .AsNoTracking()
             .Where(e => e.Id == id)
-            .Select(e => new EstablishmentDtos.EstablishmentCompleteDto(
+            .Select(e => new EstablishmentCompleteDto(
                 e.Id,
                 e.Name,
                 e.Description,
-                new EstablishmentDtos.AddressDto(
+                e.PhoneNumber,
+                e.Email,
+                e.Website,
+                new AddressDto(
                     e.Address.Street,
                     e.Address.Number,
                     e.Address.Complement,
@@ -41,13 +44,13 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     s.Name,
                     s.Description
                 )),
-                e.Users.Select(eu => new EstablishmentDtos.EstablishmentUserDto(
+                e.Users.Select(eu => new EstablishmentUserDto(
                     eu.UserId,
                     $"{eu.User.FirstName} {eu.User.LastName}",
                     eu.User.Email,
                     eu.Role
                 )),
-                e.Courts.Select(c => new EstablishmentDtos.CourtDto(
+                e.Courts.Select(c => new CourtDto(
                     c.Id,
                     c.Name,
                     c.MinBookingSlots,

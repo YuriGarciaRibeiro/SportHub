@@ -54,6 +54,10 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
             Id: establishment.Id,
             Name: establishment.Name,
             Description: establishment.Description,
+            PhoneNumber: establishment.PhoneNumber,
+            Email: establishment.Email,
+            Website: establishment.Website,
+            ImageUrl: establishment.ImageUrl,
             Address: new AddressResponse(
                 Street: establishment.Address.Street,
                 Number: establishment.Address.Number,
@@ -64,7 +68,6 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
                 Neighborhood: establishment.Address.Neighborhood
             ),
             Users: users,
-            ImageUrl: establishment.ImageUrl,
             Courts: courts,
             Sports: establishment.Sports.Select(s => new SportResponse(
                 Id: s.Id,
