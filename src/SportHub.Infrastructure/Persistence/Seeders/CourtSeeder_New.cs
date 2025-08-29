@@ -5,19 +5,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Seeders;
 
-public class CourtSeeder : BaseSeeder
+public class CourtSeederNew : BaseSeeder
 {
     private readonly IEstablishmentsRepository _establishmentsRepository;
     private readonly ICourtsRepository _courtsRepository;
     private readonly ISportsRepository _sportsRepository;
     private readonly ApplicationDbContext _dbContext;
 
-    public CourtSeeder(
+    public CourtSeederNew(
         IEstablishmentsRepository establishmentsRepository,
         ICourtsRepository courtsRepository,
         ISportsRepository sportsRepository,
         ApplicationDbContext dbContext,
-        ILogger<CourtSeeder> logger) : base(logger)
+        ILogger<CourtSeederNew> logger) : base(logger)
     {
         _establishmentsRepository = establishmentsRepository;
         _courtsRepository = courtsRepository;
