@@ -12,6 +12,8 @@ public class Establishment : AuditEntity, IEntity
     public string Email { get; set; } = null!;
     public string Website { get; set; } = null!;
     public string ImageUrl { get; set; } = null!;
+    public TimeOnly OpeningTime { get; set; }
+    public TimeOnly ClosingTime { get; set; }
 
     public Address Address { get; set; } = null!;
 

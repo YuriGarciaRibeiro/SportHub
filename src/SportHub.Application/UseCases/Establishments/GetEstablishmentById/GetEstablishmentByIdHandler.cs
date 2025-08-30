@@ -58,6 +58,8 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
             Email: establishment.Email,
             Website: establishment.Website,
             ImageUrl: establishment.ImageUrl,
+            OpeningTime: establishment.OpeningTime,
+            ClosingTime: establishment.ClosingTime,
             Address: new AddressResponse(
                 Street: establishment.Address.Street,
                 Number: establishment.Address.Number,

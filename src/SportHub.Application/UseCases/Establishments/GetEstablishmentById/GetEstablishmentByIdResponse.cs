@@ -7,6 +7,8 @@ public record GetEstablishmentByIdResponse(
     string PhoneNumber,
     string Email,
     string Website,
+    TimeOnly OpeningTime,
+    TimeOnly ClosingTime,
     AddressResponse Address,
     string? ImageUrl,
     IEnumerable<EstablishmentUserResponse> Users,

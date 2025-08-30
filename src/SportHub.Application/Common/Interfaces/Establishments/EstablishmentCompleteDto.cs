@@ -9,6 +9,8 @@ public record EstablishmentCompleteDto(
     string PhoneNumber,
     string Email,
     string Website,
+    TimeOnly OpeningTime,
+    TimeOnly ClosingTime,
     AddressDto Address,
     string? ImageUrl,
     IEnumerable<SportDto> Sports,

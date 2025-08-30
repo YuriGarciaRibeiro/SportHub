@@ -368,9 +368,21 @@ public class EstablishmentServiceTests
         // Arrange
         var id = Guid.NewGuid();
         var cacheKey = "EstablishmentByIdComplete_" + id;
-        var cachedDto = new EstablishmentCompleteDto(id, "Test", "Description",
-            new AddressDto("Street", "123", null, "Neighborhood", "City", "State", "12345"), 
-            "image.jpg", new List<SportDto>(), new List<EstablishmentUserDto>(), new List<CourtDto>());
+        var cachedDto = new EstablishmentCompleteDto(
+            id,
+            "Test", // name
+            "Description", // description
+            "SomePhone", // phone
+            "SomeEmail", // email
+            "SomeWebsite", // website
+            new TimeOnly(8, 0), // openingTime
+            new TimeOnly(22, 0), // closingTime
+            new AddressDto("Street", "123", null, "Neighborhood", "City", "State", "12345"), // address
+            "image.jpg", // imageUrl
+            new List<SportDto>(), // sports
+            new List<EstablishmentUserDto>(), // users
+            new List<CourtDto>() // courts
+        );
 
         _mockCache.Setup(c => c.GenerateCacheKey("EntityByIdComplete", "Establishment", id))
             .Returns(cacheKey);
@@ -391,9 +403,21 @@ public class EstablishmentServiceTests
         // Arrange
         var id = Guid.NewGuid();
         var cacheKey = "EstablishmentByIdComplete_" + id;
-        var dto = new EstablishmentCompleteDto(id, "Test", "Description",
-            new AddressDto("Street", "123", null, "Neighborhood", "City", "State", "12345"),
-            "image.jpg", new List<SportDto>(), new List<EstablishmentUserDto>(), new List<CourtDto>());
+        var dto = new EstablishmentCompleteDto(
+            id,
+            "Test", // name
+            "Description", // description
+            "SomePhone", // phone
+            "SomeEmail", // email
+            "SomeWebsite", // website
+            new TimeOnly(8, 0), // openingTime
+            new TimeOnly(22, 0), // closingTime
+            new AddressDto("Street", "123", null, "Neighborhood", "City", "State", "12345"), // address
+            "image.jpg", // imageUrl
+            new List<SportDto>(), // sports
+            new List<EstablishmentUserDto>(), // users
+            new List<CourtDto>() // courts
+        );
 
         _mockCache.Setup(c => c.GenerateCacheKey("EntityByIdComplete", "Establishment", id))
             .Returns(cacheKey);

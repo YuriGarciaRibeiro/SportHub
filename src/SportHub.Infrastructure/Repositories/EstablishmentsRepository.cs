@@ -29,6 +29,8 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                 e.PhoneNumber,
                 e.Email,
                 e.Website,
+                e.OpeningTime,
+                e.ClosingTime,
                 new AddressDto(
                     e.Address.Street,
                     e.Address.Number,
@@ -67,15 +69,15 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .SingleOrDefaultAsync(ct);
     }
 
-    public async Task<List<EstablishmentDtos.EstablishmentWithDetailsDto>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
+    public async Task<List<EstablishmentWithDetailsDto>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
     {
         return await _dbContext.Establishments
             .Where(e => ids.Contains(e.Id))
-            .Select(e => new EstablishmentDtos.EstablishmentWithDetailsDto(
+            .Select(e => new EstablishmentWithDetailsDto(
                 e.Id,
                 e.Name,
                 e.Description,
-                new EstablishmentDtos.AddressDto(
+                new AddressDto(
                     e.Address.Street,
                     e.Address.Number,
                     e.Address.Complement,
@@ -90,13 +92,13 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     s.Name,
                     s.Description
                 )),
-                e.Users.Select(eu => new EstablishmentDtos.EstablishmentUserDto(
+                e.Users.Select(eu => new EstablishmentUserDto(
                     eu.UserId,
                     $"{eu.User.FirstName} {eu.User.LastName}",
                     eu.User.Email,
                     eu.Role
                 )),
-                e.Courts.Select(c => new EstablishmentDtos.CourtDto(
+                e.Courts.Select(c => new CourtDto(
                     c.Id,
                     c.Name,
                     c.MinBookingSlots,
@@ -114,15 +116,15 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .ToListAsync(cancellationToken);
     }
 
-    public Task<EstablishmentDtos.EstablishmentWithAddressDto?> GetByIdWithAddressAsync(Guid id, CancellationToken cancellationToken)
+    public Task<EstablishmentWithAddressDto?> GetByIdWithAddressAsync(Guid id, CancellationToken cancellationToken)
     {
         return _dbContext.Establishments
             .Where(e => e.Id == id)
-            .Select(e => new EstablishmentDtos.EstablishmentWithAddressDto(
+            .Select(e => new EstablishmentWithAddressDto(
                 e.Id,
                 e.Name,
                 e.Description,
-                new EstablishmentDtos.AddressDto(
+                new AddressDto(
                     e.Address.Street,
                     e.Address.Number,
                     e.Address.Complement,
@@ -185,7 +187,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         return (items, total);
     }
 
-    public Task<List<ReservationDtos.ReservationWithDetailsDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken cancellationToken)
+    public Task<List<ReservationWithDetailsDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken cancellationToken)
     {
         var query = _dbContext.Reservations.AsQueryable();
 
