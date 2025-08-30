@@ -47,6 +47,7 @@ public record CourtDto(
     int MinBookingSlots,
     int MaxBookingSlots,
     int SlotDurationMinutes,
+    decimal PricePerSlot,
     string TimeZone,
     IEnumerable<SportDto> Sports
 );

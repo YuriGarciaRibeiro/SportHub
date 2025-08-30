@@ -58,6 +58,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     c.MinBookingSlots,
                     c.MaxBookingSlots,
                     c.SlotDurationMinutes,
+                    c.PricePerSlot,
                     c.TimeZone,
                     c.Sports.Select(s => new EstablishmentDtos.SportDto(
                         s.Id,
@@ -104,6 +105,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     c.MinBookingSlots,
                     c.MaxBookingSlots,
                     c.SlotDurationMinutes,
+                    c.PricePerSlot,
                     c.TimeZone,
                     c.Sports.Select(s => new EstablishmentDtos.SportDto(
                         s.Id,
@@ -144,6 +146,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         var dbQuery = _dbSet
             .Include(e => e.Users)
             .Include(e => e.Sports)
+            .Include(e => e.Courts)
             .AsQueryable();
 
         if (query.ownerId.HasValue)
@@ -176,6 +179,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     e.Address.ZipCode
                 ),
                 e.ImageUrl,
+                e.Courts.Any() ? e.Courts.Min(c => c.PricePerSlot) : null,
                 e.Sports.Select(s => new SportResponse(
                     s.Id,
                     s.Name,

@@ -41,6 +41,7 @@ public record CourtResponse(
     int MinBookingSlots,
     int MaxBookingSlots,
     string TimeZone,
+    decimal PricePerSlot,
     IEnumerable<SportResponse> Sports
 );
 

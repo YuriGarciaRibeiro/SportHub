@@ -132,7 +132,7 @@ public class EstablishmentServiceTests
         {
             new EstablishmentResponse(_testId, "Test", "Description", 
                 new AddressResponse("Street", "123", null, "Neighborhood", "City", "State", "12345"),
-                "image.jpg", new List<SportResponse>())
+                "image.jpg", 10.0m, new List<SportResponse>())
         };
         var expectedResult = (expectedResponse, 1);
 

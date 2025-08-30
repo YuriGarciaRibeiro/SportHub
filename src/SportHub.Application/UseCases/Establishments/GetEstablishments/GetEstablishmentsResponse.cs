@@ -14,6 +14,7 @@ public record EstablishmentResponse(
     string Description,
     AddressResponse Address,
     string ImageUrl,
+    decimal? StartingPrice,
     IEnumerable<SportResponse> Sports
 );
     

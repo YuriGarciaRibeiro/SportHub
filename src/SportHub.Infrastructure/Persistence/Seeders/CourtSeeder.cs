@@ -78,7 +78,8 @@ public class CourtSeeder : BaseSeeder
                     MaxBookingSlots = 3,
                     OpeningTime = new TimeOnly(6, 0),
                     ClosingTime = new TimeOnly(22, 0),
-                    TimeZone = "America/Maceio"
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 50.00m
                 }, new List<Guid> { football.Id }));
             }
 
@@ -94,7 +95,8 @@ public class CourtSeeder : BaseSeeder
                     MaxBookingSlots = 2,
                     OpeningTime = new TimeOnly(7, 0),
                     ClosingTime = new TimeOnly(21, 0),
-                    TimeZone = "America/Maceio"
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 75.00m
                 }, new List<Guid> { basketball.Id }));
             }
         }
@@ -118,7 +120,8 @@ public class CourtSeeder : BaseSeeder
                     MaxBookingSlots = 2,
                     OpeningTime = new TimeOnly(7, 0),
                     ClosingTime = new TimeOnly(22, 0),
-                    TimeZone = "America/Maceio"
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 40.00m
                 }, new List<Guid> { tennis.Id }));
 
                 courtsData.Add((new Court
@@ -131,7 +134,8 @@ public class CourtSeeder : BaseSeeder
                     MaxBookingSlots = 2,
                     OpeningTime = new TimeOnly(7, 0),
                     ClosingTime = new TimeOnly(22, 0),
-                    TimeZone = "America/Maceio"
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 40.00m
                 }, new List<Guid> { tennis.Id }));
             }
 
@@ -147,7 +151,8 @@ public class CourtSeeder : BaseSeeder
                     MaxBookingSlots = 2,
                     OpeningTime = new TimeOnly(8, 0),
                     ClosingTime = new TimeOnly(21, 0),
-                    TimeZone = "America/Maceio"
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 60.00m
                 }, new List<Guid> { padel.Id }));
             }
         }
@@ -172,7 +177,8 @@ public class CourtSeeder : BaseSeeder
                         MaxBookingSlots = 2,
                         OpeningTime = new TimeOnly(6, 0),
                         ClosingTime = new TimeOnly(23, 0),
-                        TimeZone = "America/Maceio"
+                        TimeZone = "America/Maceio",
+                        PricePerSlot = 30.00m
                     }, new List<Guid> { futsal.Id }));
                 }
             }

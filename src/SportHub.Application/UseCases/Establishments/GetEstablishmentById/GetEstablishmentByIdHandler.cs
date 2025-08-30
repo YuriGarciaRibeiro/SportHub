@@ -43,6 +43,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
             MaxBookingSlots: c.MaxBookingSlots,
             SlotDurationMinutes: c.SlotDurationMinutes,
             TimeZone: c.TimeZone,
+            PricePerSlot: c.PricePerSlot,
             Sports: c.Sports.Select(s => new SportResponse(
                 Id: s.Id,
                 Name: s.Name,

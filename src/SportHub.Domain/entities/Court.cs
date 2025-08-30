@@ -15,6 +15,8 @@ public class Court : AuditEntity, IEntity
     public TimeOnly OpeningTime { get; set; } = new TimeOnly(8, 0);
     public TimeOnly ClosingTime { get; set; } = new TimeOnly(22, 0);
 
+    public decimal PricePerSlot { get; set; } = 0;
+
     public string TimeZone { get; set; } = "America/Maceio";
 
     public ICollection<Sport> Sports { get; set; } = new List<Sport>();
