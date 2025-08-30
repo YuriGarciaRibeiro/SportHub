@@ -23,6 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Sport> Sports { get; set; } = null!;
     public DbSet<Reservation> Reservations { get; set; } = null!;
     public DbSet<Evaluation> Evaluations { get; set; } = null!;
+    public DbSet<Favorite> Favorites { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

@@ -18,4 +18,5 @@ public class User : AuditEntity, IEntity
     public string FullName => $"{FirstName} {LastName}";
 
     public ICollection<EstablishmentUser> Establishments { get; set; } = new List<EstablishmentUser>();
+    public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
 }

@@ -2,6 +2,7 @@ using Application.Services;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
 using Infrastructure.Services;
+using Application.Common.Interfaces.Favorites;
 
 namespace Api.Extensions.DependencyInjection;
 
@@ -18,6 +19,7 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddScoped<IEvaluationService, EvaluationService>();
         builder.Services.AddScoped<IReservationService, ReservationService>();
         builder.Services.AddScoped<ICacheService, CacheService>();
+        builder.Services.AddScoped<IFavoriteService, FavoriteService>();
 
         return builder;
     }
@@ -40,6 +42,8 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddScoped<ISportsRepository, SportsRepository>();
         builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
         builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
+        builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+        builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
         return builder;
     }

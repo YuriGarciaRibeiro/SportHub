@@ -22,6 +22,8 @@ public static class ApplicationExtensions
         apiGroup.MapEstablishmentsEndpoints();
         apiGroup.MapSportsEndpoints();
         apiGroup.MapCourtsEndpoints();
+        apiGroup.MapFavoritesEndpoints();
+        apiGroup.MapUserEndpoints();
 
         return app;
     }
