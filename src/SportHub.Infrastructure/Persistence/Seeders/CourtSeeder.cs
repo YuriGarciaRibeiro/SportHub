@@ -70,7 +70,7 @@ public class CourtSeeder : BaseSeeder
             {
                 courtsData.Add((new Court
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("11111111-1111-1111-1111-111111111112"),
                     Name = "Field 1 - Official",
                     EstablishmentId = centralArena.Id,
                     SlotDurationMinutes = 60,
@@ -87,7 +87,7 @@ public class CourtSeeder : BaseSeeder
             {
                 courtsData.Add((new Court
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("11111111-1111-1111-1111-111111111114"),
                     Name = "Court A - Indoor",
                     EstablishmentId = centralArena.Id,
                     SlotDurationMinutes = 90,
@@ -98,6 +98,24 @@ public class CourtSeeder : BaseSeeder
                     TimeZone = "America/Maceio",
                     PricePerSlot = 75.00m
                 }, new List<Guid> { basketball.Id }));
+            }
+
+            var volleyball = sportsList.FirstOrDefault(s => s.Name == "Volleyball");
+            if (volleyball != null)
+            {
+                courtsData.Add((new Court
+                {
+                    Id = Guid.Parse("11111111-1111-1111-1111-111111111116"),
+                    Name = "Volleyball Court A",
+                    EstablishmentId = centralArena.Id,
+                    SlotDurationMinutes = 60,
+                    MinBookingSlots = 1,
+                    MaxBookingSlots = 2,
+                    OpeningTime = new TimeOnly(8, 0),
+                    ClosingTime = new TimeOnly(22, 0),
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 50.00m
+                }, new List<Guid> { volleyball.Id }));
             }
         }
 
@@ -112,7 +130,7 @@ public class CourtSeeder : BaseSeeder
             {
                 courtsData.Add((new Court
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
                     Name = "Tennis Court 1",
                     EstablishmentId = premiumClub.Id,
                     SlotDurationMinutes = 60,
@@ -126,7 +144,7 @@ public class CourtSeeder : BaseSeeder
 
                 courtsData.Add((new Court
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("22222222-2222-2222-2222-222222222226"),
                     Name = "Tennis Court 2",
                     EstablishmentId = premiumClub.Id,
                     SlotDurationMinutes = 60,
@@ -143,7 +161,7 @@ public class CourtSeeder : BaseSeeder
             {
                 courtsData.Add((new Court
                 {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.Parse("22222222-2222-2222-2222-222222222224"),
                     Name = "Padel Court 1",
                     EstablishmentId = premiumClub.Id,
                     SlotDurationMinutes = 90,
@@ -165,22 +183,61 @@ public class CourtSeeder : BaseSeeder
 
             if (futsal != null)
             {
-                for (int i = 1; i <= 4; i++)
+                courtsData.Add((new Court
                 {
-                    courtsData.Add((new Court
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = $"Futsal Court {i}",
-                        EstablishmentId = futsalCenter.Id,
-                        SlotDurationMinutes = 60,
-                        MinBookingSlots = 1,
-                        MaxBookingSlots = 2,
-                        OpeningTime = new TimeOnly(6, 0),
-                        ClosingTime = new TimeOnly(23, 0),
-                        TimeZone = "America/Maceio",
-                        PricePerSlot = 30.00m
-                    }, new List<Guid> { futsal.Id }));
-                }
+                    Id = Guid.Parse("33333333-3333-3333-3333-333333333332"),
+                    Name = "Futsal Court 1",
+                    EstablishmentId = futsalCenter.Id,
+                    SlotDurationMinutes = 60,
+                    MinBookingSlots = 1,
+                    MaxBookingSlots = 2,
+                    OpeningTime = new TimeOnly(6, 0),
+                    ClosingTime = new TimeOnly(23, 0),
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 30.00m
+                }, new List<Guid> { futsal.Id }));
+
+                courtsData.Add((new Court
+                {
+                    Id = Guid.Parse("33333333-3333-3333-3333-333333333334"),
+                    Name = "Futsal Court 2",
+                    EstablishmentId = futsalCenter.Id,
+                    SlotDurationMinutes = 60,
+                    MinBookingSlots = 1,
+                    MaxBookingSlots = 2,
+                    OpeningTime = new TimeOnly(6, 0),
+                    ClosingTime = new TimeOnly(23, 0),
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 30.00m
+                }, new List<Guid> { futsal.Id }));
+
+                courtsData.Add((new Court
+                {
+                    Id = Guid.Parse("33333333-3333-3333-3333-333333333336"),
+                    Name = "Futsal Court 3",
+                    EstablishmentId = futsalCenter.Id,
+                    SlotDurationMinutes = 60,
+                    MinBookingSlots = 1,
+                    MaxBookingSlots = 2,
+                    OpeningTime = new TimeOnly(6, 0),
+                    ClosingTime = new TimeOnly(23, 0),
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 30.00m
+                }, new List<Guid> { futsal.Id }));
+
+                courtsData.Add((new Court
+                {
+                    Id = Guid.Parse("33333333-3333-3333-3333-333333333338"),
+                    Name = "Futsal Court 4",
+                    EstablishmentId = futsalCenter.Id,
+                    SlotDurationMinutes = 60,
+                    MinBookingSlots = 1,
+                    MaxBookingSlots = 2,
+                    OpeningTime = new TimeOnly(6, 0),
+                    ClosingTime = new TimeOnly(23, 0),
+                    TimeZone = "America/Maceio",
+                    PricePerSlot = 30.00m
+                }, new List<Guid> { futsal.Id }));
             }
         }
 

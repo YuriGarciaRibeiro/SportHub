@@ -105,4 +105,32 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
             .AsNoTracking()
             .ToListAsync(ct);
     }
+
+    public Task<(IEnumerable<ReservationWithDetailsDto> Items, int Total)> GetReservationsByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var query = _dbContext.Reservations
+            .Where(r => r.UserId == userId);
+
+        var total = query.Count();
+
+        var items = query
+            .Include(r => r.Court)
+            .OrderBy(r => r.StartTimeUtc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(r => new ReservationWithDetailsDto(
+                r.Id,
+                r.UserId,
+                "",
+                "",
+                r.CourtId,
+                r.Court.Name,
+                r.StartTimeUtc,
+                r.EndTimeUtc
+            ))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return Task.FromResult((items.Result.AsEnumerable(), total));
+    }
 }

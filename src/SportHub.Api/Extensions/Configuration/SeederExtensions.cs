@@ -11,6 +11,7 @@ public static class SeederExtensions
         builder.Services.AddScoped<IDataSeeder, SportSeeder>();
         builder.Services.AddScoped<IDataSeeder, EstablishmentSeeder>();
         builder.Services.AddScoped<IDataSeeder, CourtSeeder>();
+        builder.Services.AddScoped<IDataSeeder, ReservationSeeder>();
 
         // Register individual seeders for specific access
         builder.Services.AddScoped<UserSeeder>();

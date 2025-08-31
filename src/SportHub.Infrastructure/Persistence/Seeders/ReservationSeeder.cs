@@ -49,8 +49,8 @@ public class ReservationSeeder : BaseSeeder
         // SportHub Central Arena - Past reservations
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R1111111-1111-1111-1111-111111111111"),
-            CourtId = Guid.Parse("C1111111-1111-1111-1111-111111111111"), // Main Football Court
+            Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
+            CourtId = Guid.Parse("11111111-1111-1111-1111-111111111112"), // Main Football Court
             UserId = Guid.Parse("44444444-4444-4444-4444-444444444444"), // Anna Brown
             StartTimeUtc = pastDate.AddHours(14),
             EndTimeUtc = pastDate.AddHours(15)
@@ -58,8 +58,8 @@ public class ReservationSeeder : BaseSeeder
 
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R1111112-1111-1111-1111-111111111111"),
-            CourtId = Guid.Parse("C1111112-1111-1111-1111-111111111111"), // Basketball Court A
+            Id = Guid.Parse("11111111-1111-1111-1111-111111111113"),
+            CourtId = Guid.Parse("11111111-1111-1111-1111-111111111114"), // Basketball Court A
             UserId = Guid.Parse("55555555-5555-5555-5555-555555555555"), // Peter Davis
             StartTimeUtc = pastDate.AddHours(16),
             EndTimeUtc = pastDate.AddHours(17).AddMinutes(30)
@@ -72,8 +72,8 @@ public class ReservationSeeder : BaseSeeder
         
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R2222221-2222-2222-2222-222222222222"),
-            CourtId = Guid.Parse("C2222221-2222-2222-2222-222222222222"), // Tennis Court 1
+            Id = Guid.Parse("22222222-2222-2222-2222-222222222221"),
+            CourtId = Guid.Parse("22222222-2222-2222-2222-222222222222"), // Tennis Court 1
             UserId = Guid.Parse("66666666-6666-6666-6666-666666666666"), // Lucy Miller
             StartTimeUtc = today.AddHours(18),
             EndTimeUtc = today.AddHours(19)
@@ -81,8 +81,8 @@ public class ReservationSeeder : BaseSeeder
 
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R2222222-2222-2222-2222-222222222222"),
-            CourtId = Guid.Parse("C2222223-2222-2222-2222-222222222222"), // Padel Court 1
+            Id = Guid.Parse("22222222-2222-2222-2222-222222222223"),
+            CourtId = Guid.Parse("22222222-2222-2222-2222-222222222224"), // Padel Court 1
             UserId = Guid.Parse("77777777-7777-7777-7777-777777777777"), // Robert Wilson
             StartTimeUtc = today.AddHours(20),
             EndTimeUtc = today.AddHours(21).AddMinutes(30)
@@ -93,8 +93,8 @@ public class ReservationSeeder : BaseSeeder
         
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R3333331-3333-3333-3333-333333333333"),
-            CourtId = Guid.Parse("C3333331-3333-3333-3333-333333333333"), // Futsal Court 1
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333331"),
+            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333332"), // Futsal Court 1
             UserId = Guid.Parse("44444444-4444-4444-4444-444444444444"), // Anna Brown
             StartTimeUtc = tomorrow.AddHours(19),
             EndTimeUtc = tomorrow.AddHours(20)
@@ -102,8 +102,8 @@ public class ReservationSeeder : BaseSeeder
 
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R3333332-3333-3333-3333-333333333333"),
-            CourtId = Guid.Parse("C3333332-3333-3333-3333-333333333333"), // Futsal Court 2
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333334"), // Futsal Court 2
             UserId = Guid.Parse("88888888-8888-8888-8888-888888888888"), // Emily Moore
             StartTimeUtc = tomorrow.AddHours(20),
             EndTimeUtc = tomorrow.AddHours(21)
@@ -114,8 +114,8 @@ public class ReservationSeeder : BaseSeeder
         
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R1111113-1111-1111-1111-111111111111"),
-            CourtId = Guid.Parse("C1111113-1111-1111-1111-111111111111"), // Volleyball Court A
+            Id = Guid.Parse("11111111-1111-1111-1111-111111111115"),
+            CourtId = Guid.Parse("11111111-1111-1111-1111-111111111116"), // Volleyball Court A
             UserId = Guid.Parse("55555555-5555-5555-5555-555555555555"), // Peter Davis
             StartTimeUtc = dayAfter.AddHours(15),
             EndTimeUtc = dayAfter.AddHours(16)
@@ -123,8 +123,8 @@ public class ReservationSeeder : BaseSeeder
 
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R2222223-2222-2222-2222-222222222222"),
-            CourtId = Guid.Parse("C2222222-2222-2222-2222-222222222222"), // Tennis Court 2
+            Id = Guid.Parse("22222222-2222-2222-2222-222222222225"),
+            CourtId = Guid.Parse("22222222-2222-2222-2222-222222222226"), // Tennis Court 2
             UserId = Guid.Parse("66666666-6666-6666-6666-666666666666"), // Lucy Miller
             StartTimeUtc = dayAfter.AddHours(17),
             EndTimeUtc = dayAfter.AddHours(18)
@@ -135,8 +135,8 @@ public class ReservationSeeder : BaseSeeder
         
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R3333333-3333-3333-3333-333333333333"),
-            CourtId = Guid.Parse("C3333333-3333-3333-3333-333333333333"), // Futsal Court 3
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333335"),
+            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333336"), // Futsal Court 3
             UserId = Guid.Parse("77777777-7777-7777-7777-777777777777"), // Robert Wilson
             StartTimeUtc = saturday.AddHours(10),
             EndTimeUtc = saturday.AddHours(11)
@@ -144,8 +144,8 @@ public class ReservationSeeder : BaseSeeder
 
         reservations.Add(new Reservation
         {
-            Id = Guid.Parse("R3333334-3333-3333-3333-333333333333"),
-            CourtId = Guid.Parse("C3333334-3333-3333-3333-333333333333"), // Futsal Court 4
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333337"),
+            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333338"), // Futsal Court 4
             UserId = Guid.Parse("88888888-8888-8888-8888-888888888888"), // Emily Moore
             StartTimeUtc = saturday.AddHours(11),
             EndTimeUtc = saturday.AddHours(12)
