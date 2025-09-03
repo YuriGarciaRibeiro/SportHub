@@ -11,6 +11,7 @@ public record GetEstablishmentByIdResponse(
     TimeOnly ClosingTime,
     AddressResponse Address,
     string? ImageUrl,
+    bool? IsFavorite,
     IEnumerable<EstablishmentUserResponse> Users,
     IEnumerable<CourtResponse> Courts,
     IEnumerable<SportResponse> Sports

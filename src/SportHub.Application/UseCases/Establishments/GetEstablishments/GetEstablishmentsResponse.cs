@@ -15,6 +15,7 @@ public record EstablishmentResponse(
     AddressResponse Address,
     string ImageUrl,
     decimal? StartingPrice,
+    bool? IsFavorite,
     IEnumerable<SportResponse> Sports
 );
     

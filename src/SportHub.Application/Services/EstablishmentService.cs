@@ -1,5 +1,6 @@
 using Application.Common.Interfaces.Base;
 using Application.Common.Interfaces.Establishments;
+using Application.Common.Interfaces.Security;
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
@@ -10,17 +11,20 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 {
     private readonly IEstablishmentsRepository _establishmentRepository;
     private readonly IEstablishmentUsersRepository _establishmentUsersRepository;
+    private readonly ICurrentUserService _currentUserService;
 
     protected override TimeSpan DefaultTtl => TimeSpan.FromMinutes(30);
 
     public EstablishmentService(
         IEstablishmentsRepository establishmentRepository,
         IEstablishmentUsersRepository establishmentUsersRepository,
+        ICurrentUserService currentUserService,
         ICacheService cacheService)
         : base(establishmentRepository, cacheService)
     {
         _establishmentUsersRepository = establishmentUsersRepository;
         _establishmentRepository = establishmentRepository;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<List<Establishment>>> GetEstablishmentsByOwnerIdAsync(Guid ownerId, CancellationToken ct)
@@ -49,7 +53,11 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
 
     public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken)
     {
-        return await _establishmentRepository.GetFilteredAsync(query, cancellationToken);
+        // Pega o userId do CurrentUserService (será Guid.Empty se não autenticado)
+        var userId = _currentUserService.UserId;
+        var userIdToPass = userId != Guid.Empty ? userId : (Guid?)null;
+        
+        return await _establishmentRepository.GetFilteredAsync(query, userIdToPass, cancellationToken);
     }
 
     public async Task<EstablishmentWithAddressDto?> GetByIdWithAddressAsync(Guid id, CancellationToken ct = default)

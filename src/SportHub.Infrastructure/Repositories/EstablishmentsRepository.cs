@@ -1,6 +1,7 @@
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using EstablishmentDtos = Application.Common.Interfaces.Establishments;
@@ -141,7 +142,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .SingleOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, CancellationToken cancellationToken)
+    public async Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, Guid? userId, CancellationToken cancellationToken)
     {
         var dbQuery = _dbSet
             .Include(e => e.Users)
@@ -180,6 +181,13 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                 ),
                 e.ImageUrl,
                 e.Courts.Any() ? e.Courts.Min(c => c.PricePerSlot) : null,
+                userId.HasValue && userId.Value != Guid.Empty 
+                    ? _dbContext.Favorites.Any(f => 
+                        f.EntityId == e.Id && 
+                        f.EntityType == FavoriteType.Establishment && 
+                        f.IsDeleted == false &&
+                        f.UserId == userId.Value)
+                    : (bool?)null,
                 e.Sports.Select(s => new SportResponse(
                     s.Id,
                     s.Name,

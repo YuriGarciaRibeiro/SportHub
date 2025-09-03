@@ -20,4 +20,6 @@ public class CurrentUserService : ICurrentUserService
             return userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var guid) ? guid : Guid.Empty;
         }
     }
+
+    public bool IsAuthenticated => UserId != Guid.Empty;
 }

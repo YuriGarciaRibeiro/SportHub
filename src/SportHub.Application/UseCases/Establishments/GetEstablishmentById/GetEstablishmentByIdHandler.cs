@@ -1,5 +1,8 @@
 using Application.Common.Errors;
+using Application.Common.Interfaces.Favorites;
+using Application.Common.Interfaces.Security;
 using Application.CQRS;
+using Domain.Enums;
 
 namespace Application.UseCases.Establishments.GetEstablishmentById;
 
@@ -7,11 +10,19 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
 {
     private readonly IEstablishmentService _establishmentService;
     private readonly IUserService _userService;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IFavoriteService _favoriteService;
 
-    public GetEstablishmentByIdHandler(IEstablishmentService establishmentService, IUserService userService)
+    public GetEstablishmentByIdHandler(
+        IEstablishmentService establishmentService, 
+        IUserService userService,
+        ICurrentUserService currentUserService,
+        IFavoriteService favoriteService)
     {
         _establishmentService = establishmentService;
         _userService = userService;
+        _currentUserService = currentUserService;
+        _favoriteService = favoriteService;
     }
 
     public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
@@ -51,6 +62,16 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
             ))
         ));
 
+        bool? isFavorite = null;
+        if (_currentUserService.UserId != Guid.Empty)
+        {
+            var favorites = await _favoriteService.GetFavoritesAsync(
+                _currentUserService.UserId, 
+                FavoriteType.Establishment, 
+                cancellationToken);
+            isFavorite = favorites.Any(f => f.EntityId == establishment.Id);
+        }
+
         var response = new GetEstablishmentByIdResponse(
             Id: establishment.Id,
             Name: establishment.Name,
@@ -70,6 +91,7 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
                 Complement: establishment.Address.Complement,
                 Neighborhood: establishment.Address.Neighborhood
             ),
+            IsFavorite: isFavorite,
             Users: users,
             Courts: courts,
             Sports: establishment.Sports.Select(s => new SportResponse(

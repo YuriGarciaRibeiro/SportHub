@@ -25,7 +25,7 @@ public class FavoriteRepository : IFavoriteRepository
     public async Task<List<FavoriteDto>> GetByUserAsync(Guid userId, FavoriteType? entityType, CancellationToken cancellationToken)
     {
         return await _context.Favorites
-            .Where(f => f.UserId == userId && (!entityType.HasValue || f.EntityType == entityType.Value))
+            .Where(f => f.UserId == userId && f.IsDeleted == false && (!entityType.HasValue || f.EntityType == entityType.Value))
             .AsNoTracking()
             .Select(f => new FavoriteDto
             {
