@@ -47,4 +47,10 @@ public class FavoriteRepository : IFavoriteRepository
         _context.Favorites.Remove(favorite);
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public Task UpdateAsync(Favorite favorite, CancellationToken cancellationToken)
+    {
+        _context.Favorites.Update(favorite);
+        return _context.SaveChangesAsync(cancellationToken);
+    }
 }

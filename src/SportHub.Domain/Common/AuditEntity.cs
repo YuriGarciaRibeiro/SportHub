@@ -33,7 +33,7 @@ public abstract class AuditEntity
         DeletedBy = userId;
         DeletedAt = DateTime.UtcNow;
     }
-    
+
     public void Restore()
     {
         IsDeleted = false;

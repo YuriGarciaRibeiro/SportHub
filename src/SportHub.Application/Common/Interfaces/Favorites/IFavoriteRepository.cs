@@ -9,4 +9,5 @@ public interface IFavoriteRepository
     Task<List<FavoriteDto>> GetByUserAsync(Guid userId, FavoriteType? entityType, CancellationToken cancellationToken);
     Task AddAsync(Favorite favorite, CancellationToken cancellationToken);
     Task RemoveAsync(Favorite favorite, CancellationToken cancellationToken);
+    Task UpdateAsync(Favorite favorite, CancellationToken cancellationToken);
 }

@@ -33,6 +33,12 @@ public class FavoriteService : IFavoriteService
         var existing = await _favoriteRepository.GetByUserAndEntityAsync(userId, entityType, entityId, cancellationToken);
         if (existing != null)
         {
+            if (existing.IsDeleted)
+            {
+                existing.Restore();
+                await _favoriteRepository.UpdateAsync(existing, cancellationToken);
+                return Result.Ok();
+            }
             return Result.Fail("Favorite already exists.");
         }
 
