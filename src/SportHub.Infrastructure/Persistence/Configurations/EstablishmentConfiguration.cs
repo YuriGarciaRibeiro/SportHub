@@ -17,8 +17,17 @@ public class EstablishmentConfiguration : IEntityTypeConfiguration<Establishment
         {
             a.Property(x => x.City).HasMaxLength(100);
             a.Property(x => x.State).HasMaxLength(100);
+            
+            // Configuração espacial usando PostGIS
+            a.Property(x => x.Location)
+             .HasColumnType("geography (point)");
+            
             a.HasIndex(x => x.City);
             a.HasIndex(x => x.State);
+            
+            // Índice espacial para consultas de proximidade
+            a.HasIndex(x => x.Location)
+             .HasMethod("GIST");
         });
     }
 }

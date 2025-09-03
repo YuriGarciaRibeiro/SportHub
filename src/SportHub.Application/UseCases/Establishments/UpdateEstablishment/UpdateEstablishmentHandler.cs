@@ -53,7 +53,9 @@ public class UpdateEstablishmentHandler : ICommandHandler<UpdateEstablishmentCom
                 establishment.Address.Neighborhood,
                 establishment.Address.City,
                 establishment.Address.State,
-                establishment.Address.ZipCode
+                establishment.Address.ZipCode,
+                establishment.Address.Latitude,
+                establishment.Address.Longitude
             ),
             establishment.ImageUrl
         ));

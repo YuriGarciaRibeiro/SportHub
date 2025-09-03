@@ -26,7 +26,9 @@ public record AddressResponse(
     string Neighborhood,
     string City,
     string State,
-    string ZipCode
+    string ZipCode,
+    double? Latitude,
+    double? Longitude
 );
 
 public record SportResponse(

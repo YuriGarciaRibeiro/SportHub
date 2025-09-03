@@ -25,7 +25,9 @@ public record AddressDto(
     string Neighborhood,
     string City,
     string State,
-    string ZipCode
+    string ZipCode,
+    double? Latitude,
+    double? Longitude
 );
 
 public record SportDto(

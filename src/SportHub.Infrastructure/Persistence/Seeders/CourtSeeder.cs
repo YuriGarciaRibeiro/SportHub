@@ -59,8 +59,8 @@ public class CourtSeeder : BaseSeeder
 
         var courtsData = new List<(Court Court, List<Guid> SportIds)>();
 
-        // SportHub Central Arena - Courts
-        var centralArena = establishmentsList.FirstOrDefault(e => e.Name == "SportHub Central Arena");
+        // SportHub Arena Central - Courts
+        var centralArena = establishmentsList.FirstOrDefault(e => e.Name == "SportHub Arena Central");
         if (centralArena != null)
         {
             var football = sportsList.FirstOrDefault(s => s.Name == "Football");
@@ -119,8 +119,8 @@ public class CourtSeeder : BaseSeeder
             }
         }
 
-        // Premium Athletic Club - Courts
-        var premiumClub = establishmentsList.FirstOrDefault(e => e.Name == "Premium Athletic Club");
+        // Club Premium Atalaia - Courts
+        var premiumClub = establishmentsList.FirstOrDefault(e => e.Name == "Club Premium Atalaia");
         if (premiumClub != null)
         {
             var tennis = sportsList.FirstOrDefault(s => s.Name == "Tennis");
@@ -175,8 +175,8 @@ public class CourtSeeder : BaseSeeder
             }
         }
 
-        // Futsal Mania Center - Courts
-        var futsalCenter = establishmentsList.FirstOrDefault(e => e.Name == "Futsal Mania Center");
+        // Centro de Futsal Sergipe - Courts
+        var futsalCenter = establishmentsList.FirstOrDefault(e => e.Name == "Centro de Futsal Sergipe");
         if (futsalCenter != null)
         {
             var futsal = sportsList.FirstOrDefault(s => s.Name == "Futsal");

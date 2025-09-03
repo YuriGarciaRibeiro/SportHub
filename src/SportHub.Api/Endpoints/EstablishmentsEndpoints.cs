@@ -14,5 +14,6 @@ public static class EstablishmentsEndpoints
         group.MapEstablishmentCourtsEndpoints();
         group.MapEstablishmentSportsEndpoints();
         group.MapEstablishmentReservationsEndpoints();
+        group.MapEstablishmentLocationEndpoints();
     }
 }

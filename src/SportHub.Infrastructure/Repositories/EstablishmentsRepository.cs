@@ -1,5 +1,6 @@
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
+using Application.UseCases.Establishments.GetNearbyEstablishments;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Persistence;
@@ -39,7 +40,9 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     e.Address.Neighborhood,
                     e.Address.City,
                     e.Address.State,
-                    e.Address.ZipCode
+                    e.Address.ZipCode,
+                    e.Address.Latitude,
+                    e.Address.Longitude
                 ),
                 e.ImageUrl,
                 e.Sports.Select(s => new EstablishmentDtos.SportDto(
@@ -86,7 +89,9 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     e.Address.Neighborhood,
                     e.Address.City,
                     e.Address.State,
-                    e.Address.ZipCode
+                    e.Address.ZipCode,
+                    e.Address.Latitude,
+                    e.Address.Longitude
                 ),
                 e.ImageUrl,
                 e.Sports.Select(s => new EstablishmentDtos.SportDto(
@@ -134,7 +139,9 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     e.Address.Neighborhood,
                     e.Address.City,
                     e.Address.State,
-                    e.Address.ZipCode
+                    e.Address.ZipCode,
+                    e.Address.Latitude,
+                    e.Address.Longitude
                 ),
                 e.ImageUrl
             ))
@@ -177,7 +184,9 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     e.Address.Neighborhood,
                     e.Address.City,
                     e.Address.State,
-                    e.Address.ZipCode
+                    e.Address.ZipCode,
+                    e.Address.Latitude,
+                    e.Address.Longitude
                 ),
                 e.ImageUrl,
                 e.Courts.Any() ? e.Courts.Min(c => c.PricePerSlot) : null,
@@ -268,6 +277,44 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                 eu.User.Email,
                 eu.Role
             ))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<EstablishmentLocationDto>> GetNearbyEstablishmentsAsync(double latitude, double longitude, double radiusKm, CancellationToken cancellationToken)
+    {
+        var geometryFactory = NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+        var userLocation = geometryFactory.CreatePoint(new NetTopologySuite.Geometries.Coordinate(longitude, latitude));
+        var radiusInMeters = radiusKm * 1000;
+
+        return await _dbContext.Establishments
+            .Where(e => e.Address.Location != null)
+            .Where(e => e.Address.Location!.Distance(userLocation) <= radiusInMeters)
+            .Include(e => e.Sports)
+            .Select(e => new EstablishmentLocationDto(
+                e.Id,
+                e.Name,
+                e.Description,
+                new AddressDto(
+                    e.Address.Street,
+                    e.Address.Number,
+                    e.Address.Complement,
+                    e.Address.Neighborhood,
+                    e.Address.City,
+                    e.Address.State,
+                    e.Address.ZipCode,
+                    e.Address.Latitude,
+                    e.Address.Longitude
+                ),
+                e.ImageUrl,
+                e.Address.Location!.Distance(userLocation) / 1000.0, // Convert to km
+                e.Sports.Select(s => new EstablishmentDtos.SportDto(
+                    s.Id,
+                    s.Name,
+                    s.Description
+                ))
+            ))
+            .OrderBy(e => e.DistanceKm)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }

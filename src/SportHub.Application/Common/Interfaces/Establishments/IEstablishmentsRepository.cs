@@ -1,6 +1,7 @@
 using Application.Common.Interfaces.Base;
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
+using Application.UseCases.Establishments.GetNearbyEstablishments;
 using Domain.Entities;
 using Application.Common.Interfaces.Reservations;
 
@@ -15,6 +16,7 @@ public interface IEstablishmentsRepository : IBaseRepository<Establishment>
     Task<List<EstablishmentUserSummaryDto>> GetUsersByEstablishmentId(Guid establishmentId, CancellationToken cancellationToken);
     Task<List<SportSummaryDto>> GetSportsByEstablishmentIdAsync(Guid establishmentId, CancellationToken cancellationToken);
     Task<List<ReservationWithDetailsDto>> GetReservationsByCourtsIdAsync(IEnumerable<Guid> courtIds, EstablishmentReservationsQueryFilter filter, CancellationToken cancellationToken);
+    Task<List<EstablishmentLocationDto>> GetNearbyEstablishmentsAsync(double latitude, double longitude, double radiusKm, CancellationToken cancellationToken);
     
     // Legacy methods (to be replaced gradually)
     Task<(List<EstablishmentResponse> Items, int TotalCount)> GetFilteredAsync(GetEstablishmentsQuery query, Guid? userId, CancellationToken cancellationToken);

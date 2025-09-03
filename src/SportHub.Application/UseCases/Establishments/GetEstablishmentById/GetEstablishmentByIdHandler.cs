@@ -89,7 +89,9 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
                 State: establishment.Address.State,
                 ZipCode: establishment.Address.ZipCode,
                 Complement: establishment.Address.Complement,
-                Neighborhood: establishment.Address.Neighborhood
+                Neighborhood: establishment.Address.Neighborhood,
+                Latitude: establishment.Address.Latitude,
+                Longitude: establishment.Address.Longitude
             ),
             IsFavorite: isFavorite,
             Users: users,

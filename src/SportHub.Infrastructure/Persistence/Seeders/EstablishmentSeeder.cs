@@ -4,6 +4,8 @@ using Domain.ValueObjects;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite;
+using NetTopologySuite.Geometries;
 
 namespace Infrastructure.Persistence.Seeders;
 
@@ -91,26 +93,29 @@ public class EstablishmentSeeder : BaseSeeder
 
     private List<(Establishment Establishment, Guid OwnerId, List<Guid> SportIds)> GetTestEstablishments()
     {
+        var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+        
         return new List<(Establishment, Guid, List<Guid>)>
         {
             (
                 new Establishment
                 {
                     Id = Guid.Parse("E1111111-1111-1111-1111-111111111111"),
-                    Name = "SportHub Central Arena",
-                    Description = "Complete sports complex in downtown with football, basketball and volleyball courts. Air-conditioned environment and state-of-the-art equipment.",
-                    PhoneNumber = "+1 (555) 999-1111",
-                    Email = "contact@sportcentralarena.com",
-                    Website = "https://sportcentralarena.com",
+                    Name = "SportHub Arena Central",
+                    Description = "Complexo esportivo completo no centro de Aracaju com quadras de futebol, basquete e vôlei. Ambiente climatizado e equipamentos de última geração.",
+                    PhoneNumber = "+55 (79) 99999-1111",
+                    Email = "contato@sporthubcentral.com.br",
+                    Website = "https://sporthubcentral.com.br",
                     ImageUrl = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1000&auto=format&fit=crop",
                     Address = new Address(
-                        "123 Palm Street",
-                        "1000",
-                        "Suite 101",
-                        "Downtown",
-                        "New York",
-                        "NY",
-                        "10001"
+                        "Rua João Pessoa",
+                        "450",
+                        "Sala 101",
+                        "Centro",
+                        "Aracaju",
+                        "SE",
+                        "49010-230",
+                        geometryFactory.CreatePoint(new Coordinate(-37.0548, -10.9065)) // Longitude, Latitude
                     )
                 },
                 Guid.Parse("11111111-1111-1111-1111-111111111111"), // John Smith
@@ -125,20 +130,21 @@ public class EstablishmentSeeder : BaseSeeder
                 new Establishment
                 {
                     Id = Guid.Parse("E2222222-2222-2222-2222-222222222222"),
-                    Name = "Premium Athletic Club",
-                    Description = "Premium club focused on tennis and padel. Professional courts, complete locker rooms and leisure area.",
-                    PhoneNumber = "+1 (555) 999-2222",
-                    Email = "info@premiumathletic.com",
-                    Website = "https://premiumathletic.com",
+                    Name = "Club Premium Atalaia",
+                    Description = "Clube premium focado em tênis e padel na Praia de Atalaia. Quadras profissionais, vestiários completos e área de lazer.",
+                    PhoneNumber = "+55 (79) 99999-2222",
+                    Email = "info@clubpremiumatalaia.com.br",
+                    Website = "https://clubpremiumatalaia.com.br",
                     ImageUrl = "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?q=80&w=1000&auto=format&fit=crop",
                     Address = new Address(
-                        "456 Broadway Avenue",
-                        "2500",
+                        "Avenida Santos Dumont",
+                        "1500",
                         null,
-                        "Midtown",
-                        "New York",
-                        "NY",
-                        "10036"
+                        "Atalaia",
+                        "Aracaju",
+                        "SE",
+                        "49037-470",
+                        geometryFactory.CreatePoint(new Coordinate(-37.0493, -10.9838)) // Longitude, Latitude
                     )
                 },
                 Guid.Parse("22222222-2222-2222-2222-222222222222"), // Mary Johnson
@@ -152,20 +158,21 @@ public class EstablishmentSeeder : BaseSeeder
                 new Establishment
                 {
                     Id = Guid.Parse("E3333333-3333-3333-3333-333333333333"),
-                    Name = "Futsal Mania Center",
-                    Description = "Specialized in futsal with 4 official courts. Ideal place for casual games, tournaments and training sessions.",
-                    PhoneNumber = "+1 (555) 999-3333",
-                    Email = "reservations@futsalmania.com",
-                    Website = "https://futsalmania.com",
+                    Name = "Centro de Futsal Sergipe",
+                    Description = "Especializado em futsal com 4 quadras oficiais no bairro Ponto Novo. Local ideal para jogos casuais, torneios e treinos.",
+                    PhoneNumber = "+55 (79) 99999-3333",
+                    Email = "reservas@futsalsergipe.com.br",
+                    Website = "https://futsalsergipe.com.br",
                     ImageUrl = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1000&auto=format&fit=crop",
                     Address = new Address(
-                        "789 Sports Boulevard",
-                        "500",
-                        "Building A",
-                        "Sports District",
-                        "Los Angeles",
-                        "CA",
-                        "90210"
+                        "Rua Desembargador Maynard",
+                        "789",
+                        "Galpão A",
+                        "Ponto Novo",
+                        "Aracaju",
+                        "SE",
+                        "49097-000",
+                        geometryFactory.CreatePoint(new Coordinate(-37.0731, -10.9212)) // Longitude, Latitude
                     )
                 },
                 Guid.Parse("33333333-3333-3333-3333-333333333333"), // Charles Williams

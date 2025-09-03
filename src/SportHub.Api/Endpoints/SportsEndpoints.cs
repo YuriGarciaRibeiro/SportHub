@@ -8,7 +8,7 @@ public static class SportsEndpoints
 {
     public static void MapSportsEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        var group = endpoints.MapGroup("/api/sports")
+        var group = endpoints.MapGroup("/sports")
             .WithTags("Sports")
             .WithOpenApi();
 
