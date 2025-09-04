@@ -15,7 +15,10 @@ public record EstablishmentCompleteDto(
     string? ImageUrl,
     IEnumerable<SportDto> Sports,
     IEnumerable<EstablishmentUserDto> Users,
-    IEnumerable<CourtDto> Courts
+    IEnumerable<CourtDto> Courts,
+    double? DistanceKm = null,
+    double? AverageRating = null,
+    IEnumerable<EvaluationDto> Evaluations = null!
 );
 
 public record AddressDto(
@@ -52,4 +55,13 @@ public record CourtDto(
     decimal PricePerSlot,
     string TimeZone,
     IEnumerable<SportDto> Sports
+);
+
+public record EvaluationDto(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    int Rating,
+    string? Comment,
+    DateTime CreatedAt
 );

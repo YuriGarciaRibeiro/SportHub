@@ -9,43 +9,34 @@ namespace Application.UseCases.Establishments.GetEstablishmentById;
 public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQuery, GetEstablishmentByIdResponse>
 {
     private readonly IEstablishmentService _establishmentService;
-    private readonly IUserService _userService;
     private readonly ICurrentUserService _currentUserService;
     private readonly IFavoriteService _favoriteService;
 
     public GetEstablishmentByIdHandler(
         IEstablishmentService establishmentService, 
-        IUserService userService,
         ICurrentUserService currentUserService,
         IFavoriteService favoriteService)
     {
         _establishmentService = establishmentService;
-        _userService = userService;
         _currentUserService = currentUserService;
         _favoriteService = favoriteService;
     }
 
     public async Task<Result<GetEstablishmentByIdResponse>> Handle(GetEstablishmentByIdQuery request, CancellationToken cancellationToken)
     {
-        var establishment = await _establishmentService.GetByIdCompleteAsync(request.Id, ct: cancellationToken);
+        var establishment = await _establishmentService.GetByIdCompleteAsync(request.Id, request.Latitude, request.Longitude, ct: cancellationToken);
         if (establishment == null)
         {
             return Result.Fail(new NotFound($"Establishment with ID '{request.Id}' not found."));
         }
 
-        var userTasks = establishment.Users.Select(async e =>
-        {
-            var user = await _userService.GetUserByIdAsync(e.UserId, cancellationToken);
-            return new EstablishmentUserResponse(
-                UserId: e.UserId,
-                FirstName: user.Value.FirstName,
-                LastName: user.Value.LastName,
-                Email: user.Value.Email,
-                Role: e.Role.ToString()
-            );
-        });
-
-        var users = await Task.WhenAll(userTasks);
+        var users = establishment.Users.Select(u => new EstablishmentUserResponse(
+            UserId: u.UserId,
+            FirstName: u.Name.Split(' ').FirstOrDefault() ?? "",
+            LastName: string.Join(" ", u.Name.Split(' ').Skip(1)),
+            Email: u.Email,
+            Role: u.Role.ToString()
+        ));
 
         var courts = establishment.Courts.Select(c => new CourtResponse(
             Id: c.Id,
@@ -100,6 +91,16 @@ public class GetEstablishmentByIdHandler : IQueryHandler<GetEstablishmentByIdQue
                 Id: s.Id,
                 Name: s.Name,
                 Description: s.Description
+            )),
+            DistanceKm: establishment.DistanceKm,
+            AverageRating: establishment.AverageRating,
+            Evaluations: establishment.Evaluations.Select(e => new EvaluationResponse(
+                Id: e.Id,
+                UserId: e.UserId,
+                UserName: e.UserName,
+                Rating: e.Rating,
+                Comment: e.Comment,
+                CreatedAt: e.CreatedAt
             ))
         );
 

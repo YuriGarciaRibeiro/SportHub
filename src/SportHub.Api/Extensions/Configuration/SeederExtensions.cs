@@ -12,6 +12,7 @@ public static class SeederExtensions
         builder.Services.AddScoped<IDataSeeder, EstablishmentSeeder>();
         builder.Services.AddScoped<IDataSeeder, CourtSeeder>();
         builder.Services.AddScoped<IDataSeeder, ReservationSeeder>();
+        builder.Services.AddScoped<IDataSeeder, EvaluationSeeder>();
 
         // Register individual seeders for specific access
         builder.Services.AddScoped<UserSeeder>();
@@ -19,6 +20,7 @@ public static class SeederExtensions
         builder.Services.AddScoped<EstablishmentSeeder>();
         builder.Services.AddScoped<CourtSeeder>();
         builder.Services.AddScoped<ReservationSeeder>();
+        builder.Services.AddScoped<EvaluationSeeder>();
 
         // Register the seeder service
         builder.Services.AddScoped<DataSeederService>();

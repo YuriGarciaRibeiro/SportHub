@@ -103,13 +103,18 @@ public class EstablishmentService : BaseService<Establishment>, IEstablishmentSe
         return reservations;
     }
 
-    public async Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, double? userLatitude = null, double? userLongitude = null, CancellationToken ct = default)
     {
+        if (userLatitude.HasValue && userLongitude.HasValue)
+        {
+            return await _establishmentRepository.GetByIdCompleteAsync(id, userLatitude, userLongitude, ct);
+        }
+
         var key = CacheKeyByIdComplete(id);
         var cached = await _cache.GetAsync<EstablishmentCompleteDto>(key, ct);
         if (cached is not null) return cached;
 
-        var establishment = await _establishmentRepository.GetByIdCompleteAsync(id, ct);
+        var establishment = await _establishmentRepository.GetByIdCompleteAsync(id, null, null, ct);
         if (establishment is not null)
             await _cache.SetAsync(key, establishment, TimeSpan.FromMinutes(10), ct);
 

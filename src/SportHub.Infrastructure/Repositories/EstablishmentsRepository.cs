@@ -1,6 +1,6 @@
+using Application.Common.Enums;
 using Application.Common.QueryFilters;
 using Application.UseCases.Establishments.GetEstablishments;
-using Application.UseCases.Establishments.GetNearbyEstablishments;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Persistence;
@@ -19,59 +19,96 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         _dbContext = dbContext;
     }
 
-    public Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<EstablishmentCompleteDto?> GetByIdCompleteAsync(Guid id, double? userLatitude = null, double? userLongitude = null, CancellationToken ct = default)
     {
-        return _dbContext.Establishments
+        var establishment = await _dbContext.Establishments
             .AsNoTracking()
             .Where(e => e.Id == id)
-            .Select(e => new EstablishmentCompleteDto(
-                e.Id,
-                e.Name,
-                e.Description,
-                e.PhoneNumber,
-                e.Email,
-                e.Website,
-                e.OpeningTime,
-                e.ClosingTime,
-                new AddressDto(
-                    e.Address.Street,
-                    e.Address.Number,
-                    e.Address.Complement,
-                    e.Address.Neighborhood,
-                    e.Address.City,
-                    e.Address.State,
-                    e.Address.ZipCode,
-                    e.Address.Latitude,
-                    e.Address.Longitude
-                ),
-                e.ImageUrl,
-                e.Sports.Select(s => new EstablishmentDtos.SportDto(
+            .Include(e => e.Sports)
+            .Include(e => e.Users)
+                .ThenInclude(eu => eu.User)
+            .Include(e => e.Courts)
+                .ThenInclude(c => c.Sports)
+            .SingleOrDefaultAsync(ct);
+
+        if (establishment == null)
+            return null;
+
+        // Buscar avaliações do estabelecimento
+        var evaluations = await _dbContext.Evaluations
+            .AsNoTracking()
+            .Where(e => e.TargetId == id && e.TargetType == EvaluationTargetType.Establishment)
+            .Include(e => e.User)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync(ct);
+
+        if (establishment == null)
+            return null;
+
+        var distanceKm = userLatitude.HasValue && userLongitude.HasValue && 
+                        establishment.Address.Latitude.HasValue && 
+                        establishment.Address.Longitude.HasValue
+            ? Math.Round(CalculateHaversineDistance(userLatitude.Value, userLongitude.Value, 
+                establishment.Address.Latitude.Value, establishment.Address.Longitude.Value), 2)
+            : (double?)null;
+
+        return new EstablishmentCompleteDto(
+            establishment.Id,
+            establishment.Name,
+            establishment.Description,
+            establishment.PhoneNumber,
+            establishment.Email,
+            establishment.Website,
+            establishment.OpeningTime,
+            establishment.ClosingTime,
+            new AddressDto(
+                establishment.Address.Street,
+                establishment.Address.Number,
+                establishment.Address.Complement,
+                establishment.Address.Neighborhood,
+                establishment.Address.City,
+                establishment.Address.State,
+                establishment.Address.ZipCode,
+                establishment.Address.Latitude,
+                establishment.Address.Longitude
+            ),
+            establishment.ImageUrl,
+            establishment.Sports.Select(s => new EstablishmentDtos.SportDto(
+                s.Id,
+                s.Name,
+                s.Description
+            )),
+            establishment.Users.Select(eu => new EstablishmentUserDto(
+                eu.UserId,
+                $"{eu.User.FirstName} {eu.User.LastName}",
+                eu.User.Email,
+                eu.Role
+            )),
+            establishment.Courts.Select(c => new CourtDto(
+                c.Id,
+                c.Name,
+                c.MinBookingSlots,
+                c.MaxBookingSlots,
+                c.SlotDurationMinutes,
+                c.PricePerSlot,
+                c.TimeZone,
+                c.Sports.Select(s => new EstablishmentDtos.SportDto(
                     s.Id,
                     s.Name,
                     s.Description
-                )),
-                e.Users.Select(eu => new EstablishmentUserDto(
-                    eu.UserId,
-                    $"{eu.User.FirstName} {eu.User.LastName}",
-                    eu.User.Email,
-                    eu.Role
-                )),
-                e.Courts.Select(c => new CourtDto(
-                    c.Id,
-                    c.Name,
-                    c.MinBookingSlots,
-                    c.MaxBookingSlots,
-                    c.SlotDurationMinutes,
-                    c.PricePerSlot,
-                    c.TimeZone,
-                    c.Sports.Select(s => new EstablishmentDtos.SportDto(
-                        s.Id,
-                        s.Name,
-                        s.Description
-                    ))
                 ))
+            )),
+            distanceKm,
+            evaluations.Any() ? Math.Round(evaluations.Average(e => e.Rating), 1) : (double?)null,
+            evaluations.Select(e => new EvaluationDto(
+                e.Id,
+                e.UserId,
+                $"{e.User.FirstName} {e.User.LastName}",
+                e.Rating,
+                e.Comment,
+                e.CreatedAt
             ))
-            .SingleOrDefaultAsync(ct);
+        );
     }
 
     public async Task<List<EstablishmentWithDetailsDto>> GetByIdsWithDetailsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken)
@@ -168,42 +205,76 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
 
         var total = await dbQuery.CountAsync(cancellationToken);
 
-        var items = await dbQuery
+        // Aplicar ordenação no banco de dados
+        var orderedQuery = ApplyOrdering(dbQuery, query);
+
+        var establishments = await orderedQuery
             .AsNoTracking()
-            .OrderBy(e => e.Name)
             .Skip((query.page - 1) * query.pageSize)
             .Take(query.pageSize)
-            .Select(e => new EstablishmentResponse(
-                e.Id,
-                e.Name,
-                e.Description,
-                new AddressResponse(
-                    e.Address.Street,
-                    e.Address.Number,
-                    e.Address.Complement,
-                    e.Address.Neighborhood,
-                    e.Address.City,
-                    e.Address.State,
-                    e.Address.ZipCode,
-                    e.Address.Latitude,
-                    e.Address.Longitude
-                ),
-                e.ImageUrl,
-                e.Courts.Any() ? e.Courts.Min(c => c.PricePerSlot) : null,
-                userId.HasValue && userId.Value != Guid.Empty 
-                    ? _dbContext.Favorites.Any(f => 
-                        f.EntityId == e.Id && 
-                        f.EntityType == FavoriteType.Establishment && 
-                        f.IsDeleted == false &&
-                        f.UserId == userId.Value)
-                    : (bool?)null,
-                e.Sports.Select(s => new SportResponse(
-                    s.Id,
-                    s.Name,
-                    s.Description
-                ))
-            ))
             .ToListAsync(cancellationToken);
+
+        var items = establishments
+            .Select(e => {
+                var distanceKm = query.latitude.HasValue && query.longitude.HasValue && 
+                               e.Address.Latitude.HasValue && e.Address.Longitude.HasValue
+                    ? Math.Round(CalculateHaversineDistance(query.latitude.Value, query.longitude.Value, 
+                        e.Address.Latitude.Value, e.Address.Longitude.Value), 2)
+                    : (double?)null;
+
+                return new EstablishmentResponse(
+                    e.Id,
+                    e.Name,
+                    e.Description,
+                    new AddressResponse(
+                        e.Address.Street,
+                        e.Address.Number,
+                        e.Address.Complement,
+                        e.Address.Neighborhood,
+                        e.Address.City,
+                        e.Address.State,
+                        e.Address.ZipCode,
+                        e.Address.Latitude,
+                        e.Address.Longitude
+                    ),
+                    e.ImageUrl,
+                    e.Courts.Any() ? e.Courts.Min(c => c.PricePerSlot) : null,
+                    userId.HasValue && userId.Value != Guid.Empty 
+                        ? _dbContext.Favorites.Any(f => 
+                            f.EntityId == e.Id && 
+                            f.EntityType == FavoriteType.Establishment && 
+                            f.IsDeleted == false &&
+                            f.UserId == userId.Value)
+                        : (bool?)null,
+                    e.Sports.Select(s => new SportResponse(
+                        s.Id,
+                        s.Name,
+                        s.Description
+                    )),
+                    distanceKm,
+                    _dbContext.Evaluations
+                        .Where(ev => ev.TargetId == e.Id && ev.TargetType == EvaluationTargetType.Establishment)
+                        .Select(ev => (double)ev.Rating)
+                        .DefaultIfEmpty()
+                        .Average() is var avg && avg > 0 ? Math.Round(avg, 1) : (double?)null
+                );
+            })
+            .ToList();
+
+        // Se orderBy é "distance", ordena por distância em memória
+        if (query.orderBy == EstablishmentOrderBy.Distance && query.latitude.HasValue && query.longitude.HasValue)
+        {
+            items = query.sortDirection == SortDirection.Desc
+                ? items.OrderByDescending(e => e.DistanceKm ?? double.MaxValue).ToList()
+                : items.OrderBy(e => e.DistanceKm ?? double.MaxValue).ToList();
+        }
+        // Se orderBy é "rating", ordena por rating médio em memória
+        else if (query.orderBy == EstablishmentOrderBy.Rating)
+        {
+            items = query.sortDirection == SortDirection.Desc
+                ? items.OrderByDescending(e => e.AverageRating ?? 0).ToList()
+                : items.OrderBy(e => e.AverageRating ?? 0).ToList();
+        }
 
         return (items, total);
     }
@@ -281,41 +352,50 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<EstablishmentLocationDto>> GetNearbyEstablishmentsAsync(double latitude, double longitude, double radiusKm, CancellationToken cancellationToken)
+    private static IQueryable<Establishment> ApplyOrdering(IQueryable<Establishment> query, GetEstablishmentsQuery request)
     {
-        var geometryFactory = NetTopologySuite.NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
-        var userLocation = geometryFactory.CreatePoint(new NetTopologySuite.Geometries.Coordinate(longitude, latitude));
-        var radiusInMeters = radiusKm * 1000;
+        return request.orderBy switch
+        {
+            EstablishmentOrderBy.Name => request.sortDirection == SortDirection.Desc
+                ? query.OrderByDescending(e => e.Name)
+                : query.OrderBy(e => e.Name),
+                
+            EstablishmentOrderBy.Newest => request.sortDirection == SortDirection.Asc
+                ? query.OrderBy(e => e.CreatedAt)
+                : query.OrderByDescending(e => e.CreatedAt),
+                
+            EstablishmentOrderBy.Rating =>
+                query.OrderBy(e => e.Name),
+                
+            EstablishmentOrderBy.Popularity => request.sortDirection == SortDirection.Desc
+                ? query.OrderByDescending(e => e.Courts.Count()) // TODO: Implementar popularity real  
+                : query.OrderBy(e => e.Courts.Count()),
+                
+            EstablishmentOrderBy.Distance when request.latitude.HasValue && request.longitude.HasValue =>
+                query.OrderBy(e => e.Name),
+                
+            _ => query.OrderBy(e => e.Name)
+        };
+    }
 
-        return await _dbContext.Establishments
-            .Where(e => e.Address.Location != null)
-            .Where(e => e.Address.Location!.Distance(userLocation) <= radiusInMeters)
-            .Include(e => e.Sports)
-            .Select(e => new EstablishmentLocationDto(
-                e.Id,
-                e.Name,
-                e.Description,
-                new AddressDto(
-                    e.Address.Street,
-                    e.Address.Number,
-                    e.Address.Complement,
-                    e.Address.Neighborhood,
-                    e.Address.City,
-                    e.Address.State,
-                    e.Address.ZipCode,
-                    e.Address.Latitude,
-                    e.Address.Longitude
-                ),
-                e.ImageUrl,
-                e.Address.Location!.Distance(userLocation) / 1000.0, // Convert to km
-                e.Sports.Select(s => new EstablishmentDtos.SportDto(
-                    s.Id,
-                    s.Name,
-                    s.Description
-                ))
-            ))
-            .OrderBy(e => e.DistanceKm)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+    private static double CalculateHaversineDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double earthRadiusKm = 6371.0;
+        
+        var dLat = ToRadians(lat2 - lat1);
+        var dLon = ToRadians(lon2 - lon1);
+        
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        
+        return earthRadiusKm * c;
+    }
+
+    private static double ToRadians(double degrees)
+    {
+        return degrees * Math.PI / 180.0;
     }
 }

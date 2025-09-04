@@ -1,3 +1,4 @@
+using Application.Common.Enums;
 using Application.Security;
 using Application.UseCases.Establishments.ActiveEstablishment;
 using Application.UseCases.Establishments.CreateEstablishment;
@@ -20,13 +21,38 @@ public static class EstablishmentsCrudEndpoints
             ISender sender,
             [FromQuery] string? ownerId,
             [FromQuery] string? isAvailable,
+            [FromQuery] double? latitude,
+            [FromQuery] double? longitude,
+            [FromQuery] string? orderBy,
+            [FromQuery] string? sortDirection,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10) =>
         {
             Guid? parsedOwnerId = Guid.TryParse(ownerId, out var g) ? g : null;
             bool? parsedIsAvailable = bool.TryParse(isAvailable, out var b) ? b : null;
+            
+            EstablishmentOrderBy? parsedOrderBy = null;
+            if (!string.IsNullOrEmpty(orderBy) && Enum.TryParse<EstablishmentOrderBy>(orderBy, true, out var orderByEnum))
+            {
+                parsedOrderBy = orderByEnum;
+            }
+            
+            SortDirection? parsedSortDirection = null;
+            if (!string.IsNullOrEmpty(sortDirection) && Enum.TryParse<SortDirection>(sortDirection, true, out var sortDirectionEnum))
+            {
+                parsedSortDirection = sortDirectionEnum;
+            }
 
-            var query = new GetEstablishmentsQuery(parsedOwnerId, parsedIsAvailable, page, pageSize);
+            var query = new GetEstablishmentsQuery(
+                parsedOwnerId, 
+                parsedIsAvailable, 
+                latitude, 
+                longitude, 
+                parsedOrderBy, 
+                parsedSortDirection, 
+                page, 
+                pageSize
+            );
 
             var result = await sender.Send(query);
             return result.ToIResult();
@@ -123,9 +149,11 @@ public static class EstablishmentsCrudEndpoints
         // GET /establishments/{id} - Get establishment by ID
         group.MapGet("/{id:guid}", async (
             Guid id,
+            [FromQuery] double? latitude,
+            [FromQuery] double? longitude,
             ISender sender) =>
         {
-            var result = await sender.Send(new GetEstablishmentByIdQuery(id));
+            var result = await sender.Send(new GetEstablishmentByIdQuery(id, latitude, longitude));
 
             return result.ToIResult();
         })

@@ -14,7 +14,10 @@ public record GetEstablishmentByIdResponse(
     bool? IsFavorite,
     IEnumerable<EstablishmentUserResponse> Users,
     IEnumerable<CourtResponse> Courts,
-    IEnumerable<SportResponse> Sports
+    IEnumerable<SportResponse> Sports,
+    double? DistanceKm = null,
+    double? AverageRating = null,
+    IEnumerable<EvaluationResponse> Evaluations = null!
 );
 
 public record EstablishmentUserResponse(
@@ -52,4 +55,13 @@ public record SportResponse(
     Guid Id,
     string Name,
     string Description
+);
+
+public record EvaluationResponse(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    int Rating,
+    string? Comment,
+    DateTime CreatedAt
 );

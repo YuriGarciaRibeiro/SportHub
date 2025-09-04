@@ -16,7 +16,9 @@ public record EstablishmentResponse(
     string ImageUrl,
     decimal? StartingPrice,
     bool? IsFavorite,
-    IEnumerable<SportResponse> Sports
+    IEnumerable<SportResponse> Sports,
+    double? DistanceKm = null,
+    double? AverageRating = null
 );
     
 public record AddressResponse(
