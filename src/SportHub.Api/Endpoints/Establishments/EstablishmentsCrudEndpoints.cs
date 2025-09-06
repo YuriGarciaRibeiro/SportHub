@@ -146,14 +146,14 @@ public static class EstablishmentsCrudEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization(PolicyNames.IsEstablishmentOwner);
 
-        // GET /establishments/{id} - Get establishment by ID
-        group.MapGet("/{id:guid}", async (
-            Guid id,
+        // GET /establishments/{establishmentId} - Get establishment by ID
+        group.MapGet("/{establishmentId:guid}", async (
+            Guid establishmentId,
             [FromQuery] double? latitude,
             [FromQuery] double? longitude,
             ISender sender) =>
         {
-            var result = await sender.Send(new GetEstablishmentByIdQuery(id, latitude, longitude));
+            var result = await sender.Send(new GetEstablishmentByIdQuery(establishmentId, latitude, longitude));
 
             return result.ToIResult();
         })

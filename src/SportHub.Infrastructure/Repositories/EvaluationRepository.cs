@@ -34,4 +34,10 @@ public class EvaluationRepository : BaseRepository<Evaluation>, IEvaluationRepos
             .Where(e => e.UserId == userId)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<bool> HasUserEvaluatedTargetAsync(Guid userId, Guid targetId, EvaluationTargetType targetType, CancellationToken cancellationToken)
+    {
+        return _dbContext.Evaluations
+            .AnyAsync(e => e.UserId == userId && e.TargetId == targetId && e.TargetType == targetType, cancellationToken);
+    }
 }

@@ -1,3 +1,4 @@
+using Application.UseCases.Evaluation.AddEvaluation;
 using SportHub.Api.Endpoints;
 
 namespace Api.Extensions.Application;
@@ -24,6 +25,7 @@ public static class ApplicationExtensions
         apiGroup.MapCourtsEndpoints();
         apiGroup.MapFavoritesEndpoints();
         apiGroup.MapUserEndpoints();
+        apiGroup.MapEvaluationEndpoints();
 
         return app;
     }

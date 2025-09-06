@@ -8,4 +8,5 @@ public interface IEvaluationRepository : IBaseRepository<Evaluation>
     Task<IEnumerable<Evaluation>> GetEvaluationsByTargetAsync(Guid targetId, EvaluationTargetType targetType, CancellationToken cancellationToken);
     Task<IEnumerable<Evaluation>> GetEvaluationsByUserAsync(Guid userId, CancellationToken cancellationToken);
     Task<double> GetAverageRatingAsync(Guid targetId, EvaluationTargetType targetType, CancellationToken cancellationToken);
+    Task<bool> HasUserEvaluatedTargetAsync(Guid userId, Guid targetId, EvaluationTargetType targetType, CancellationToken cancellationToken);
 }
