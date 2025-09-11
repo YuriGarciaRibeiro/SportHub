@@ -22,12 +22,12 @@ public static class EvaluationEndpoints
             };
 
             var result = await sender.Send(command);
-            return result.ToIResult();
+            return result.ToIResult(StatusCodes.Status201Created);
         })
         .WithName("AddEvaluation")
         .WithSummary("Add an evaluation")
         .WithDescription("Adds an evaluation for a target entity (e.g., establishment, event).")
-        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError)
         .RequireAuthorization();

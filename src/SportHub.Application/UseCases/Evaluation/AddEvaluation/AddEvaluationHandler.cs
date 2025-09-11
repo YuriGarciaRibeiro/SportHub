@@ -4,12 +4,16 @@ namespace Application.UseCases.Evalution.AddEvaluation;
 
 public class AddEvaluationHandler : ICommandHandler<AddEvaluationCommand>
 {
+    private readonly IEvaluationService _evaluationService;
     private readonly IEvaluationRepository _evaluationRepository;
+    private readonly IEstablishmentService _establishmentService;
 
-    public AddEvaluationHandler(IEvaluationRepository evaluationRepository)
-    {
-        _evaluationRepository = evaluationRepository;
-    }
+        public AddEvaluationHandler(IEvaluationService evaluationService, IEvaluationRepository evaluationRepository, IEstablishmentService establishmentService)
+        {
+            _evaluationService = evaluationService;
+            _evaluationRepository = evaluationRepository;
+            _establishmentService = establishmentService;
+        }
 
     public async Task<Result> Handle(AddEvaluationCommand request, CancellationToken cancellationToken)
     {   
@@ -28,7 +32,12 @@ public class AddEvaluationHandler : ICommandHandler<AddEvaluationCommand>
             Comment = evaluationDto.Comment
         };
 
-        await _evaluationRepository.AddAsync(evaluation, cancellationToken);
+        await _evaluationService.CreateAsync(evaluation, cancellationToken);
+
+        if (evaluation.TargetType == Domain.Enums.EvaluationTargetType.Establishment)
+        {
+            await _establishmentService.InvalidateCacheAsync(evaluation.TargetId, cancellationToken);
+        }
 
         return Result.Ok();
     }

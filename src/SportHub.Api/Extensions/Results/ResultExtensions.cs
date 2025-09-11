@@ -24,10 +24,12 @@ public static class ResultExtensions
         return BuildProblemResult(result.Errors);
     }
 
-    public static IResult ToIResult(this Result result)
+    public static IResult ToIResult(this Result result, int? successStatusCode = null)
     {
         if (result.IsSuccess)
-            return Microsoft.AspNetCore.Http.Results.NoContent();
+            return successStatusCode.HasValue
+                ? Microsoft.AspNetCore.Http.Results.Json(null, statusCode: successStatusCode.Value)
+                : Microsoft.AspNetCore.Http.Results.Ok();
 
         return BuildProblemResult(result.Errors);
     }
