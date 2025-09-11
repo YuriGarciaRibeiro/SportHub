@@ -20,6 +20,5 @@ public class UpdateCourtRequest
         public int? MaxBookingSlots { get; set; }
         public TimeOnly? OpeningTime { get; set; }
         public TimeOnly? ClosingTime { get; set; }
-        public string? TimeZone { get; set; }
         public IEnumerable<Guid>? SportIds { get; set; }
     }

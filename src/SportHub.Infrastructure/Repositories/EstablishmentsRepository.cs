@@ -61,6 +61,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
             establishment.Website,
             establishment.OpeningTime,
             establishment.ClosingTime,
+            establishment.TimeZone,
             new AddressDto(
                 establishment.Address.Street,
                 establishment.Address.Number,
@@ -91,7 +92,6 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                 c.MaxBookingSlots,
                 c.SlotDurationMinutes,
                 c.PricePerSlot,
-                c.TimeZone,
                 c.Sports.Select(s => new EstablishmentDtos.SportDto(
                     s.Id,
                     s.Name,
@@ -149,7 +149,6 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                     c.MaxBookingSlots,
                     c.SlotDurationMinutes,
                     c.PricePerSlot,
-                    c.TimeZone,
                     c.Sports.Select(s => new EstablishmentDtos.SportDto(
                         s.Id,
                         s.Name,

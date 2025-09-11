@@ -14,7 +14,6 @@ public class CourtResponse
     public int SlotDurationMinutes { get; set; }
     public int MinBookingSlots { get; set; }
     public int MaxBookingSlots { get; set; }
-    public string TimeZone { get; set; } = "America/Maceio";
     public IEnumerable<SportResponse> Sports { get; set; } = new List<SportResponse>();
 }
 

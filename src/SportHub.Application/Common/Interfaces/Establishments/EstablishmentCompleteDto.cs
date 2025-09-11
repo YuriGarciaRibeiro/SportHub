@@ -11,6 +11,7 @@ public record EstablishmentCompleteDto(
     string Website,
     TimeOnly OpeningTime,
     TimeOnly ClosingTime,
+    string TimeZone,
     AddressDto Address,
     string? ImageUrl,
     IEnumerable<SportDto> Sports,
@@ -53,7 +54,6 @@ public record CourtDto(
     int MaxBookingSlots,
     int SlotDurationMinutes,
     decimal PricePerSlot,
-    string TimeZone,
     IEnumerable<SportDto> Sports
 );
 

@@ -11,7 +11,6 @@ public class UpdateCourtResponse
     public int MaxBookingSlots { get; set; }
     public TimeOnly OpeningTime { get; set; }
     public TimeOnly ClosingTime { get; set; }
-    public string TimeZone { get; set; } = null!;
     public IEnumerable<Sport> Sports { get; set; } = null!;
 }
 

@@ -9,7 +9,6 @@ public record CourtCompleteDto(
     TimeOnly OpeningTime,
     TimeOnly ClosingTime,
     decimal PricePerSlot,
-    string TimeZone,
     EstablishmentSummaryDto Establishment,
     IEnumerable<SportDto> Sports
 );
@@ -23,7 +22,6 @@ public record CourtWithSportsDto(
     TimeOnly OpeningTime,
     TimeOnly ClosingTime,
     decimal PricePerSlot,
-    string TimeZone,
     IEnumerable<SportDto> Sports
 );
 
@@ -36,7 +34,6 @@ public record CourtFilterResultDto(
     TimeOnly OpeningTime,
     TimeOnly ClosingTime,
     decimal PricePerSlot,
-    string TimeZone,
     EstablishmentSummaryDto Establishment,
     IEnumerable<SportDto> Sports
 );

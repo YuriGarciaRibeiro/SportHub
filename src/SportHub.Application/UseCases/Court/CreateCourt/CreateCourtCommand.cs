@@ -25,6 +25,5 @@ public class CourtRequest
     public int MaxBookingSlots { get; set; } = 4;
     public TimeOnly OpeningTime { get; set; } = new TimeOnly(8, 0);
     public TimeOnly ClosingTime { get; set; } = new TimeOnly(22, 0);
-    public string TimeZone { get; set; } = "America/Maceio";
     public IEnumerable<Guid> Sports { get; set; } = new List<Guid>();
 }

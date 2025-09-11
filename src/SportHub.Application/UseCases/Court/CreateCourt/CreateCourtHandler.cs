@@ -48,7 +48,6 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtRe
             SlotDurationMinutes = request.Court.SlotDurationMinutes,
             OpeningTime = request.Court.OpeningTime,
             ClosingTime = request.Court.ClosingTime,
-            TimeZone = request.Court.TimeZone,
             Sports = sports.ToList()
         };
 
@@ -63,7 +62,6 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, GetCourtRe
             SlotDurationMinutes = court.SlotDurationMinutes,
             OpeningTime = court.OpeningTime,
             ClosingTime = court.ClosingTime,
-            TimeZone = court.TimeZone,
             Sports = court.Sports.Select(s => new SportResponse
             {
                 Id = s.Id,

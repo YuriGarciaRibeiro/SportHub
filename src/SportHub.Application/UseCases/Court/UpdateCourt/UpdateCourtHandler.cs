@@ -33,7 +33,6 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
         court.MaxBookingSlots = request.Request.MaxBookingSlots ?? court.MaxBookingSlots;
         court.OpeningTime = request.Request.OpeningTime ?? court.OpeningTime;
         court.ClosingTime = request.Request.ClosingTime ?? court.ClosingTime;
-        court.TimeZone = request.Request.TimeZone ?? court.TimeZone;
         
 
         if (request.Request.SportIds != null)
@@ -58,7 +57,6 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, UpdateCour
             MaxBookingSlots = court.MaxBookingSlots,
             OpeningTime = court.OpeningTime,
             ClosingTime = court.ClosingTime,
-            TimeZone = court.TimeZone,
             Sports = court.Sports
         });
     }

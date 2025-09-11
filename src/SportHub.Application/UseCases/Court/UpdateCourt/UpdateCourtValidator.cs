@@ -29,9 +29,5 @@ public class UpdateCourtValidator : AbstractValidator<UpdateCourtCommand>
         RuleFor(x => x.Request.ClosingTime)
             .NotEmpty().WithMessage("Closing time is required.")
             .When(x => x.Request.ClosingTime.HasValue);
-
-        RuleFor(x => x.Request.TimeZone)
-            .NotEmpty().WithMessage("Time zone is required.")
-            .When(x => x.Request.TimeZone is not null);
     }
 }

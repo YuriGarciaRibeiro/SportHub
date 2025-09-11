@@ -10,6 +10,7 @@ public class EstablishmentConfiguration : IEntityTypeConfiguration<Establishment
     {
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Name).IsRequired().HasMaxLength(200);
+        builder.Property(e => e.TimeZone).IsRequired().HasDefaultValue("America/Maceio");
 
         builder.HasIndex(e => e.Name);
 

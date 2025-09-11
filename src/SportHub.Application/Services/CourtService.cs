@@ -53,7 +53,6 @@ public class CourtService : BaseService<Court>, ICourtService
             c.OpeningTime, 
             c.ClosingTime, 
             c.PricePerSlot,
-            c.TimeZone,
             new Common.Interfaces.Courts.EstablishmentSummaryDto(establishmentId, string.Empty, string.Empty, string.Empty),
             c.Sports
         )).ToList();

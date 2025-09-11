@@ -17,8 +17,6 @@ public class Court : AuditEntity, IEntity
 
     public decimal PricePerSlot { get; set; } = 0;
 
-    public string TimeZone { get; set; } = "America/Maceio";
-
     public ICollection<Sport> Sports { get; set; } = new List<Sport>();
 
     public Establishment Establishment { get; set; } = null!;

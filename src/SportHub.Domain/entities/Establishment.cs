@@ -14,6 +14,7 @@ public class Establishment : AuditEntity, IEntity
     public string ImageUrl { get; set; } = null!;
     public TimeOnly OpeningTime { get; set; }
     public TimeOnly ClosingTime { get; set; }
+    public string TimeZone { get; set; } = "America/Maceio";
 
     public Address Address { get; set; } = null!;
 

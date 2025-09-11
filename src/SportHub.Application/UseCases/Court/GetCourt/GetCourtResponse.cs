@@ -6,7 +6,6 @@ public class GetCourtResponse
     public string Name { get; set; } = string.Empty;
     public TimeOnly OpeningTime { get; set; }
     public TimeOnly ClosingTime { get; set; }
-    public string TimeZone { get; set; } = "America/Maceio";
     public IEnumerable<SportDto> Sports { get; set; } = Enumerable.Empty<SportDto>();
     public EstablishmentDto Establishment { get; set; } = new EstablishmentDto();
 

@@ -38,7 +38,6 @@ public class GetCourtsByEstablishmentIdQueryHandler : IQueryHandler<GetCourtsByE
                 SlotDurationMinutes = c.SlotDurationMinutes,
                 MinBookingSlots = c.MinBookingSlots,
                 MaxBookingSlots = c.MaxBookingSlots,
-                TimeZone = c.TimeZone,
                 Sports = c.Sports.Select(s => new SportResponse
                 {
                     Id = s.Id,

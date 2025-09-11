@@ -28,7 +28,6 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
                 c.OpeningTime,
                 c.ClosingTime,
                 c.PricePerSlot,
-                c.TimeZone,
                 c.Sports.Select(s => new CourtDtos.SportDto(
                     s.Id,
                     s.Name,
@@ -73,7 +72,6 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
                 c.OpeningTime,
                 c.ClosingTime,
                 c.PricePerSlot,
-                c.TimeZone,
                 new CourtDtos.EstablishmentSummaryDto(
                     c.Establishment.Id,
                     c.Establishment.Name,
@@ -103,7 +101,6 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
                 c.OpeningTime,
                 c.ClosingTime,
                 c.PricePerSlot,
-                c.TimeZone,
                 new CourtDtos.EstablishmentSummaryDto(
                     c.Establishment.Id,
                     c.Establishment.Name,

@@ -11,7 +11,6 @@ public class GetCourtResponse
     public int MaxBookingSlots { get; set; }
     public TimeOnly OpeningTime { get; set; }
     public TimeOnly ClosingTime { get; set; }
-    public string TimeZone { get; set; } = "America/Maceio";
     public List<SportResponse> Sports { get; set; } = new List<SportResponse>();
 }
 
