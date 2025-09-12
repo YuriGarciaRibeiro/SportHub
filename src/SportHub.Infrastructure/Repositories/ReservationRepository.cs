@@ -115,6 +115,7 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
 
         var items = query
             .Include(r => r.Court)
+            .ThenInclude(c => c.Establishment)
             .OrderBy(r => r.StartTimeUtc)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -126,7 +127,11 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
                 r.CourtId,
                 r.Court.Name,
                 r.StartTimeUtc,
-                r.EndTimeUtc
+                r.EndTimeUtc,
+                r.SlotsBooked,
+                r.TotalPrice,
+                r.Court.Establishment.Id,
+                r.Court.Establishment.Name
             ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);

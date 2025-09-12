@@ -10,6 +10,8 @@ public class Reservation : AuditEntity, IEntity
 
     public DateTime StartTimeUtc { get; set; }
     public DateTime EndTimeUtc { get; set; }
+    public decimal TotalPrice { get; set; }
+    public int SlotsBooked { get; set; }
 
     public Court Court { get; set; } = null!;
     public User User { get; set; } = null!;

@@ -1,5 +1,3 @@
-
-
 namespace SportHub.Application.UseCases.Reservation.GetReservationByUserId;
 
 public class GetReservationsByUserIdHandler : IQueryHandler<GetReservationsByUserIdQuery, GetReservationsByUserIdResponse>
@@ -22,11 +20,18 @@ public class GetReservationsByUserIdHandler : IQueryHandler<GetReservationsByUse
                 ReservationId = r.Id,
                 StartTimeUtc = r.StartTimeUtc,
                 EndTimeUtc = r.EndTimeUtc,
-                Court = new CourtResponse
+                TotalPrice = r.TotalPrice,
+                SlotsBooked = r.SlotsBooked,
+                Establishment = new EstablishmentResponse
                 {
-                    CourtId = r.CourtId,
-                    Name = r.CourtName
-                }
+                    EstablishmentId = r.EstablishmentId,
+                    Name = r.EstablishmentName,
+                    Court = new CourtResponse
+                    {
+                        CourtId = r.CourtId,
+                        Name = r.CourtName,
+                    }
+                },
             }),
             TotalCount = total,
             Page = request.Page,

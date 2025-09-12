@@ -90,7 +90,9 @@ public class ReservationService : BaseService<Reservation>, IReservationService
             CourtId = court.Id,
             UserId = userId,
             StartTimeUtc = startUtc,
-            EndTimeUtc = endUtc
+            EndTimeUtc = endUtc,
+            SlotsBooked = (int)totalSlots,
+            TotalPrice = (decimal)totalSlots * court.PricePerSlot
         };
 
         await _reservationRepository.AddAsync(reservation, cancellationToken);

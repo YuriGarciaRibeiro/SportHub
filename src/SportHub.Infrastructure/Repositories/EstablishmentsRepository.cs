@@ -308,6 +308,7 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
         return query
             .Include(r => r.User)
             .Include(r => r.Court)
+            .ThenInclude(c => c.Establishment)
             .Select(r => new ReservationWithDetailsDto(
                 r.Id,
                 r.UserId,
@@ -316,7 +317,11 @@ public class EstablishmentsRepository : BaseRepository<Establishment>, IEstablis
                 r.CourtId,
                 r.Court.Name,
                 r.StartTimeUtc,
-                r.EndTimeUtc
+                r.EndTimeUtc,
+                r.SlotsBooked,
+                r.TotalPrice,
+                r.Court.Establishment.Id,
+                r.Court.Establishment.Name
             ))
             .AsNoTracking()
             .ToListAsync(cancellationToken);

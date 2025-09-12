@@ -33,18 +33,9 @@ public record ReservationWithDetailsDto(
     Guid CourtId,
     string CourtName,
     DateTime StartTimeUtc,
-    DateTime EndTimeUtc
-);
-
-public record ReservationCompleteDto(
-    Guid Id,
-    Guid UserId,
-    string UserName,
-    string UserEmail,
-    Guid CourtId,
-    string CourtName,
+    DateTime EndTimeUtc,
+    int SlotsBooked,
+    decimal TotalPrice,
     Guid EstablishmentId,
-    string EstablishmentName,
-    DateTime StartTimeUtc,
-    DateTime EndTimeUtc
+    string EstablishmentName
 );
