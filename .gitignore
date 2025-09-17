@@ -21,4 +21,7 @@ coverage/
 
 # Ignorar todos os arquivos .md exceto README.md
 *.md
-!README.md
+!README_EN.md
+!README_PT.md
+!SEEDERS_EN.md
+!SEEDERS_PT.md
