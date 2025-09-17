@@ -36,7 +36,7 @@ public class EvaluationSeeder : BaseSeeder
         }
 
         // Buscar estabelecimentos e usuários existentes
-        var establishments = await _dbContext.Establishments.Take(3).ToListAsync(cancellationToken);
+        var establishments = await _dbContext.Establishments.ToListAsync(cancellationToken);
         var users = await _dbContext.Users.Where(u => u.Role == UserRole.User).Take(6).ToListAsync(cancellationToken);
 
         if (!establishments.Any() || !users.Any())

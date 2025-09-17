@@ -31,13 +31,6 @@ public class CourtSeeder : BaseSeeder
     {
         LogInfo("Starting courts seeding...");
 
-        var existingCourts = await _courtsRepository.GetAllAsync(cancellationToken);
-        if (existingCourts?.Any() == true)
-        {
-            LogInfo($"Courts already exist ({existingCourts.Count()} found). Skipping seeding.");
-            return;
-        }
-
         // Get establishments and sports
         var establishments = await _establishmentsRepository.GetAllAsync(cancellationToken);
         var sports = await _sportsRepository.GetAllAsync(cancellationToken);
@@ -1189,11 +1182,21 @@ public class CourtSeeder : BaseSeeder
         }
 
         // Add courts and associate sports
+        var addedCourts = 0;
         foreach (var (court, sportIds) in courtsData)
         {
+            // Check if court already exists
+            var existingCourt = await _courtsRepository.GetByIdAsync(court.Id, cancellationToken);
+            if (existingCourt != null)
+            {
+                LogInfo($"Court already exists: {court.Name}");
+                continue;
+            }
+
             // Add court first
             await _courtsRepository.AddAsync(court, cancellationToken);
             LogInfo($"Created court: {court.Name}");
+            addedCourts++;
 
             // Now associate sports using DbContext directly to avoid tracking conflicts
             if (sportIds.Any())
@@ -1218,6 +1221,6 @@ public class CourtSeeder : BaseSeeder
             }
         }
 
-        LogInfo($"Courts seeding completed. Added {courtsData.Count} courts.");
+        LogInfo($"Courts seeding completed. Added {addedCourts} new courts out of {courtsData.Count} total courts.");
     }
 }

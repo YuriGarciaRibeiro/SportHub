@@ -1,5 +1,7 @@
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Seeders;
 
@@ -7,14 +9,17 @@ public class ReservationSeeder : BaseSeeder
 {
     private readonly IReservationRepository _reservationRepository;
     private readonly IReservationService _reservationService;
+    private readonly ApplicationDbContext _dbContext;
 
     public ReservationSeeder(
         IReservationRepository reservationRepository,
         IReservationService reservationService,
+        ApplicationDbContext dbContext,
         ILogger<ReservationSeeder> logger) : base(logger)
     {
         _reservationRepository = reservationRepository;
         _reservationService = reservationService;
+        _dbContext = dbContext;
     }
 
     public override int Order => 5; // Fifth to be executed (after Courts)
@@ -23,157 +28,80 @@ public class ReservationSeeder : BaseSeeder
     {
         LogInfo("Starting reservations seeding...");
 
-        var reservations = GetTestReservations();
+        // Verificar se já existem reservas
+        var existingReservations = await _dbContext.Reservations.AnyAsync(cancellationToken);
+        if (existingReservations)
+        {
+            LogInfo("Reservations already exist, skipping seeding.");
+            return;
+        }
+
+        // Buscar todos os usuários e quadras existentes
+        var users = await _dbContext.Users.ToListAsync(cancellationToken);
+        var courts = await _dbContext.Courts.ToListAsync(cancellationToken);
+
+        if (!users.Any() || !courts.Any())
+        {
+            LogWarning("No users or courts found. Cannot seed reservations.");
+            return;
+        }
+
+        var reservations = GenerateReservationsForAllUsers(users, courts);
 
         foreach (var reservation in reservations)
         {
-            var existing = await _reservationRepository.GetByIdAsync(reservation.Id, cancellationToken);
-            if (existing != null)
-            {
-                LogInfo($"Reservation already exists: {reservation.Id}");
-                continue;
-            }
-
             await _reservationRepository.AddAsync(reservation, cancellationToken);
             LogInfo($"Created reservation for court {reservation.CourtId} by user {reservation.UserId}");
         }
 
-        LogInfo("Reservations seeding completed.");
+        LogInfo($"Reservations seeding completed. Created {reservations.Count} reservations.");
     }
 
-    private List<Reservation> GetTestReservations()
+    private List<Reservation> GenerateReservationsForAllUsers(List<User> users, List<Court> courts)
     {
-        var baseDate = DateTime.UtcNow.AddDays(1); // Start from tomorrow
         var reservations = new List<Reservation>();
+        var random = new Random(42); // Seed fixo para resultados consistentes
+        var baseDate = DateTime.UtcNow;
 
-        // Past reservations (for testing history)
-        var pastDate = DateTime.UtcNow.AddDays(-7);
+        // Criar reservas para cada usuário
+        foreach (var user in users)
+        {
+            // Cada usuário terá entre 1 a 4 reservas
+            var numberOfReservations = random.Next(1, 5);
+            
+            for (int i = 0; i < numberOfReservations; i++)
+            {
+                // Selecionar uma quadra aleatória
+                var court = courts[random.Next(courts.Count)];
+                
+                // Gerar uma data aleatória (mix de passado, presente e futuro)
+                var daysOffset = random.Next(-10, 15); // 10 dias no passado até 15 dias no futuro
+                var hour = random.Next(8, 22); // Entre 8h e 22h
+                var startTime = baseDate.AddDays(daysOffset).Date.AddHours(hour);
+                
+                // Duração aleatória (1-3 horas)
+                var duration = random.Next(1, 4);
+                var endTime = startTime.AddHours(duration);
+                
+                // Preço baseado na duração e tipo de quadra (simulado)
+                var pricePerHour = random.Next(10, 50);
+                var totalPrice = pricePerHour * duration;
+                
+                var reservation = new Reservation
+                {
+                    Id = Guid.NewGuid(),
+                    CourtId = court.Id,
+                    UserId = user.Id,
+                    StartTimeUtc = startTime.ToUniversalTime(),
+                    EndTimeUtc = endTime.ToUniversalTime(),
+                    SlotsBooked = duration * 2, // Assumindo slots de 30 minutos
+                    TotalPrice = totalPrice
+                };
+                
+                reservations.Add(reservation);
+            }
+        }
         
-        // SportHub Central Arena - Past reservations
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-            CourtId = Guid.Parse("11111111-1111-1111-1111-111111111112"), // Main Football Court
-            UserId = Guid.Parse("44444444-4444-4444-4444-444444444444"), // Anna Brown
-            StartTimeUtc = pastDate.AddHours(14),
-            EndTimeUtc = pastDate.AddHours(15),
-            SlotsBooked = 1,
-            TotalPrice = 10
-        });
-
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("11111111-1111-1111-1111-111111111113"),
-            CourtId = Guid.Parse("11111111-1111-1111-1111-111111111114"), // Basketball Court A
-            UserId = Guid.Parse("55555555-5555-5555-5555-555555555555"), // Peter Davis
-            StartTimeUtc = pastDate.AddHours(16),
-            EndTimeUtc = pastDate.AddHours(17).AddMinutes(30),
-            SlotsBooked = 3,
-            TotalPrice = 15
-        });
-
-        // Future reservations for today and next days
-        
-        // Today's reservations
-        var today = DateTime.UtcNow.Date;
-        
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("22222222-2222-2222-2222-222222222221"),
-            CourtId = Guid.Parse("22222222-2222-2222-2222-222222222222"), // Tennis Court 1
-            UserId = Guid.Parse("66666666-6666-6666-6666-666666666666"), // Lucy Miller
-            StartTimeUtc = today.AddHours(18),
-            EndTimeUtc = today.AddHours(19),
-            SlotsBooked = 2,
-            TotalPrice = 20
-        });
-
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("22222222-2222-2222-2222-222222222223"),
-            CourtId = Guid.Parse("22222222-2222-2222-2222-222222222224"), // Padel Court 1
-            UserId = Guid.Parse("77777777-7777-7777-7777-777777777777"), // Robert Wilson
-            StartTimeUtc = today.AddHours(20),
-            EndTimeUtc = today.AddHours(21).AddMinutes(30),
-            SlotsBooked = 3,
-            TotalPrice = 30
-        });
-
-        // Tomorrow's reservations
-        var tomorrow = baseDate;
-        
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333331"),
-            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333332"), // Futsal Court 1
-            UserId = Guid.Parse("44444444-4444-4444-4444-444444444444"), // Anna Brown
-            StartTimeUtc = tomorrow.AddHours(19),
-            EndTimeUtc = tomorrow.AddHours(20),
-            SlotsBooked = 2,
-            TotalPrice = 40
-        });
-
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333334"), // Futsal Court 2
-            UserId = Guid.Parse("88888888-8888-8888-8888-888888888888"), // Emily Moore
-            StartTimeUtc = tomorrow.AddHours(20),
-            EndTimeUtc = tomorrow.AddHours(21),
-            SlotsBooked = 2,
-            TotalPrice = 40
-        });
-
-        // Day after tomorrow
-        var dayAfter = baseDate.AddDays(1);
-        
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("11111111-1111-1111-1111-111111111115"),
-            CourtId = Guid.Parse("11111111-1111-1111-1111-111111111116"), // Volleyball Court A
-            UserId = Guid.Parse("55555555-5555-5555-5555-555555555555"), // Peter Davis
-            StartTimeUtc = dayAfter.AddHours(15),
-            EndTimeUtc = dayAfter.AddHours(16),
-            SlotsBooked = 2,
-            TotalPrice = 20
-        });
-
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("22222222-2222-2222-2222-222222222225"),
-            CourtId = Guid.Parse("22222222-2222-2222-2222-222222222226"), // Tennis Court 2
-            UserId = Guid.Parse("66666666-6666-6666-6666-666666666666"), // Lucy Miller
-            StartTimeUtc = dayAfter.AddHours(17),
-            EndTimeUtc = dayAfter.AddHours(18),
-            SlotsBooked = 2,
-            TotalPrice = 20
-        });
-
-        // Weekend reservations (more busy)
-        var saturday = baseDate.AddDays(5 - (int)baseDate.DayOfWeek); // Next Saturday
-        
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333335"),
-            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333336"), // Futsal Court 3
-            UserId = Guid.Parse("77777777-7777-7777-7777-777777777777"), // Robert Wilson
-            StartTimeUtc = saturday.AddHours(10),
-            EndTimeUtc = saturday.AddHours(11),
-            SlotsBooked = 2,
-            TotalPrice = 40
-        });
-
-        reservations.Add(new Reservation
-        {
-            Id = Guid.Parse("33333333-3333-3333-3333-333333333337"),
-            CourtId = Guid.Parse("33333333-3333-3333-3333-333333333338"), // Futsal Court 4
-            UserId = Guid.Parse("88888888-8888-8888-8888-888888888888"), // Emily Moore
-            StartTimeUtc = saturday.AddHours(11),
-            EndTimeUtc = saturday.AddHours(12),
-            SlotsBooked = 2,
-            TotalPrice = 40
-        });
-
         return reservations;
     }
 }
