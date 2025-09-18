@@ -4,6 +4,13 @@ using Infrastructure.Security;
 using Infrastructure.Services;
 using Application.Common.Interfaces.Favorites;
 using Application.Common.Interfaces.Geography;
+using SportHub.Application.Common.Interfaces.PasswordReset;
+using SportHub.Application.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using SportHub.Infrastructure.Repositories;
+using Application.Common.Interfaces.Email;
+using SportHub.Application.Options;
 
 namespace Api.Extensions.DependencyInjection;
 
@@ -22,6 +29,7 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddScoped<ICacheService, CacheService>();
         builder.Services.AddScoped<IFavoriteService, FavoriteService>();
         builder.Services.AddScoped<IGeographyService, GeographyService>();
+        builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 
         return builder;
     }
@@ -31,7 +39,8 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
-
+        builder.Services.AddScoped<ICustomEmailSender, SmtpEmailSender>();
+        builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
         return builder;
     }
 
@@ -46,6 +55,8 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
         builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
         builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+        builder.Services.AddScoped<IOtpCodeRepository, OtpCodeRepository>();
+        builder.Services.AddScoped<IResetSessionRepository, ResetSessionRepository>();
 
         return builder;
     }

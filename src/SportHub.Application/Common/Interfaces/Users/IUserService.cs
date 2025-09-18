@@ -11,4 +11,5 @@ public interface IUserService : IBaseService<User>
     public Task<Result<User>> RemoveRoleFromUserAsync(Guid userId, UserRole role, CancellationToken cancellationToken);
     Task<User?> GetUserByEmailAsync(string email, CancellationToken ct = default);
     Task<bool> EmailExistsAsync(string email, CancellationToken ct = default);
+    
 }

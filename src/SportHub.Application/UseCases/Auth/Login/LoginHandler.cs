@@ -38,7 +38,8 @@ public class LoginHandler : ICommandHandler<LoginCommand, AuthResponse>
             user.Id,
             user.FullName,
             user.Role.ToString(),
-            user.Email
+            user.Email,
+            user.TokenVersion.ToString()
         );
 
         return Result.Ok(new AuthResponse

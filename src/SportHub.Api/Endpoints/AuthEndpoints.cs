@@ -5,6 +5,11 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Api.Extensions.Results;
 using Application.UseCases.Auth.Login;
+using Application.UseCases.Auth.ForgotPassword;
+using Microsoft.AspNetCore.Diagnostics;
+using Application.Common.Interfaces.Email;
+using Application.UseCases.Auth.VerifyForgotPasswordCode;
+using Application.UseCases.Auth.UpdatePassword;
 
 namespace SportHub.Api.Endpoints;
 
@@ -46,6 +51,54 @@ public static class AuthEndpoints
         .Produces<AuthResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("/forgot-password", async (
+            ForgotPasswordCommand command,
+            ISender sender) =>
+        {
+            Result result = await sender.Send(command);
+
+            return result.ToIResult(StatusCodes.Status202Accepted);
+        })
+        .WithName("ForgotPassword")
+        .WithSummary("Request password reset")
+        .WithDescription("Sends a password reset email to the user.")
+        .Produces(StatusCodes.Status202Accepted)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("forgot-password/verify", async (
+            VerifyForgotPasswordCodeCommand command,
+            ISender sender) =>
+        {
+            var result = await sender.Send(command);
+
+            return result.ToIResult(StatusCodes.Status200OK);
+        })
+        .WithName("VerifyForgotPasswordCode")
+        .WithSummary("Verify forgot password code")
+        .WithDescription("Verifies the code sent to the user's email for password reset.")
+        .Produces<VerifyForgotPasswordCodeResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
+        .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("forgot-password/update", async (
+            UpdatePasswordCommand command,
+            ISender sender) =>
+        {
+            var result = await sender.Send(command);
+
+            return result.ToIResult(StatusCodes.Status200OK);
+        })
+        .WithName("UpdatePassword")
+        .WithSummary("Update password")
+        .WithDescription("Updates the user's password using a valid reset session.")
+        .Produces(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 

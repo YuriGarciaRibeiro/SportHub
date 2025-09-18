@@ -46,7 +46,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
         await _userService.CreateAsync(user, cancellationToken);
 
         var (token, expiresAt) = _jwtService.GenerateToken(
-            user.Id, user.FullName, user.Role.ToString(), user.Email);
+            user.Id, user.FullName, user.Role.ToString(), user.Email, user.TokenVersion.ToString());
 
         return Result.Ok(new AuthResponse
         {

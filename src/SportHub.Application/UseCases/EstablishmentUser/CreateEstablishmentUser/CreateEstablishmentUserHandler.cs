@@ -25,7 +25,6 @@ public class CreateEstablishmentUserHandler : ICommandHandler<CreateEstablishmen
 
     public async Task<Result<CreateEstablishmentUserResponse>> Handle(CreateEstablishmentUserCommand request, CancellationToken cancellationToken)
     {
-        // TODO: Tirar Essa validaçao
         var permissionResult = await _establishmentRoleService.ValidateUserPermissionAsync(
             _currentUserService.UserId, 
             request.EstablishmentId, 

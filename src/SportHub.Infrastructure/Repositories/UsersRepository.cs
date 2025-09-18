@@ -24,4 +24,19 @@ public class UsersRepository : BaseRepository<User>, IUsersRepository
     {
         return await _dbContext.Users.AnyAsync(u => u.Email == email, cancellationToken);
     }
+
+    public async Task UpdatePasswordAsync(User user, string newHash, string newSalt, CancellationToken ct = default)
+    {
+        user.PasswordHash = newHash;
+        user.Salt = newSalt;
+        _dbContext.Users.Update(user);
+        await _dbContext.SaveChangesAsync(ct);
+    }
+
+    public async Task IncrementTokenVersionAsync(User user, CancellationToken ct = default)
+    {
+        user.TokenVersion++;
+        _dbContext.Users.Update(user);
+        await _dbContext.SaveChangesAsync(ct);
+    }
 }

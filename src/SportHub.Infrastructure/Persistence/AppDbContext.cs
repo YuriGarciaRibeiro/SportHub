@@ -24,6 +24,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Reservation> Reservations { get; set; } = null!;
     public DbSet<Evaluation> Evaluations { get; set; } = null!;
     public DbSet<Favorite> Favorites { get; set; } = null!;
+    public DbSet<ResetSession> ResetSessions { get; set; } = null!;
+    public DbSet<OtpCode> OtpCodes { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
