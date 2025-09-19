@@ -12,12 +12,14 @@
       .btn a{ color:inherit !important; text-decoration:none !important; }
       /* dark mode (clientes que respeitam prefers-color-scheme) */
       @media (prefers-color-scheme: dark) {
-        .bg{ background:#0F172A !important; }
+        .bg{ background:#0B0F14 !important; }
         .card{ background:#111827 !important; border-color:#1F2937 !important; }
-        .text{ color:#F8FAFC !important; }
-        .muted{ color:#94A3B8 !important; }
-        .badge{ background:#1F2937 !important; border-color:#374151 !important; color:#F8FAFC !important; }
-        .logo-text{ color:#6366F1 !important; }
+        .text{ color:#F1F5F9 !important; }
+        .muted{ color:#CBD5E1 !important; }
+        .badge{ background:#1F2937 !important; border-color:#374151 !important; color:#F1F5F9 !important; }
+        .logo-text{ color:#22C55E !important; }
+        .btn{ background:#22C55E !important; }
+        .link{ color:#22C55E !important; }
       }
     </style>
   </head>
@@ -30,7 +32,7 @@
             <tr>
               <td align="center" style="padding:12px 0 16px 0;">
                 <!-- troque por <img> se tiver logo -->
-                <div class="logo-text" style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#6366F1;letter-spacing:.4px;">
+                <div class="logo-text" style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#16A34A;letter-spacing:.4px;">
                   SportHub
                 </div>
               </td>
@@ -54,7 +56,7 @@
                 <!-- CTA principal -->
                 <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:12px auto 8px auto;">
                   <tr>
-                    <td class="btn" bgcolor="#6366F1" style="border-radius:10px;background:#6366F1;">
+                    <td class="btn" bgcolor="#16A34A" style="border-radius:10px;background:#16A34A;">
                       <a href="{{AppUrl}}"
                          style="display:inline-block;padding:12px 20px;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:15px;color:#FFFFFF;text-decoration:none;border-radius:10px;">
                         Acessar o SportHub
@@ -67,7 +69,7 @@
                 <!-- Remova se não usar verificação -->
                 <p class="text" style="margin:8px 0 16px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:21px;color:#0F172A;">
                   Se solicitado, confirme seu e-mail para liberar todos os recursos:
-                  <a href="{{VerifyEmailUrl}}" style="color:#6366F1;text-decoration:underline;">Verificar e-mail</a>
+                  <a href="{{VerifyEmailUrl}}" class="link" style="color:#16A34A;text-decoration:underline;">Verificar e-mail</a>
                 </p>
 
                 <!-- Destaques -->
@@ -101,8 +103,8 @@
                 <!-- Suporte -->
                 <p class="muted" style="margin:16px 0 0 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;">
                   Precisa de ajuda? Fale com a gente:
-                  <a href="{{SupportUrl}}" style="color:#6366F1;text-decoration:underline;">{{SupportUrl}}</a> •
-                  <a href="mailto:{{SupportEmail}}" style="color:#6366F1;text-decoration:underline;">{{SupportEmail}}</a>
+                  <a href="{{SupportUrl}}" class="link" style="color:#16A34A;text-decoration:underline;">{{SupportUrl}}</a> •
+                  <a href="mailto:{{SupportEmail}}" class="link" style="color:#16A34A;text-decoration:underline;">{{SupportEmail}}</a>
                 </p>
               </td>
             </tr>
