@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using Application.Common.Interfaces.Email;
 using Application.Common.Interfaces.Users;
+using Application.Emails.recoverycode;
 using Domain.Entities;
 using SportHub.Application.Common.Interfaces.Email;
 using SportHub.Application.Common.Interfaces.PasswordReset;
@@ -137,14 +138,6 @@ public class PasswordResetService : IPasswordResetService
         if (bumpTokenVersion) await _users.IncrementTokenVersionAsync(user, ct);
     }
 
-    private sealed record PasswordResetEmailModel(
-        string UserName,
-        string UserEmail,
-        string VerificationCode,
-        int    ExpiryMinutes,
-        string? VerifyUrl,
-        string? SupportEmail,
-        string? SupportUrl,
-        int    Year);
+    
 }
 

@@ -1,8 +1,8 @@
-using Application.Common.Enums;
 using Application.Common.Errors;
-using Application.CQRS;
-using FluentResults;
+using Application.Common.Interfaces.Email;
+using Application.Emails.reservation_confirmed;
 using Microsoft.Extensions.Logging;
+using SportHub.Application.Common.Interfaces.Email;
 
 namespace Application.UseCases.Reservations.CreateReservation;
 
@@ -11,16 +11,18 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
     private readonly IReservationService _reservationService;
     private readonly ICurrentUserService _currentUserService;
     private readonly ICourtService _courtService;
-    private readonly ICacheService _cacheService;
+    private readonly ICustomEmailSender _emailService;
+    private readonly IEmailTemplateService _emailTemplateService;
     private readonly ILogger<CreateReservationHandler> _logger;
 
-    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtService courtService, ICacheService cacheService, ILogger<CreateReservationHandler> logger)
+    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtService courtService, ICustomEmailSender emailService, IEmailTemplateService emailTemplateService, ILogger<CreateReservationHandler> logger)
     {
         _logger = logger;
         _courtService = courtService;
         _currentUserService = currentUserService;
         _reservationService = reservationService;
-        _cacheService = cacheService;
+        _emailService = emailService;
+        _emailTemplateService = emailTemplateService;
     }
 
     public async Task<Result<CreateReservationResponse>> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
@@ -48,6 +50,27 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
         }
 
         _logger.LogInformation($"Reservation created successfully for Court ID {request.CourtId} by User ID {userId}.");
+
+        // Send confirmation email
+        var emailModel = new ReservationConfirmedEmailModel(
+            establishmentName: court.Establishment.Name,
+            startDateTime: request.Reservation.StartTime.ToString("f"),
+            endDateTime: request.Reservation.EndTime.ToString("f"),
+            userName: _currentUserService.FullName,
+            reservationId: reservationResult.Value.ToString(),
+            courtName: court.Name,
+            duration: (request.Reservation.EndTime - request.Reservation.StartTime).TotalHours + " hours",
+            price: (court.PricePerSlot * (decimal)(request.Reservation.EndTime - request.Reservation.StartTime).TotalHours).ToString("C"),
+            supportUrl: "https://support.sporthub.com",
+            year: DateTime.UtcNow.Year.ToString()
+        );
+
+        var emailContent = await _emailTemplateService.RenderTemplateAsync("ReservationConfirmed", emailModel, cancellationToken);
+        await _emailService.SendAsync(
+            to: _currentUserService.Email,
+            subject: "Your Reservation is Confirmed!",
+            body: emailContent
+        );
 
         return Result.Ok(new CreateReservationResponse
         {

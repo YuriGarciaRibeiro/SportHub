@@ -21,5 +21,22 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
+    public string FullName
+    {
+        get
+        {
+            var fullNameClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name);
+            return fullNameClaim?.Value ?? string.Empty;
+        }
+    }
+
+    public string Email
+    {
+        get
+        {
+            var emailClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email);
+            return emailClaim?.Value ?? string.Empty;
+        }
+    }
     public bool IsAuthenticated => UserId != Guid.Empty;
 }

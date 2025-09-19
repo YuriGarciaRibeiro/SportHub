@@ -4,6 +4,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Application.Common.Interfaces.Email;
 using SportHub.Application.Common.Interfaces.Email;
+using Application.Emails.welcome;
 
 namespace Application.UseCases.Auth.Register;
 
@@ -92,17 +93,8 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
         }
         catch (Exception)
         {
-            // Log do erro, mas não falha o cadastro se o email não for enviado
-            // O usuário foi criado com sucesso, o email é um "nice to have"
         }
     }
 
-    private sealed record WelcomeEmailModel(
-        string UserName,
-        string UserEmail,
-        string AppUrl,
-        string VerifyEmailUrl,
-        string SupportEmail,
-        string SupportUrl,
-        int Year);
+    
 }

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>Reserva confirmada - SportHub</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="x-preheader" content="Sua reserva em {{EstablishmentName}} para {{StartDateTime}} foi confirmada.">
+    <style>
+      a[x-apple-data-detectors]{ color:inherit!important; text-decoration:none!important; }
+      .logo-text{ color:#16A34A; }
+      .btn a{ color:inherit !important; text-decoration:none !important; }
+
+      @media (prefers-color-scheme: dark) {
+        .bg{ background:#0B0F14 !important; }
+        .card{ background:#111827 !important; border-color:#1F2937 !important; }
+        .text{ color:#F1F5F9 !important; }
+        .muted{ color:#CBD5E1 !important; }
+        .badge{ background:#1F2937 !important; border-color:#374151 !important; color:#F1F5F9 !important; }
+        .logo-text{ color:#22C55E !important; }
+        .btn{ background:#22C55E !important; }
+        .link{ color:#22C55E !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background:#F8FAFC;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="bg" style="background:#F8FAFC;">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:620px;">
+            <tr>
+              <td align="center" style="padding:12px 0 16px 0;">
+                <div class="logo-text" style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#16A34A;letter-spacing:.4px;">
+                  SportHub
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="card" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:24px;">
+                <h1 class="text" style="margin:0 0 12px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;color:#0F172A;">
+                  Reserva confirmada — {{EstablishmentName}}
+                </h1>
+
+                <p class="text" style="margin:0 0 12px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#0F172A;">
+                  Olá {{UserName}},
+                </p>
+
+                <p class="text" style="margin:0 0 16px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#0F172A;">
+                  Sua reserva (ID <strong>{{ReservationId}}</strong>) foi confirmada.
+                </p>
+
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 16px 0;border-collapse:separate;">
+                  <tr>
+                    <td style="padding:0 0 8px 0;">
+                      <p style="margin:0;font:600 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">Quadra</p>
+                      <p style="margin:4px 0 0 0;font:400 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#475569;">{{CourtName}}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 8px 0;">
+                      <p style="margin:0;font:600 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">Data e hora</p>
+                      <p style="margin:4px 0 0 0;font:400 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#475569;">{{StartDateTime}} — {{EndDateTime}}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 8px 0;">
+                      <p style="margin:0;font:600 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">Duração</p>
+                      <p style="margin:4px 0 0 0;font:400 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#475569;">{{Duration}}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 0 8px 0;">
+                      <p style="margin:0;font:600 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">Valor</p>
+                      <p style="margin:4px 0 0 0;font:400 14px/20px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#475569;">{{Price}}</p>
+                    </td>
+                  </tr>
+                </table>
+
+                <p class="muted" style="margin:12px 0 0 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;">
+                  Precisa alterar algo? Contate o suporte: <a href="{{SupportUrl}}" class="link" style="color:#16A34A;text-decoration:underline;">{{SupportUrl}}</a> • <a href="mailto:{{SupportEmail}}" class="link" style="color:#16A34A;text-decoration:underline;">{{SupportEmail}}</a>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td align="center" style="padding:16px 8px;">
+                <p class="muted" style="margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;color:#475569;">
+                  © {{Year}} SportHub. Todos os direitos reservados.
+                </p>
+                <p class="muted" style="margin:6px 0 0 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;color:#94A3B8;">
+                  Você está recebendo este e-mail porque realizou uma reserva no SportHub com {{UserEmail}}.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
