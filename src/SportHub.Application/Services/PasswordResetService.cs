@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Net;
+using System.Reflection;
 using Application.Common.Interfaces.Email;
 using Application.Common.Interfaces.Users;
 using Domain.Entities;
@@ -27,7 +30,7 @@ public class PasswordResetService : IPasswordResetService
     public async Task RequestAsync(string email, CancellationToken ct = default)
     {
         var user = await _users.GetByEmailAsync(email, ct);
-        if (user is null) return; 
+        if (user is null) return;
 
         var now = DateTime.UtcNow;
         await _otps.RemoveActivesAsync(user.Id, "password_reset", now, ct);
@@ -43,9 +46,25 @@ public class PasswordResetService : IPasswordResetService
             ExpiresAt = now.AddMinutes(10)
         }, ct);
 
+        var html = await GetEmailTemplateAsync();
+
+        // Preenche placeholders
+        html = ApplyEmailTemplate(html, new PasswordResetEmailModel(
+            UserName: user.FullName ?? "",
+            UserEmail: user.Email,
+            VerificationCode: code,
+            ExpiryMinutes: 10,
+            VerifyUrl: "https://sporthub.app/redefinir",   // ajuste se quiser
+            SupportEmail: "suporte@sporthub.app",
+            SupportUrl: "https://sporthub.app/ajuda",
+            Year: DateTime.UtcNow.Year
+        ));
+
+
+
         await _email.SendAsync(user.Email,
             "Código para redefinir a senha",
-            $"Seu código é: {code}\nEle expira em 10 minutos.",
+            html,
             ct);
     }
 
@@ -57,7 +76,7 @@ public class PasswordResetService : IPasswordResetService
         var now = DateTime.UtcNow;
         var otp = await _otps.GetLatestActiveAsync(user.Id, "password_reset", now, ct);
         if (otp is null || otp.Attempts >= otp.MaxAttempts) return false;
-        
+
         otp.Attempts++;
         Console.WriteLine(otp.CodeHash);
         Console.WriteLine(SecurityUtils.Sha256Hex(code));
@@ -111,4 +130,57 @@ public class PasswordResetService : IPasswordResetService
         await _users.UpdatePasswordAsync(user, hash, salt, ct);
         if (bumpTokenVersion) await _users.IncrementTokenVersionAsync(user, ct);
     }
+
+    private static async Task<string> GetEmailTemplateAsync()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        var resourceName = "SportHub.Application.Emails.recoverycode.html";
+        
+        using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream == null)
+        {
+            throw new FileNotFoundException($"Embedded resource '{resourceName}' not found.");
+        }
+        
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync();
+    }
+
+    private static string ApplyEmailTemplate(string html, PasswordResetEmailModel m)
+    {
+        // Se seu HTML usa os 6 dígitos separadamente: {{VerificationCode:0}} ... :5
+        // Garante 6 chars
+        var code = (m.VerificationCode ?? "").PadLeft(6, '0');
+        html = html
+            .Replace("{{VerificationCode}}", code)
+            .Replace("{{VerificationCode:0}}", code[0].ToString())
+            .Replace("{{VerificationCode:1}}", code[1].ToString())
+            .Replace("{{VerificationCode:2}}", code[2].ToString())
+            .Replace("{{VerificationCode:3}}", code[3].ToString())
+            .Replace("{{VerificationCode:4}}", code[4].ToString())
+            .Replace("{{VerificationCode:5}}", code[5].ToString());
+
+        // Demais placeholders (encode onde for texto)
+        string H(string s) => WebUtility.HtmlEncode(s ?? "");
+
+        return html
+            .Replace("{{UserName}}", H(m.UserName))
+            .Replace("{{UserEmail}}", H(m.UserEmail))
+            .Replace("{{ExpiryMinutes}}", m.ExpiryMinutes.ToString(CultureInfo.InvariantCulture))
+            .Replace("{{VerifyUrl}}", m.VerifyUrl ?? "")
+            .Replace("{{SupportEmail}}", H(m.SupportEmail ?? ""))
+            .Replace("{{SupportUrl}}", m.SupportUrl ?? "")
+            .Replace("{{Year}}", m.Year.ToString());
+    }
+
+    private sealed record PasswordResetEmailModel(
+        string UserName,
+        string UserEmail,
+        string VerificationCode,
+        int    ExpiryMinutes,
+        string? VerifyUrl,
+        string? SupportEmail,
+        string? SupportUrl,
+        int    Year);
 }
+

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <title>Seu código de recuperação - SportHub</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="x-preheader" content="Seu código de verificação é {{VerificationCode}}. Ele expira em {{ExpiryMinutes}} minutos.">
+    <style>
+      a[x-apple-data-detectors]{ color:inherit!important; text-decoration:none!important; }
+      @media (prefers-color-scheme: dark) {
+        .bg{ background:#0F172A !important; }
+        .card{ background:#111827 !important; border-color:#1F2937 !important; }
+        .text{ color:#F8FAFC !important; }
+        .muted{ color:#94A3B8 !important; }
+        .chip{ background:#1F2937 !important; border-color:#374151 !important; color:#F8FAFC !important; }
+        .logo-text{ color:#6366F1 !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background:#F8FAFC;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="bg" style="background:#F8FAFC;">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px;">
+            <tr>
+              <td align="center" style="padding:12px 0 16px 0;">
+                <div class="logo-text" style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;color:#6366F1;letter-spacing:.4px;">
+                  SportHub
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="card" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:24px;">
+                <h1 class="text" style="margin:0 0 12px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;color:#0F172A;">
+                  Código de verificação
+                </h1>
+
+                <p class="text" style="margin:0 0 12px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#0F172A;">
+                  Olá {{UserName}},
+                </p>
+
+                <p class="text" style="margin:0 16px 16px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#0F172A;">
+                  Use o código abaixo para redefinir sua senha no <strong>SportHub</strong>. Ele expira em <strong>{{ExpiryMinutes}}</strong> minutos.
+                </p>
+
+                <!-- BLOCO DO CÓDIGO -->
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:8px 0 16px 0;">
+                  <tr>
+                    <td align="center">
+                      <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px;">
+                        <tr>
+                          <!-- Se preferir sem caixas separadas, troque pelo bloco único logo abaixo -->
+                          <!-- Caixinhas por dígito (melhor UX em e-mail) -->
+                          <td class="chip" style="width:48px;height:56px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;text-align:center;">
+                            <div style="font:700 24px/56px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">{{VerificationCode:0}}</div>
+                          </td>
+                          <td class="chip" style="width:48px;height:56px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;text-align:center;">
+                            <div style="font:700 24px/56px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">{{VerificationCode:1}}</div>
+                          </td>
+                          <td class="chip" style="width:48px;height:56px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;text-align:center;">
+                            <div style="font:700 24px/56px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">{{VerificationCode:2}}</div>
+                          </td>
+                          <td class="chip" style="width:48px;height:56px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;text-align:center;">
+                            <div style="font:700 24px/56px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">{{VerificationCode:3}}</div>
+                          </td>
+                          <td class="chip" style="width:48px;height:56px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;text-align:center;">
+                            <div style="font:700 24px/56px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">{{VerificationCode:4}}</div>
+                          </td>
+                          <td class="chip" style="width:48px;height:56px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;text-align:center;">
+                            <div style="font:700 24px/56px Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0F172A;">{{VerificationCode:5}}</div>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Alternativa: bloco único (se não quiser dígito a dígito)
+                      <div style="display:inline-block;padding:12px 16px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;font:700 26px/28px Segoe UI,Roboto,Helvetica,Arial,sans-serif;letter-spacing:6px;color:#0F172A;">
+                        {{VerificationCode}}
+                      </div>
+                      -->
+                    </td>
+                  </tr>
+                </table>
+
+                <p class="muted" style="margin:0 0 8px 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;">
+                  Se você não solicitou esta recuperação, pode ignorar este e-mail.
+                </p>
+
+                <p class="muted" style="margin:12px 0 0 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#475569;">
+                  Abraços,<br>
+                  Equipe SportHub<br>
+                  <a href="{{SupportUrl}}" style="color:#6366F1;text-decoration:underline;">{{SupportUrl}}</a> •
+                  <a href="mailto:{{SupportEmail}}" style="color:#6366F1;text-decoration:underline;">{{SupportEmail}}</a>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td align="center" style="padding:16px 8px;">
+                <p class="muted" style="margin:0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;color:#475569;">
+                  © {{Year}} SportHub. Todos os direitos reservados.
+                </p>
+                <p class="muted" style="margin:6px 0 0 0;font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:11px;line-height:16px;color:#94A3B8;">
+                  Você recebeu este e-mail porque foi iniciada uma solicitação de recuperação de senha para a conta {{UserEmail}}.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

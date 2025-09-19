@@ -21,4 +21,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Emails\recoverycode.html" />
+  </ItemGroup>
+
 </Project>
