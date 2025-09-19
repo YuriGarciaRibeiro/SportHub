@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Net;
-using System.Reflection;
 using Application.Common.Interfaces.Email;
 using Application.Common.Interfaces.Users;
 using Domain.Entities;
+using SportHub.Application.Common.Interfaces.Email;
 using SportHub.Application.Common.Interfaces.PasswordReset;
 using SportHub.Application.Security;
 
@@ -16,15 +16,22 @@ public class PasswordResetService : IPasswordResetService
     private readonly IResetSessionRepository _sessions;
     private readonly ICustomEmailSender _email;
     private readonly IPasswordService _passwordService;
+    private readonly IEmailTemplateService _emailTemplateService;
 
     public PasswordResetService(
         IUsersRepository users,
         IOtpCodeRepository otps,
         IResetSessionRepository sessions,
         ICustomEmailSender email,
-        IPasswordService passwordService)
+        IPasswordService passwordService,
+        IEmailTemplateService emailTemplateService)
     {
-        _users = users; _otps = otps; _sessions = sessions; _email = email; _passwordService = passwordService;
+        _users = users; 
+        _otps = otps; 
+        _sessions = sessions; 
+        _email = email; 
+        _passwordService = passwordService;
+        _emailTemplateService = emailTemplateService;
     }
 
     public async Task RequestAsync(string email, CancellationToken ct = default)
@@ -46,19 +53,18 @@ public class PasswordResetService : IPasswordResetService
             ExpiresAt = now.AddMinutes(10)
         }, ct);
 
-        var html = await GetEmailTemplateAsync();
-
-        // Preenche placeholders
-        html = ApplyEmailTemplate(html, new PasswordResetEmailModel(
+        var model = new PasswordResetEmailModel(
             UserName: user.FullName ?? "",
             UserEmail: user.Email,
             VerificationCode: code,
             ExpiryMinutes: 10,
-            VerifyUrl: "https://sporthub.app/redefinir",   // ajuste se quiser
+            VerifyUrl: "https://sporthub.app/redefinir",
             SupportEmail: "suporte@sporthub.app",
             SupportUrl: "https://sporthub.app/ajuda",
             Year: DateTime.UtcNow.Year
-        ));
+        );
+
+        var html = await _emailTemplateService.RenderTemplateAsync("recoverycode.html", model, ct);
 
 
 
@@ -129,48 +135,6 @@ public class PasswordResetService : IPasswordResetService
         var (hash, salt, _) = SecurityUtils.HashPassword(newPassword);
         await _users.UpdatePasswordAsync(user, hash, salt, ct);
         if (bumpTokenVersion) await _users.IncrementTokenVersionAsync(user, ct);
-    }
-
-    private static async Task<string> GetEmailTemplateAsync()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourceName = "SportHub.Application.Emails.recoverycode.html";
-        
-        using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream == null)
-        {
-            throw new FileNotFoundException($"Embedded resource '{resourceName}' not found.");
-        }
-        
-        using var reader = new StreamReader(stream);
-        return await reader.ReadToEndAsync();
-    }
-
-    private static string ApplyEmailTemplate(string html, PasswordResetEmailModel m)
-    {
-        // Se seu HTML usa os 6 dígitos separadamente: {{VerificationCode:0}} ... :5
-        // Garante 6 chars
-        var code = (m.VerificationCode ?? "").PadLeft(6, '0');
-        html = html
-            .Replace("{{VerificationCode}}", code)
-            .Replace("{{VerificationCode:0}}", code[0].ToString())
-            .Replace("{{VerificationCode:1}}", code[1].ToString())
-            .Replace("{{VerificationCode:2}}", code[2].ToString())
-            .Replace("{{VerificationCode:3}}", code[3].ToString())
-            .Replace("{{VerificationCode:4}}", code[4].ToString())
-            .Replace("{{VerificationCode:5}}", code[5].ToString());
-
-        // Demais placeholders (encode onde for texto)
-        string H(string s) => WebUtility.HtmlEncode(s ?? "");
-
-        return html
-            .Replace("{{UserName}}", H(m.UserName))
-            .Replace("{{UserEmail}}", H(m.UserEmail))
-            .Replace("{{ExpiryMinutes}}", m.ExpiryMinutes.ToString(CultureInfo.InvariantCulture))
-            .Replace("{{VerifyUrl}}", m.VerifyUrl ?? "")
-            .Replace("{{SupportEmail}}", H(m.SupportEmail ?? ""))
-            .Replace("{{SupportUrl}}", m.SupportUrl ?? "")
-            .Replace("{{Year}}", m.Year.ToString());
     }
 
     private sealed record PasswordResetEmailModel(

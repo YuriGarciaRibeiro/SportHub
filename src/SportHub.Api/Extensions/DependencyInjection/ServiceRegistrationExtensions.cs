@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using SportHub.Infrastructure.Repositories;
 using Application.Common.Interfaces.Email;
 using SportHub.Application.Options;
+using SportHub.Application.Common.Interfaces.Email;
 
 namespace Api.Extensions.DependencyInjection;
 
@@ -30,6 +31,7 @@ public static class ServiceRegistrationExtensions
         builder.Services.AddScoped<IFavoriteService, FavoriteService>();
         builder.Services.AddScoped<IGeographyService, GeographyService>();
         builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+        builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 
         return builder;
     }

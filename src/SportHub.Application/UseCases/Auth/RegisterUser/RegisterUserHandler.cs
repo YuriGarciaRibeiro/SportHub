@@ -2,6 +2,8 @@ using Application.Common.Errors;
 using Application.CQRS;
 using Domain.Entities;
 using Domain.Enums;
+using Application.Common.Interfaces.Email;
+using SportHub.Application.Common.Interfaces.Email;
 
 namespace Application.UseCases.Auth.Register;
 
@@ -10,15 +12,21 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
     private readonly IUserService _userService;
     private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
+    private readonly IEmailTemplateService _emailTemplateService;
+    private readonly ICustomEmailSender _emailSender;
 
     public RegisterUserHandler(
         IUserService userService,
         IPasswordService passwordService,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IEmailTemplateService emailTemplateService,
+        ICustomEmailSender emailSender)
     {
         _userService = userService;
         _passwordService = passwordService;
         _jwtService = jwtService;
+        _emailTemplateService = emailTemplateService;
+        _emailSender = emailSender;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -45,6 +53,8 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
 
         await _userService.CreateAsync(user, cancellationToken);
 
+        await SendWelcomeEmailAsync(user, cancellationToken);
+
         var (token, expiresAt) = _jwtService.GenerateToken(
             user.Id, user.FullName, user.Role.ToString(), user.Email, user.TokenVersion.ToString());
 
@@ -57,4 +67,42 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
             ExpiresAt = expiresAt
         });
     }
+
+    private async Task SendWelcomeEmailAsync(User user, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var model = new WelcomeEmailModel(
+                UserName: user.FullName,
+                UserEmail: user.Email,
+                AppUrl: "https://sporthub.app",
+                VerifyEmailUrl: "https://sporthub.app/verificar-email",
+                SupportEmail: "suporte@sporthub.app",
+                SupportUrl: "https://sporthub.app/ajuda",
+                Year: DateTime.UtcNow.Year
+            );
+
+            var html = await _emailTemplateService.RenderTemplateAsync("welcome.html", model, cancellationToken);
+
+            await _emailSender.SendAsync(
+                user.Email,
+                "Bem-vindo ao SportHub! 🏆",
+                html,
+                cancellationToken);
+        }
+        catch (Exception)
+        {
+            // Log do erro, mas não falha o cadastro se o email não for enviado
+            // O usuário foi criado com sucesso, o email é um "nice to have"
+        }
+    }
+
+    private sealed record WelcomeEmailModel(
+        string UserName,
+        string UserEmail,
+        string AppUrl,
+        string VerifyEmailUrl,
+        string SupportEmail,
+        string SupportUrl,
+        int Year);
 }

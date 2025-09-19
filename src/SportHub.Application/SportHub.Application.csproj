@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Emails\recoverycode.html" />
+    <EmbeddedResource Include="Emails\*.html" />
   </ItemGroup>
 
 </Project>
