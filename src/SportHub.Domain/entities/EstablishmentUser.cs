@@ -1,5 +1,5 @@
-using Domain.Common;
 using Domain.Enums;
+using SportHub.Domain.Common;
 
 namespace Domain.Entities;
 

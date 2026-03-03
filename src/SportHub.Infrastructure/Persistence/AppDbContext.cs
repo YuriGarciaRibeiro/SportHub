@@ -1,8 +1,8 @@
 using Application.Common.Interfaces;
-using Domain.Common;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using SportHub.Domain.Common;
 
 namespace Infrastructure.Persistence;
 

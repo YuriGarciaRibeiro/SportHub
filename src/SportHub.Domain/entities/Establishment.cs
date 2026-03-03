@@ -1,5 +1,6 @@
 using Domain.Common;
 using Domain.ValueObjects;
+using SportHub.Domain.Common;
 
 namespace Domain.Entities;
 

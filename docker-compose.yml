@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: src/SportHub.Api/Dockerfile
     ports:
-      - "5000:8080"
+      - "5001:8080"
     depends_on:
       - db
       - redis

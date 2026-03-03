@@ -1,6 +1,6 @@
 using System;
 
-namespace Domain.Common;
+namespace SportHub.Domain.Common;
 
 public abstract class AuditEntity
 {

@@ -1,4 +1,5 @@
 using Domain.Common;
+using SportHub.Domain.Common;
 
 namespace Domain.Entities;
 
