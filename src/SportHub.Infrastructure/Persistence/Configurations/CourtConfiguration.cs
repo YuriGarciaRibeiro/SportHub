@@ -14,7 +14,12 @@ public class CourtConfiguration : IEntityTypeConfiguration<Court>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.Property(c => c.PricePerHour)
+            .HasPrecision(10, 2);
+
+        builder.Property(c => c.ImageUrl)
+            .HasMaxLength(512);
+
         builder.HasIndex(c => c.Name);
-        builder.HasIndex(c => c.EstablishmentId);
     }
 }

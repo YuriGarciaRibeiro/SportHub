@@ -8,4 +8,5 @@ public static class PolicyNames
     public const string IsEstablishmentStaff = "IsEstablishmentStaff";
     public const string IsEstablishmentManager = "IsEstablishmentManager";
     public const string IsEstablishmentOwner = "IsEstablishmentOwner";
+    public const string IsSuperAdmin = "IsSuperAdmin";
 }

@@ -1,648 +1,537 @@
-# SportHub — Especificação Técnica e Diretrizes de Arquitetura
+# Tech Spec: SportHub API — v4.0
 
-> **Versão:** 2.0 | **Data:** 2026-03-03 | **Stack:** .NET 9 (C#) — Backend Monolito
+> Última atualização: 2026-03-14
+> Gerado automaticamente a partir da análise do codebase
 
 ---
 
 ## 1. Visão Geral
 
-**SportHub** é uma API REST para gestão de estabelecimentos esportivos, quadras e reservas. Permite que donos de estabelecimentos cadastrem seus espaços, configurem quadras com horários e slots, e que usuários comuns realizem reservas de quadras por horário. É o backend central consumido pelo frontend SPA em repositório separado (`sporthub-front-end`).
+**SportHub** é uma API REST multi-tenant para gestão de estabelecimentos esportivos (quadras, reservas, esportes). Permite que cada estabelecimento (tenant) opere com dados isolados em um schema PostgreSQL próprio, acessível via subdomínio (`arena1.sporthub.app`) ou header `X-Tenant-Slug`.
+
+O sistema é construído com **.NET 10 (Preview)** usando **Minimal APIs** e segue **Clean Architecture** com 4 camadas bem definidas: Domain, Application, Infrastructure e Api. Implementa CQRS via MediatR, Result Pattern via FluentResults, validação via FluentValidation e autenticação JWT Bearer.
+
+Existe um papel de **SuperAdmin** (operador da plataforma) que gerencia tenants globalmente, e papéis por tenant (User, EstablishmentMember, Admin) para controle de acesso local.
 
 ---
 
 ## 2. Stack Tecnológico
 
-### 2.1 Linguagens e Frameworks
+| Categoria | Tecnologia | Versão |
+|---|---|---|
+| **Runtime** | .NET | 10.0 (Preview) |
+| **Framework** | ASP.NET Core Minimal APIs | 10.0 |
+| **ORM** | Entity Framework Core | 9.0.7 |
+| **Banco de Dados** | PostgreSQL | 16 |
+| **Cache** | Redis (StackExchange) | 7 |
+| **CQRS/Mediator** | MediatR | 13.0.0 |
+| **Result Pattern** | FluentResults | 4.0.0 |
+| **Validação** | FluentValidation | 12.0.0 |
+| **Autenticação** | JWT Bearer (HMAC-SHA256) | — |
+| **Logging** | Serilog | 9.0.0 |
+| **Documentação API** | Scalar (OpenAPI) | 2.6.1 |
+| **Senhas** | PBKDF2 (SHA256, 10000 iter) | — |
+| **Containerização** | Docker Compose | 3.9 |
 
-| Camada | Tecnologia | Versão |
-|--------|-----------|--------|
-| Runtime | .NET | 9.0 |
-| Linguagem | C# | 13 (via net9.0) |
-| Web Framework | ASP.NET Core Minimal API | 9.0 |
-| ORM | Entity Framework Core + Npgsql | 9.0.7 |
-| Mediator/CQRS | MediatR | 13.0.0 |
-| Validação (Application) | FluentValidation | 12.0.0 |
-| Validação (Api) | FluentValidation.AspNetCore | 11.3.1 |
-| Erros tipados | FluentResults | 4.0.0 |
-| Logging | Serilog (Console + File) | 9.0.0 |
-| Cache | StackExchange.Redis (IDistributedCache) | 9.0.7 |
-| Auth | JWT Bearer (HMAC-SHA256) + Policies ASP.NET | 9.0.7 |
-| Documentação API | Microsoft.AspNetCore.OpenApi + Scalar | 9.0.7 / 2.6.1 |
-| Segurança de senha | System.IdentityModel.Tokens.Jwt | 8.13.0 |
-
-### 2.2 Infraestrutura (Docker Compose)
-
-| Serviço | Imagem | Porta | Uso |
-|---------|--------|-------|-----|
-| API | Dockerfile local | 5001→8080 | Backend principal |
-| Banco de dados | postgres:16 | 5432 | Persistência relacional |
-| Cache | redis:7 | 6379 | Cache distribuído |
-| Admin BD | dpage/pgadmin4 | 5050 | UI admin PostgreSQL |
-| Admin Cache | redis-commander | 8081 | UI admin Redis |
-
-### 2.3 Ferramentas de Build
-
-- **MSBuild** via `dotnet CLI` / `.sln` (SportHub.sln)
-- Nullable references habilitado globalmente (`<Nullable>enable</Nullable>`)
-- Implicit usings habilitado em todos os projetos
-- Global usings em Application: `MediatR` e `FluentResults`
+### Dependências Chave
+- `Npgsql.EntityFrameworkCore.PostgreSQL` 9.0.4
+- `System.IdentityModel.Tokens.Jwt` 8.13.0
+- `Microsoft.Extensions.Caching.StackExchangeRedis` 9.0.7
+- `FluentValidation.AspNetCore` 11.3.1
 
 ---
 
-## 3. Estrutura do Repositório
+## 3. Arquitetura e Padrões
+
+### 3.1. Estrutura de Camadas (Clean Architecture)
 
 ```
-SportHub/
+SportHub.sln
 ├── src/
-│   ├── SportHub.Api/            # Presentation Layer — Minimal API, Endpoints, Middlewares
-│   ├── SportHub.Application/    # Application Layer — CQRS, Use Cases, Interfaces, Services
-│   ├── SportHub.Domain/         # Domain Layer — Entities, Value Objects, Enums
-│   └── SportHub.Infrastructure/ # Infrastructure Layer — EF Core, Repos, Security, Seeders
-├── tests/
-│   └── SportHub.Tests/          # Projeto de testes (estrutura inicial)
-├── documentos/                  # Documentação técnica
-├── docker-compose.yml
-└── SportHub.sln
+│   ├── SportHub.Domain          ← Entidades, Value Objects, Enums (zero dependências)
+│   ├── SportHub.Application     ← CQRS, UseCases, Interfaces, Services, Validators
+│   ├── SportHub.Infrastructure  ← EF Core, Repositórios, Security, Middleware de Tenant
+│   └── SportHub.Api             ← Endpoints (Minimal APIs), DI, Middleware HTTP, Program.cs
+└── tests/
+    └── SportHub.Tests
 ```
 
-### 3.1 Dependências entre Projetos
-
+**Direção de dependência:**
 ```
-SportHub.Api ─────────┬── SportHub.Application ──── SportHub.Domain
-                      └── SportHub.Infrastructure ─┬── SportHub.Application
-                                                   └── SportHub.Domain
+Api → Application, Infrastructure
+Infrastructure → Application, Domain
+Application → Domain
+Domain → (nenhuma)
 ```
 
-> **Regra de ouro:** Domain não depende de nenhuma camada. Application depende apenas do Domain. Infrastructure implementa contratos do Application. Api orquestra o bootstrap e DI.
+### 3.2. Padrões Predominantes
 
----
+| Módulo/Diretório | Padrão Arquitetural | Notas |
+|---|---|---|
+| `SportHub.Domain` | Domain Model (Anêmico/Rico misto) | Tenant tem Factory Method (`Create`), User é anêmico |
+| `SportHub.Application/UseCases` | CQRS (Command/Query Separation) | Via MediatR com `ICommand`/`IQuery` customizados |
+| `SportHub.Application/Common/Errors` | Result Pattern (Typed Errors) | FluentResults com `Error` tipados (metadata `StatusCode`) |
+| `SportHub.Infrastructure/Repositories` | Repository Pattern + Generic Base | `BaseRepository<T>` com `IEntity` constraint |
+| `SportHub.Infrastructure/Persistence` | Multi-Tenant Schema-per-Tenant | `ApplicationDbContext` (por tenant) + `TenantDbContext` (global) |
+| `SportHub.Api/Endpoints` | Minimal API Endpoints | Extension methods estáticos (`MapXxxEndpoints`) |
+| `SportHub.Api/Behaviors` | Pipeline Behaviors (MediatR) | `ValidationBehavior` + `LoggingBehavior` |
 
-## 4. Arquitetura — Clean Architecture (4 Camadas)
+### 3.3. Multi-Tenancy (Arquitetura Core)
 
-### 4.1 Domain Layer (`SportHub.Domain`)
+A multi-tenancy é a arquitetura central do sistema:
 
-Responsável por: entidades de negócio, value objects, enums. **Zero dependências externas.**
+1. **Schema-per-Tenant**: cada tenant tem um schema PostgreSQL isolado (`tenant_{slug}`)
+2. **Schema público (`public`)**: contém a tabela `Tenants` (metadados globais) + tabelas `Users` do SuperAdmin
+3. **Dois DbContexts**:
+   - `TenantDbContext` → opera SEMPRE no schema `public` (tabela `Tenants`)
+   - `ApplicationDbContext` → opera no schema dinâmico do tenant resolvido
+4. **Resolução de Tenant** (pipeline):
+   ```
+   Request → TenantResolutionMiddleware → extrai slug (subdomínio ou X-Tenant-Slug)
+           → busca no Redis/DB → preenche ITenantContext (Scoped)
+           → TenantSchemaConnectionInterceptor → SET search_path TO "tenant_xxx"
+   ```
+5. **TenantModelCacheKeyFactory**: garante que o EF Core não misture models de schemas diferentes
+6. **Provisioning**: `TenantProvisioningService` cria schema, executa migrations e faz seed
 
-**Entidades:**
+#### Rotas Bypass (sem tenant):
+- `/api/tenants/**` — gestão de tenants (SuperAdmin)
+- `/health`, `/scalar/**`, `/openapi/**`
+- `/auth/superadmin`
 
-| Entidade | Herda de | Implementa | Descrição |
-|----------|----------|------------|-----------|
-| `User` | `AuditEntity` | `IEntity` | Usuário da plataforma com role global |
-| `Establishment` | `AuditEntity` | `IEntity` | Estabelecimento esportivo com endereço |
-| `EstablishmentUser` | `AuditEntity` | — | Tabela de junção: vínculo usuário↔estabelecimento com role |
-| `Court` | `AuditEntity` | `IEntity` | Quadra com configuração de slots e horários |
-| `Sport` | `AuditEntity` | `IEntity` | Esporte (dados iniciais via seeder) |
-| `Reservation` | `AuditEntity` | `IEntity` | Reserva de quadra com horário UTC |
+#### Rotas Optional Tenant:
+- `/auth/login` — permite login sem tenant (SuperAdmin)
+- `/api/branding` — retorna branding se tenant existir
 
-**IEntity:** interface marcadora com `Guid Id { get; }` — obrigatória para usar `BaseRepository<T>`.
+### 3.4. CQRS Customizado
 
-**AuditEntity (classe base abstrata):**
-
-Toda entidade persistida herda `AuditEntity`, que gerencia automaticamente:
-- `CreatedAt`, `CreatedBy` — setados via `SetCreated(userId)`
-- `UpdatedAt`, `UpdatedBy` — setados via `SetUpdated(userId)`
-- `IsDeleted`, `DeletedAt`, `DeletedBy` — soft delete via `MarkAsDeleted(userId)` / `Restore()`
-- **Importante:** `EstablishmentUser` herda `AuditEntity` mas NÃO implementa `IEntity` (não possui `Id` próprio, usa chave composta)
-
-**Value Objects:**
-
-| VO | Tipo EF | Propriedades |
-|----|---------|-------------|
-| `Address` | Owned Entity | `Street`, `Number`, `Complement?`, `Neighborhood`, `City`, `State`, `ZipCode` |
-
-**Enums:**
-
-| Enum | Valores | Uso |
-|------|---------|-----|
-| `UserRole` | `Admin`, `EstablishmentMember`, `User` | Role global do usuário (tabela `Users`) |
-| `EstablishmentRole` | `Staff=0`, `Manager=1`, `Owner=2` | Role por estabelecimento (tabela `EstablishmentUsers`) |
-
-**Relações principais:**
-- `User` ↔ `Establishment`: N:N via `EstablishmentUser` (com role)
-- `Establishment` → `Court`: 1:N
-- `Establishment` ↔ `Sport`: N:N (EF many-to-many)
-- `Court` ↔ `Sport`: N:N
-- `Court` → `Reservation`: 1:N
-- `User` → `Reservation`: 1:N
-
-### 4.2 Application Layer (`SportHub.Application`)
-
-Responsável por: casos de uso (CQRS), interfaces de contratos, validadores, behaviors, serviços de domínio.
-
-**Global Usings:** `MediatR` e `FluentResults` (importados globalmente para toda a camada).
-
-#### 4.2.1 CQRS via MediatR
+Interfaces proprietárias sobre MediatR:
 
 ```csharp
 // Commands (escrita)
-ICommand              → IRequest<Result>
-ICommand<TResponse>   → IRequest<Result<TResponse>>
-ICommandHandler<TCommand>            → IRequestHandler<TCommand, Result>
-ICommandHandler<TCommand, TResponse> → IRequestHandler<TCommand, Result<TResponse>>
+ICommand : IRequest<Result>
+ICommand<TResponse> : IRequest<Result<TResponse>>
+ICommandHandler<TCmd> : IRequestHandler<TCmd, Result>
+ICommandHandler<TCmd, TResp> : IRequestHandler<TCmd, Result<TResp>>
 
 // Queries (leitura)
-IQuery<TResponse>                    → IRequest<Result<TResponse>>
-IQueryHandler<TQuery, TResponse>     → IRequestHandler<TQuery, Result<TResponse>>
+IQuery<TResponse> : IRequest<Result<TResponse>>
+IQueryHandler<TQuery, TResp> : IRequestHandler<TQuery, Result<TResp>>
 ```
 
-#### 4.2.2 Organização dos Use Cases
+**Todos os handlers retornam `Result` ou `Result<T>`** (FluentResults), nunca lançam exceções para erros de negócio.
+
+### 3.5. Pipeline Behaviors (MediatR)
+
+Ordem de execução no pipeline:
+
+1. **`LoggingBehavior`** (Scoped) — loga request/response com tempo de execução
+2. **`ValidationBehavior`** (Transient) — executa todos os `IValidator<TRequest>`, lança `ValidationException` se falhar
+
+---
+
+## 4. Design de Código e Convenções
+
+### 4.1. Nomenclatura
+
+| Elemento | Padrão | Exemplo |
+|---|---|---|
+| **Entidades** | PascalCase, classe concreta | `User`, `Court`, `Tenant` |
+| **Interfaces** | Prefixo `I` | `IEntity`, `ICacheService`, `IUsersRepository` |
+| **Commands** | `{Ação}{Entidade}Command` | `RegisterUserCommand`, `CreateCourtCommand` |
+| **Queries** | `{Ação}{Entidade}Query` | `GetAllTenantsQuery`, `GetAvailabilityQuery` |
+| **Handlers** | `{Ação}{Entidade}Handler` | `RegisterUserHandler`, `LoginHandler` |
+| **Validators** | `{Ação}{Entidade}Validator` | `RegisterUserValidator`, `LoginValidator` |
+| **Responses** | `{Contexto}Response` | `AuthResponse`, `ProvisionTenantResponse` |
+| **Endpoints** | `{Entidade}Endpoints` (static class) | `AuthEndpoints`, `TenantEndpoints` |
+| **Repositórios** | `{Entidade}Repository` : `BaseRepository<T>` | `UsersRepository`, `CourtsRepository` |
+| **Configurations EF** | `{Entidade}Configuration` | `UserConfiguration`, `TenantConfiguration` |
+| **Settings** | `{Contexto}Settings` | `JwtSettings`, `AdminUserSettings` |
+| **Errors** | Classe por tipo HTTP | `BadRequest`, `NotFound`, `Conflict`, `Unauthorized` |
+
+### 4.2. Organização de UseCases
+
+Cada UseCase fica em pasta própria: `UseCases/{Domínio}/{Ação}/`
 
 ```
 UseCases/
 ├── Auth/
-│   ├── AuthResponse.cs                  (response compartilhado Login/Register)
-│   ├── Login/                           (LoginCommand, LoginHandler, LoginValidator)
-│   ├── RegisterUser/                    (RegisterUserCommand, RegisterUserHandler, RegisterUserValidator)
-│   └── DeleteUser/                      (DeleteUserCommand, DeleteUserHandler)
-├── Establishments/
-│   ├── CreateEstablishment/             (Command, Handler, Validator)
-│   ├── UpdateEstablishment/             (Command, Handler, Validator)
-│   ├── DeleteEstablishment/             (Command, Handler)
-│   ├── ActiveEstablishment/             (Command, Handler)
-│   ├── GetEstablishments/               (Query, Handler, Response) ← paginação
-│   └── GetEstablishmentById/            (Query, Handler, Response)
-├── EstablishmentUser/
-│   └── CreateEstablishmentUser/         (Command, Handler, Validator, Request/Response)
+│   ├── AuthResponse.cs          ← DTO compartilhado
+│   ├── Login/
+│   │   ├── LoginCommand.cs
+│   │   ├── LoginHandler.cs
+│   │   └── LoginValidator.cs
+│   ├── RegisterUser/
+│   │   ├── RegisterUserCommand.cs
+│   │   ├── RegisterUserHandler.cs
+│   │   └── RegisterUserValidator.cs
+│   └── RefreshToken/
+├── Tenant/
+│   ├── ProvisionTenant/
+│   ├── GetAllTenants/
+│   └── ...
 ├── Court/
-│   ├── CreateCourt/                     (Command, Handler, Validator)
-│   ├── GetAvailability/                 (Query, Handler, Response) ← usa Redis cache
-│   └── GetCourtsByEstablishmentId/      (Query, Handler, Response)
+├── Sport/
 └── Reservation/
-    └── CreateReservation/               (Command, Handler, Validator, Request/Response)
 ```
 
-#### 4.2.3 Pipeline Behaviors (MediatR)
+### 4.3. Tratamento de Erros
 
-| Behavior | Camada | Scope DI | Responsabilidade |
-|----------|--------|----------|-----------------|
-| `LoggingBehavior<,>` | Api | Scoped | Log de entrada/saída com `Stopwatch` e tempo de execução |
-| `ValidationBehavior<,>` | Application | Transient | Executa todos `IValidator<TRequest>` em paralelo; lança `ValidationException` se falhar |
+**Camada Application (Result Pattern):**
 
-Ordem de execução: Logging → Validation → Handler.
+Erros tipados estendem `FluentResults.Error` com metadata `StatusCode`:
 
-#### 4.2.4 Erros Tipados (FluentResults)
-
-Todos os handlers retornam `Result<T>` ou `Result`. Erros modelados como subclasses de `Error` com metadado `StatusCode`:
-
-| Classe de Erro | StatusCode HTTP | Uso |
-|---------------|----------------|-----|
+| Classe | StatusCode HTTP | Uso |
+|---|---|---|
+| `BadRequest` | **422** (não 400!) | Validação de negócio |
 | `NotFound` | 404 | Recurso não encontrado |
-| `BadRequest` | **422** | Dados inválidos de negócio |
-| `Conflict` | 409 | Conflito (ex: email duplicado) |
+| `Unauthorized` | 401 | Credenciais inválidas |
 | `Forbidden` | 403 | Sem permissão |
-| `Unauthorized` | 401 | Não autenticado |
-| `InternalServerError` | 500 | Erro interno |
+| `Conflict` | 409 | Duplicidade (email, slug) |
+| `InternalServerError` | 500 | Erro inesperado |
 
-> **Atenção:** `BadRequest` retorna **422** (não 400). Erros genéricos `Result.Fail("msg")` sem tipo específico resultam em status 400 no `ResultExtensions`.
+> ⚠️ **Gotcha**: `BadRequest` retorna **422**, não 400. O 400 real só ocorre em `DbUpdateException` com `UniqueViolation`.
 
-#### 4.2.5 Interfaces de Contratos (`Common/Interfaces/`)
+**Camada Api (Exception Handler):**
 
-**Repositórios:**
+`CustomExceptionHandler` captura exceções não tratadas:
+- `ValidationException` (FluentValidation) → 422 com ProblemDetails + lista de erros
+- `DbUpdateException` com `UniqueViolation` (PostgreSQL) → 400
+- Qualquer outra → 500
 
-| Interface | Descrição |
-|-----------|-----------|
-| `IBaseRepository<T>` | CRUD genérico (`GetById`, `GetAll`, `Add`, `Update`, `Remove`, `GetByIds`, `Exists`, `Query`, `AddMany`) |
-| `IEstablishmentsRepository` | + `GetByIdsWithDetailsAsync`, `GetByIdWithAddressAsync`, `GetFilteredAsync` |
-| `IEstablishmentUsersRepository` | + `GetAsync`, `GetByOwnerIdAsync`, `HasRoleAnywhereAsync` |
-| `IUsersRepository` | + `GetByEmailAsync`, `EmailExistsAsync` |
-| `ICourtsRepository` | Queries específicas de quadra |
-| `ISportsRepository` | + `GetSportsByIdsAsync`, `ExistsByNameAsync` |
-| `IReservationRepository` | + `GetByCourtAndDayAsync`, `ExistsConflictAsync` |
+`CustomAuthorizationMiddlewareResultHandler` garante respostas JSON padronizadas:
+- Challenge (sem token) → 401 ProblemDetails
+- Forbidden (sem role) → 403 ProblemDetails
 
-**Serviços:**
+**Conversão Result → IResult:**
 
-| Interface | Responsabilidade |
-|-----------|-----------------|
-| `IJwtService` | Geração de token JWT |
-| `IPasswordService` | Hash/verificação de senha (PBKDF2) |
-| `ICurrentUserService` | `UserId` do usuário autenticado via `HttpContext` |
-| `IUserService` | CRUD de usuário, gestão de roles |
-| `IEstablishmentService` | Operações de negócio sobre estabelecimentos |
-| `IEstablishmentRoleService` | Verificação de roles por estabelecimento |
-| `IReservationService` | Disponibilidade de slots e criação de reserva |
-| `ICacheService` | Abstração de cache Redis (`Get`, `Set`, `Remove`, `Exists`, `GenerateCacheKey`) |
+`ResultExtensions.ToIResult()` converte `FluentResults.Result` para `Microsoft.AspNetCore.Http.IResult`:
+- Success → 200/201/204 (configurável)
+- Failure → ProblemDetails com statusCode extraído da metadata do primeiro Error
 
-#### 4.2.6 Serviços de Aplicação
+### 4.4. Padrão de Resposta da API
 
-| Serviço | Camada Real | Responsabilidade |
-|---------|------------|-----------------|
-| `JwtService` | Application | Gera JWT com claims; expiração hardcoded em **2h** (ignora `ExpiryMinutes` do appsettings) |
-| `CacheService` | Application* | Wrapper sobre `IDistributedCache` com serialização JSON; TTL padrão 30min |
-| `ReservationService` | Application | Geração de slots disponíveis + validação e criação de reserva |
-| `EstablishmentRoleService` | Application | Verificação hierárquica de roles (`HasAtLeastRoleAsync`) |
-| `EstablishmentService` | Application | Busca de estabelecimentos com detalhes |
+Todas as respostas de erro seguem **RFC 9457 (Problem Details)**:
 
-> \* `CacheService` está em `Application/Services/` mas usa namespace `Infrastructure.Services` — inconsistência de namespace.
+```json
+{
+  "type": "https://httpstatuses.io/{status}",
+  "title": "Operation failed",
+  "detail": "E-mail 'x@y.com' is already in use.",
+  "status": 409,
+  "instance": "/auth/register",
+  "traceId": "0HN...",
+  "errors": [{ "message": "...", "metadata": { "StatusCode": 409 } }]
+}
+```
 
-#### 4.2.7 Cache
+---
 
-Chaves geradas por `CacheKeyPrefix` enum + argumentos variádicos: `{Prefix}:{arg1}:{arg2}`.
+## 5. Autenticação e Autorização
 
-Prefixos disponíveis (`CacheKeyPrefix`): `UserById`, `CourtAvailability`, `ReservationList`, `EstablishmentSummary`, `GetAvailability`.
+### 5.1. JWT Bearer
 
-Padrão de uso:
+- **Algoritmo**: HMAC-SHA256
+- **Expiração Access Token**: 2h (hardcoded em `JwtService`, ignora `JwtSettings.ExpiryMinutes`)
+- **Expiração Refresh Token**: 7 dias
+- **Claims**: `NameIdentifier` (userId), `Email`, `Name` (fullName), `Role`
+
+> ⚠️ **Gotcha**: `JwtSettings.ExpiryMinutes` existe no `appsettings.json` mas é **ignorado** — o `JwtService` usa `DateTime.UtcNow.AddHours(2)` hardcoded.
+
+### 5.2. Authorization Policies
+
+| Policy | Requirement | Handler |
+|---|---|---|
+| `IsStaff` | `GlobalRoleRequirement(Staff)` | `GlobalRoleHandler` |
+| `IsManager` | `GlobalRoleRequirement(Manager)` | `GlobalRoleHandler` |
+| `IsOwner` | `GlobalRoleRequirement(Owner)` | `GlobalRoleHandler` |
+| `IsSuperAdmin` | `SuperAdminRequirement` | `SuperAdminHandler` |
+
+**Roles do Sistema (`UserRole` enum):**
+- `User` (0) — usuário padrão
+- `EstablishmentMember` (1) — membro do tenant
+- `Admin` (2) — administrador do tenant
+- `SuperAdmin` (99) — operador da plataforma
+
+**Roles de Estabelecimento (`EstablishmentRole` enum):**
+- `Staff` (0), `Manager` (1), `Owner` (2)
+
+### 5.3. Senhas
+
+`PasswordService` usa **PBKDF2** com SHA256:
+- Salt: 32 bytes aleatórios (Base64)
+- Hash: 64 bytes
+- Iterações: 10.000
+
+---
+
+## 6. Modelo de Dados
+
+### 6.1. Schema `public` (Global)
+
+| Tabela | Descrição |
+|---|---|
+| `Tenants` | Metadados de cada tenant (slug, nome, status, branding, owner) |
+| `Users` | Apenas o SuperAdmin reside aqui (via seed no startup) |
+
+### 6.2. Schema `tenant_{slug}` (Por Tenant)
+
+| Tabela | Descrição |
+|---|---|
+| `Users` | Usuários do tenant (Admin, Members, Users) |
+| `Courts` | Quadras esportivas do tenant |
+| `Sports` | Esportes disponíveis (many-to-many com Courts) |
+| `Reservations` | Reservas de quadras (FK: Court, User) |
+
+### 6.3. Entidades e Herança
+
+```
+AuditEntity (abstract)
+├── User : AuditEntity, IEntity
+├── Court : AuditEntity, IEntity
+├── Sport : AuditEntity, IEntity
+└── Reservation : AuditEntity, IEntity
+
+Tenant (standalone, SEM IEntity, SEM AuditEntity)
+```
+
+**`AuditEntity`** fornece: `CreatedAt`, `UpdatedAt`, `CreatedBy`, `UpdatedBy`, `IsDeleted`, `DeletedBy`, `DeletedAt`
+- Soft Delete automático via `ApplicationDbContext.SaveChangesAsync` (intercepta `EntityState.Deleted` → `MarkAsDeleted`)
+- Restauração via `Restore()`
+
+**`IEntity`** define apenas `Guid Id { get; }`
+
+> ⚠️ **Gotcha**: `Tenant` NÃO implementa `IEntity` nem herda `AuditEntity`. Por isso, `TenantRepository` não herda `BaseRepository<T>` e opera via `TenantDbContext` separado.
+
+### 6.4. Value Objects
+
+- **`Address`** — Street, Number, Complement, Neighborhood, City, State, ZipCode (não utilizado atualmente nas entidades)
+
+---
+
+## 7. Camada de Infraestrutura
+
+### 7.1. Repositórios
+
+`BaseRepository<T>` (genérico, requer `IEntity`):
+- `GetByIdAsync`, `GetAllAsync`, `AddAsync`, `UpdateAsync`, `RemoveAsync`
+- `GetByIdsAsync`, `ExistsAsync`, `Query()`, `AddManyAsync`
+
+> ⚠️ **Gotcha**: `BaseRepository` chama `SaveChangesAsync` em **cada operação** (Add, Update, Remove). Não há Unit of Work explícito.
+
+Repositórios específicos estendem `BaseRepository<T>`:
+- `UsersRepository` — `GetByEmailAsync`, `GetByRefreshTokenAsync`, `EmailExistsAsync`
+- `CourtsRepository` — override `GetAllAsync`/`GetByIdAsync` com `.Include(Sports)` e `.AsSplitQuery()`
+- `SportsRepository` — `ExistsByNameAsync` (ILike), `GetByNameAsync`, `GetSportsByIdsAsync`
+- `ReservationRepository` — `GetByCourtAndDayAsync`, `ExistsConflictAsync`
+- `TenantRepository` — standalone (usa `TenantDbContext`), `GetBySlugAsync`, `SlugExistsAsync`
+
+### 7.2. Caching (Redis)
+
+`CacheService` implementa `ICacheService` usando `IDistributedCache` (StackExchange.Redis):
+- Serialização: `System.Text.Json` (camelCase)
+- TTL padrão: 30 minutos
+- Prefixos de chave via enum `CacheKeyPrefix`: `UserById`, `CourtAvailability`, `TenantBySlug`, etc.
+
+> ⚠️ **Gotcha**: `CacheService` está no projeto `Application` mas usa namespace `Infrastructure.Services`. Isso causa confusão nos imports.
+
+**Redis configurado via** `RedisExtensions.AddRedis()` com `RedisOptions` (validação por DataAnnotations).
+
+### 7.3. Seeders
+
+| Seeder | Schema | Momento | Descrição |
+|---|---|---|---|
+| `SuperAdminSeeder` | `public` | Startup (`Program.cs`) | Cria SuperAdmin se não existir |
+| `SportSeeder` | tenant | Provisioning | Seeds de esportes padrão (6 esportes) |
+| `CustomUserSeeder` | tenant | Provisioning | Seed de usuários customizados |
+
+### 7.4. EF Core Configurations (Fluent API)
+
+- `TenantConfiguration` — tabela fixa em `"public".Tenants`, index único em Slug e CustomDomain
+- `UserConfiguration` — index único em Email, Role como string, `FullName` ignorado
+- `CourtConfiguration` — `PricePerHour` com precision(10,2), index em Name
+- `ReservationConfiguration` / `SportConfiguration` — configurações básicas
+
+### 7.5. TenantSchemaConnectionInterceptor
+
+`DbConnectionInterceptor` que executa `SET search_path TO "tenant_xxx", public;` ao abrir cada conexão:
+- Extrai slug do subdomínio (3+ partes) ou `subdomain.localhost` (2 partes)
+- Fallback: header `X-Tenant-Slug`
+- Converte slug em schema: `"arena-1"` → `"tenant_arena_1"`
+
+---
+
+## 8. Camada Api
+
+### 8.1. Endpoints
+
+| Grupo | Rota Base | Auth | Usa MediatR |
+|---|---|---|---|
+| `AuthEndpoints` | `/auth` | Anônimo | ✅ |
+| `SportsEndpoints` | `/api/sports` | Misto (GET público) | ✅ |
+| `CourtsEndpoints` | `/api/courts` | Misto (GET público) | Misto (GET lista usa Repo direto) |
+| `AdminStatsEndpoints` | `/admin/stats` | RequireAuth | ❌ (Repos direto) |
+| `TenantEndpoints` | `/api/tenants` | SuperAdmin | ✅ |
+| Branding (`/api/branding`) | — | Anônimo | ❌ (ITenantContext direto) |
+| Settings (`/api/settings`) | — | RequireAuth | ✅ |
+
+> ⚠️ **Gotcha**: `AdminStatsEndpoints` e o GET `/api/courts` listagem NÃO usam MediatR — injetam repositórios diretamente no endpoint.
+
+### 8.2. Registro de Endpoints
+
+Todos registrados em `AppExtensions.UseEndpoints()`:
 ```csharp
-var key = _cache.GenerateCacheKey(CacheKeyPrefix.GetAvailability, courtId, date);
-var cached = await _cache.GetAsync<TResponse>(key, ct);
-if (cached != null) return Result.Ok(cached);
-// ... calcular ...
-await _cache.SetAsync(key, response, TimeSpan.FromMinutes(30), ct);
+app.MapAuthEndpoints();
+app.MapSportsEndpoints();
+app.MapCourtsEndpoints();
+app.MapAdminStatsEndpoints();
+app.MapTenantEndpoints();
 ```
 
-#### 4.2.8 Validação (FluentValidation)
-
-- Um validador por Command, no mesmo diretório do Use Case
-- Herdando `AbstractValidator<TCommand>`
-- Registrados automaticamente via `AddValidatorsFromAssemblyContaining<RegisterUserValidator>()`
-- Executados pelo `ValidationBehavior` no pipeline MediatR — **nunca chamar validators manualmente**
-- Extensão customizada: `PasswordValidatorExtensions.Password()` — mínimo 8 chars, 1 maiúscula, 1 dígito, 1 especial
-
-### 4.3 Infrastructure Layer (`SportHub.Infrastructure`)
-
-Responsável por: persistência (EF Core), implementação de repositórios, serviços de segurança, seeders.
-
-#### 4.3.1 ApplicationDbContext
-
-- Herda `DbContext`, recebe `ICurrentUserService` via construtor
-- DbSets: `Users`, `Establishments`, `EstablishmentUsers`, `Courts`, `Sports`, `Reservations`
-- `OnModelCreating`: carrega configurações via `ApplyConfigurationsFromAssembly`
-- **`SaveChangesAsync` sobrescrito** para audit automático:
-  - `Added` → `SetCreated(userId)`
-  - `Modified` → `SetUpdated(userId)`
-  - `Deleted` → converte para `Modified` + `MarkAsDeleted(userId)` (soft delete automático)
-  - Owned entities têm estado preservado como `Unchanged` em deleções
-
-#### 4.3.2 Repositórios
-
-`BaseRepository<T>` implementa `IBaseRepository<T>` com constraint `where T : class, IEntity`:
-
-| Método | Comportamento |
-|--------|--------------|
-| `AddAsync` | `_dbSet.AddAsync` + `SaveChangesAsync` (commit imediato) |
-| `UpdateAsync` | `_dbSet.Update` + `SaveChangesAsync` |
-| `RemoveAsync` | `_dbSet.Remove` + `SaveChangesAsync` (soft delete via DbContext) |
-| `Query()` | Retorna `IQueryable<T>` para queries customizadas |
-
-Repositórios específicos herdam `BaseRepository<T>`:
-
-| Repositório | Métodos adicionais chave |
-|-------------|------------------------|
-| `EstablishmentsRepository` | `GetByIdsWithDetailsAsync` (com Include+SplitQuery+NoTracking), `GetFilteredAsync` (paginação com projeção) |
-| `EstablishmentUsersRepository` | `GetAsync(userId, estId)`, `GetByOwnerIdAsync`, `HasRoleAnywhereAsync` |
-| `ReservationRepository` | `GetByCourtAndDayAsync`, `ExistsConflictAsync` (overlap temporal) |
-| `UsersRepository` | `GetByEmailAsync`, `EmailExistsAsync` |
-| `SportsRepository` | `GetSportsByIdsAsync`, `ExistsByNameAsync` |
-
-#### 4.3.3 Configurações EF Core
-
-Uma `IEntityTypeConfiguration<T>` por entidade em `Persistence/Configurations/`:
-
-| Configuração | Destaques |
-|-------------|-----------|
-| `UserConfiguration` | Índice único em `Email`, índice em `Role`, `Role` convertido para string |
-| `EstablishmentConfiguration` | Índice em `Name`, `Address` como Owned Entity (índices em `City`, `State`) |
-| `EstablishmentUserConfiguration` | Chave composta `(EstablishmentId, UserId)` |
-| `EstablishmentSportConfiguration` | Configuração da relação N:N entre Establishment e Sport |
-| `CourtConfiguration` | Configuração de propriedades de quadra |
-| `ReservationConfiguration` | FK para Court e User |
-| `SportConfiguration` | Configuração básica de Sport |
-
-#### 4.3.4 Seeders (executados no startup)
-
-| Seeder | Comportamento |
-|--------|--------------|
-| `CustomUserSeeder` | Cria usuário Admin se não existir (email de `AdminUserSettings`). Role `Admin`, ativo |
-| `SportSeeder` | Popula 8 esportes base: Football, Basketball, Volleyball, Tennis, Futsal, Handball, Beach Tennis, Squash. Verifica por nome antes de inserir |
-
-#### 4.3.5 Segurança
-
-| Serviço | Implementação |
-|---------|--------------|
-| `PasswordService` | PBKDF2/SHA-256, 10.000 iterações, salt 32 bytes, hash 64 bytes |
-| `EstablishmentHandler` | `AuthorizationHandler<EstablishmentRequirement, HttpContext>` — extrai `establishmentId` da rota, verifica role hierárquico; **Admin e User têm bypass** |
-| `GlobalRoleHandler` | Verifica se usuário tem determinado `EstablishmentRole` em qualquer estabelecimento |
-| `CurrentUserService` | Extrai `UserId` de `ClaimTypes.NameIdentifier` via `IHttpContextAccessor` |
-
-### 4.4 API Layer (`SportHub.Api`)
-
-Responsável por: exposição HTTP, roteamento, middlewares, DI bootstrap, logging pipeline.
-
-**Estilo:** Minimal API com `MapGroup` e extensões estáticas por domínio.
-
-#### 4.4.1 Endpoints
-
-| Grupo | Prefixo | Arquivo | Rotas principais |
-|-------|---------|---------|-----------------|
-| Auth | `/auth` | `AuthEndpoints.cs` | `POST /register`, `POST /login` |
-| Establishments | `/establishments` | `EstablishmentsEndpoints.cs` | CRUD + `/activate` + `/{id}/users` + `/{id}/courts` |
-| Courts | `/courts` | `CourtsEndpoints.cs` | `GET /{id}/availability/{date}`, `POST /{id}/reservations` |
-| Sports | `/api/sports` | `SportsEndpoints.cs` | `GET /` (lista todos) |
-
-Endpoints registrados em `AppExtensions.UseEndpoints()`.
-
-**Padrão de endpoint:**
-
-```csharp
-group.MapPost("/", async (CreateXCommand command, ISender sender) => {
-    var result = await sender.Send(command);
-    return result.ToIResult(StatusCodes.Status201Created);
-})
-.WithName("CreateX").WithSummary("...").WithDescription("...")
-.Produces<XResponse>(201)
-.Produces<ProblemDetails>(400)
-.RequireAuthorization(PolicyNames.IsEstablishmentManager);
-```
-
-#### 4.4.2 ResultExtensions (`ToIResult`)
-
-Converte `Result<T>` / `Result` em `IResult` HTTP:
-- Sucesso com valor → `Results.Json(value, statusCode)` (default 200)
-- Sucesso sem valor → `Results.NoContent()`
-- Falha → `Results.Problem(...)` com `ProblemDetails` contendo:
-  - `StatusCode` extraído do metadata do primeiro erro (fallback 400)
-  - `traceId` do `HttpContext`
-  - Lista de erros com mensagens e metadados
-
-#### 4.4.3 Exception Handlers
-
-**`CustomExceptionHandler` (IExceptionHandler):**
-
-| Exceção | Status | Título |
-|---------|--------|--------|
-| `ValidationException` (FluentValidation) | 422 | Validation Failed |
-| `DbUpdateException` (PostgreSQL unique constraint) | 400 | Unique Constraint Violation |
-| Qualquer outra | 500 | Internal Server Error |
-
-**`CustomAuthorizationMiddlewareResultHandler` (IAuthorizationMiddlewareResultHandler):**
-
-| Situação | Status | Mensagem |
-|----------|--------|----------|
-| Challenged (token ausente/inválido) | 401 | "Token faltando ou inválido" |
-| Forbidden (sem permissão) | 403 | "You don't have permission to access this resource" |
-
-Ambos retornam `ProblemDetails` com `traceId`.
-
-#### 4.4.4 Bootstrap / DI (ServiceExtensions)
-
-Todos os registros de DI são feitos via extension methods no `WebApplicationBuilder`:
-
-| Método | Responsabilidade |
-|--------|-----------------|
-| `AddAuthentication()` | JWT Bearer config + 6 Authorization Policies |
-| `AddServices()` | Registro de todos os serviços (Scoped) |
-| `AddRepositories()` | Registro de todos os repositórios (Scoped) |
-| `AddCustomExceptionHandler()` | Exception handler + Authorization middleware + ProblemDetails |
-| `AddDatabase()` | EF Core + Npgsql com connection string do appsettings |
-| `AddMediatR()` | MediatR + FluentValidation + Pipeline Behaviors |
-| `AddSettings()` | `JwtSettings` + `AdminUserSettings` via `IOptions<T>` |
-| `AddSeeders()` | `CustomUserSeeder` + `SportSeeder` (Transient) |
-| `AddSerilogLogging()` | Serilog com config do appsettings |
-| `AddCaching()` | Redis via `RedisExtensions.AddRedis()` |
-
----
-
-## 5. Segurança e Autorização
-
-### 5.1 Autenticação JWT
-
-- **Algoritmo:** HMAC-SHA256
-- **Claims:** `NameIdentifier` (userId), `Email`, `Name` (fullName), `Role` (UserRole)
-- **Expiração:** 2h (hardcoded no `JwtService`)
-- **Validação:** issuer, audience, lifetime, signing key
-- **Config:** seção `Jwt` no appsettings (`Key`, `Issuer`, `Audience`, `ExpiryMinutes`)
-- **Gotcha:** `ExpiryMinutes` do appsettings **não é usado** — expiração está hardcoded como `AddHours(2)` no `JwtService`
-
-### 5.2 Modelo de Papéis Dual
-
-**Global (UserRole):** papel fixo na tabela `Users`, gravado como claim no JWT.
-
-| Role | Acesso |
-|------|--------|
-| `Admin` | Acesso total, bypass de todas verificações de estabelecimento |
-| `EstablishmentMember` | É dono/gerente/staff de pelo menos um estabelecimento |
-| `User` | Usuário padrão, pode fazer reservas |
-
-**Por Estabelecimento (EstablishmentRole):** armazenado em `EstablishmentUsers`, verificado em runtime.
-
-| Role | Nível | Hierarquia |
-|------|-------|-----------|
-| `Staff` | 0 | Acesso básico |
-| `Manager` | 1 | ≥ Staff |
-| `Owner` | 2 | ≥ Manager ≥ Staff |
-
-Verificação hierárquica: `HasAtLeastRoleAsync` compara `actual >= required`.
-
-### 5.3 Authorization Policies
-
-| Policy | Tipo | Verificação |
-|--------|------|------------|
-| `IsStaff` | Global | Tem `Staff` em qualquer estabelecimento |
-| `IsManager` | Global | Tem `Manager` em qualquer estabelecimento |
-| `IsOwner` | Global | Tem `Owner` em qualquer estabelecimento |
-| `IsEstablishmentStaff` | Por Estabelecimento | `Staff+` no `{establishmentId}` da rota |
-| `IsEstablishmentManager` | Por Estabelecimento | `Manager+` no `{establishmentId}` da rota |
-| `IsEstablishmentOwner` | Por Estabelecimento | `Owner` no `{establishmentId}` da rota |
-
-### 5.4 Senha
-
-- **Algoritmo:** PBKDF2 com SHA-256
-- **Iterações:** 10.000
-- **Salt:** 32 bytes aleatórios (Base64)
-- **Hash:** 64 bytes (Base64)
-- **Regras de validação:** mínimo 8 caracteres, 1 maiúscula, 1 dígito, 1 caractere especial (via `PasswordValidatorExtensions`)
-
----
-
-## 6. Domínio de Negócio — Reservas
-
-### 6.1 Configuração de Quadra (Court)
-
-| Propriedade | Default | Descrição |
-|-------------|---------|-----------|
-| `SlotDurationMinutes` | 30 | Granularidade dos slots |
-| `MinBookingSlots` | 1 | Mínimo de slots por reserva |
-| `MaxBookingSlots` | 4 | Máximo de slots por reserva |
-| `OpeningTime` | 08:00 | Abertura (`TimeOnly`) |
-| `ClosingTime` | 22:00 | Fechamento (`TimeOnly`) |
-| `TimeZone` | `America/Maceio` | Fuso horário da quadra |
-
-### 6.2 Fluxo de Disponibilidade (com cache)
+### 8.3. Middleware Pipeline
 
 ```
-GET /courts/{courtId}/availability/{date}
-    ↓
-GetAvailabilityHandler
-    ↓ check Redis → key: "GetAvailability:{courtId}:{date}" (TTL 30min)
-    ↓ [miss]
-    ↓
-ReservationService.GetAvailableSlotsAsync(courtId, day)
-    ├── busca Court no banco
-    ├── gera slots: de OpeningTime até ClosingTime a cada SlotDuration
-    ├── busca reservas do dia via GetByCourtAndDayAsync
-    ├── filtra slots com conflito temporal (overlap)
-    └── retorna List<DateTime> (slots disponíveis)
-    ↓
-[save no Redis] → return slots UTC
-```
-
-### 6.3 Fluxo de Criação de Reserva
-
-```
-POST /courts/{courtId}/reservations  [RequireAuthorization]
-    ↓
-CreateReservationHandler
-    ↓
-ReservationService.ReserveAsync(court, userId, startUtc, endUtc)
-    ├── valida dentro do horário de funcionamento (Opening ≤ start, end ≤ Closing)
-    ├── valida duração múltipla de SlotDuration
-    ├── valida total de slots (min ≤ slots ≤ max)
-    ├── verifica conflito no banco: ExistsConflictAsync (overlap temporal)
-    └── persiste Reservation → retorna Guid do ID
+Request
+  → UseRouting
+  → UseCors
+  → TenantResolutionMiddleware  (resolve tenant, preenche ITenantContext)
+  → UseAuthentication           (valida JWT)
+  → UseAuthorization            (verifica policies)
+  → Endpoint Handler
 ```
 
 ---
 
-## 7. Guia de Padronização (Style Guide)
+## 9. Serviços de Aplicação
 
-### 7.1 Nomenclatura
-
-| Artefato | Convenção | Exemplo |
-|----------|-----------|---------|
-| Entidade | PascalCase, singular | `Establishment`, `Court` |
-| Command | `{Ação}{Entidade}Command` | `CreateEstablishmentCommand` |
-| Query | `{Get}{Entidade}{Filtro}Query` | `GetCourtsByEstablishmentIdQuery` |
-| Handler | `{UseCase}Handler` | `CreateEstablishmentHandler` |
-| Validator | `{UseCase}Validator` | `RegisterUserValidator` |
-| Response | `{UseCase}Response` | `GetEstablishmentsResponse` |
-| Request (input extra) | `{Entidade}Request` | `CourtRequest`, `ReservationRequest` |
-| Interface | `I{Nome}` | `IEstablishmentsRepository` |
-| Repositório | `{Entidade}sRepository` | `EstablishmentsRepository` |
-| Serviço | `{Nome}Service` | `ReservationService`, `JwtService` |
-| Extensão estática | `{Nome}Extensions` | `ServiceExtensions`, `AppExtensions` |
-| Endpoints | `{Entidade}Endpoints` | `EstablishmentsEndpoints` |
-| Configuração EF | `{Entidade}Configuration` | `EstablishmentConfiguration` |
-| Settings | `{Nome}Settings` | `JwtSettings`, `AdminUserSettings` |
-
-### 7.2 Criação de Novo Use Case (passo a passo)
-
-1. **Domain:** se necessário, adicionar/ajustar entidade em `SportHub.Domain/entities/` + enum/VO
-2. **Application — Contrato:**
-   - `{Feature}Command.cs` (record/class) implementando `ICommand<TResponse>` ou `ICommand`
-   - Ou `{Feature}Query.cs` implementando `IQuery<TResponse>`
-   - `{Feature}Response.cs` (se retorna dados)
-3. **Application — Validação:**
-   - `{Feature}Validator.cs` herdando `AbstractValidator<{Feature}Command>` (para Commands)
-4. **Application — Handler:**
-   - `{Feature}Handler.cs` implementando `ICommandHandler<,>` ou `IQueryHandler<,>`
-   - Retorna `Result.Ok(...)` ou `Result.Fail(new {ErrorType}("..."))`
-   - Injetar dependências via construtor (interfaces da Application)
-5. **Infrastructure:** se necessário, adicionar método ao repositório existente ou criar novo
-   - Interface em `Application/Common/Interfaces/`
-   - Implementação em `Infrastructure/Repositories/`
-   - Registrar DI em `ServiceExtensions.AddRepositories()`
-6. **API:** mapear endpoint em `Endpoints/{Entidade}Endpoints.cs`
-   - Usar `ISender` para enviar command/query
-   - Converter resultado com `.ToIResult()` ou `.ToIResult(statusCode)`
-   - Registrar grupo em `AppExtensions.UseEndpoints()`
-
-### 7.3 Tratamento de Erros
-
-**Na Application (handlers):** usar erros tipados FluentResults:
-```csharp
-return Result.Fail(new NotFound("Resource not found"));     // → 404
-return Result.Fail(new BadRequest("Invalid data"));         // → 422
-return Result.Fail(new Conflict("Already exists"));         // → 409
-return Result.Fail(new Forbidden("No permission"));         // → 403
-return Result.Fail(new Unauthorized("Not authenticated"));  // → 401
-return Result.Ok(response);
-```
-
-**Na API:** sempre usar `.ToIResult()` — converte automaticamente para `ProblemDetails`.
-
-**Regra:** **Nunca lançar exceções nos handlers.** Exceções são apenas para casos inesperados (tratadas pelo `CustomExceptionHandler`). Erros de negócio usam `Result.Fail`.
-
-### 7.4 Banco de Dados / EF Core
-
-- Toda entidade persistida herda `AuditEntity`
-- **Soft delete automático:** `SaveChangesAsync` converte `EntityState.Deleted` para `Modified` + `MarkAsDeleted`. Nunca usar delete físico
-- Criar `IEntityTypeConfiguration<T>` para cada entidade em `Infrastructure/Persistence/Configurations/`
-- Usar `AsSplitQuery()` + `AsNoTracking()` em queries de leitura com múltiplos `Include`
-- Adicionar índices explícitos em campos frequentemente filtrados
-- `Address` é **owned entity** (coluna embutida, não tabela separada)
-- Enums persistidos como **string** (ex: `UserRole` via `.HasConversion<string>()`)
-
-### 7.5 Configuração / Settings
-
-Configurações fortemente tipadas via `IOptions<T>`:
-
-| Setting | Seção appsettings | Validação |
-|---------|-------------------|-----------|
-| `JwtSettings` | `Jwt` | Manual |
-| `AdminUserSettings` | `AdminUser` | Manual |
-| `RedisOptions` | `Redis` | `ValidateDataAnnotations` + `ValidateOnStart` |
+| Serviço | Interface | Descrição |
+|---|---|---|
+| `JwtService` | `IJwtService` | Gera access tokens (2h) e refresh tokens (7d) |
+| `CacheService` | `ICacheService` | Wrapper Redis com serialização JSON |
+| `ReservationService` | `IReservationService` | Lógica de disponibilidade e reserva de slots |
+| `CurrentUserService` | `ICurrentUserService` | Extrai `UserId` do JWT (ClaimTypes.NameIdentifier) |
+| `UserService` | `IUserService` | CRUD de roles e busca de users |
+| `TenantContext` | `ITenantContext` | Estado Scoped do tenant resolvido |
+| `TenantProvisioningService` | `ITenantProvisioningService` | Provisiona schema + migrations + seed |
+| `TenantUsersQueryService` | `ITenantUsersQueryService` | Consulta users de um tenant específico (cross-schema) |
+| `PasswordService` | `IPasswordService` | Hash/verify com PBKDF2-SHA256 |
 
 ---
 
-## 8. Pontos Críticos ("Gotchas")
+## 10. Integrações Externas
 
-1. **JWT expiração hardcoded:** `JwtService` ignora `ExpiryMinutes` do appsettings e usa `AddHours(2)` fixo
-2. **BadRequest = 422:** O erro tipado `BadRequest` retorna 422, não 400. Erros genéricos sem tipo retornam 400
-3. **CacheService namespace:** `CacheService` está em `Application/Services/` mas com namespace `Infrastructure.Services`
-4. **EstablishmentUser sem IEntity:** Não possui `Id` próprio — usa chave composta `(EstablishmentId, UserId)`. Não pode usar `BaseRepository<EstablishmentUser>`
-5. **Soft delete global:** Todo `Remove` via DbContext faz soft delete. Para queries, lembrar de filtrar `IsDeleted == false` quando necessário
-6. **Admin bypass:** `EstablishmentHandler` dá bypass automático para users com `UserRole.Admin` **e** `UserRole.User` — apenas `EstablishmentMember` é verificado no estabelecimento
-7. **SportsEndpoints prefixo diferente:** Usa `/api/sports` enquanto os demais endpoints não têm prefixo `/api`
-8. **Commit por operação:** `BaseRepository.AddAsync` faz `SaveChangesAsync` individualmente — operações compostas (ex: criar establishment + user) resultam em múltiplos saves
+| Sistema | Objetivo | Protocolo |
+|---|---|---|
+| **PostgreSQL 16** | Banco de dados principal (multi-schema) | TCP/5432 |
+| **Redis 7** | Cache distribuído (tenant resolution, dados) | TCP/6379 |
+| **pgAdmin 4** | Administração do banco (dev only) | HTTP/5050 |
+| **Redis Commander** | Visualização do cache (dev only) | HTTP/8081 |
 
----
-
-## 9. Integrações Externas
-
-| Sistema | Protocolo | Uso |
-|---------|-----------|-----|
-| PostgreSQL 16 | EF Core / Npgsql | Persistência relacional principal |
-| Redis 7 | IDistributedCache (StackExchange.Redis) | Cache distribuído (disponibilidade de quadras) |
-
-O frontend (repositório `sporthub-front-end`) consome esta API via **REST/JSON** autenticado com **JWT Bearer** no header `Authorization`.
+> Não há integrações com serviços externos (pagamento, email, SMS, etc.) no momento.
 
 ---
 
-## 10. Documentação da API
+## 11. Pontos Críticos ("Gotchas")
 
-- **OpenAPI** gerado automaticamente pelo ASP.NET Core 9
-- **Scalar** como UI interativa de documentação (apenas em desenvolvimento)
-- Acesso: `GET /scalar/v1` (development)
-- Segurança documentada via `BearerSecuritySchemeTransformer`
+### ⚠️ Obrigatório conhecer antes de contribuir:
+
+1. **`BadRequest` retorna 422, não 400** — O error type `BadRequest` em `Common/Errors/BadRequest.cs` tem metadata `StatusCode: 422`. O HTTP 400 real só ocorre para `DbUpdateException` com `UniqueViolation` do PostgreSQL.
+
+2. **`JwtService` ignora `ExpiryMinutes`** — `JwtSettings.ExpiryMinutes` existe no appsettings mas o `JwtService.GenerateToken` usa `DateTime.UtcNow.AddHours(2)` hardcoded.
+
+3. **`Tenant` não implementa `IEntity`** — `Tenant` é standalone, sem auditoria e sem `IEntity`. O `TenantRepository` é completamente separado e usa `TenantDbContext`.
+
+4. **`BaseRepository` faz `SaveChanges` por operação** — Cada `AddAsync`, `UpdateAsync`, `RemoveAsync` chama `SaveChangesAsync`. Não há Unit of Work. Operações compostas (ex: criar user + atualizar refresh token) resultam em múltiplos SaveChanges.
+
+5. **`CacheService` namespace incorreto** — A classe está em `Application/Services/CacheService.cs` mas usa `namespace Infrastructure.Services`. Imports podem confundir.
+
+6. **`AdminStatsEndpoints` e GET Courts não usam MediatR** — Diferente do padrão do projeto, esses endpoints injetam repos diretamente.
+
+7. **Soft Delete automático** — `ApplicationDbContext.SaveChangesAsync` intercepta `EntityState.Deleted` e converte em `MarkAsDeleted`. Nunca faz DELETE real.
+
+8. **Schema dinâmico via `SET search_path`** — O schema não é definido no `OnModelCreating`. É injetado por conexão via `TenantSchemaConnectionInterceptor`. O `TenantModelCacheKeyFactory` NÃO inclui schema na chave (intencional).
+
+9. **Migrations schema-agnostic** — As migrations do `ApplicationDbContext` são geradas sem `HasDefaultSchema`. O schema é aplicado em runtime pelo interceptor.
+
+10. **CORS permite qualquer subdomínio de localhost** — Em dev, `SetIsOriginAllowed` retorna true para qualquer `*.localhost`.
+
+11. **SuperAdmin seed acontece no startup** — `SuperAdminSeeder` executa em `Program.cs` antes de qualquer request. Cria o user no schema `public`.
+
+12. **`UserRole.SuperAdmin = 99`** — Valor alto intencional para separação clara dos roles normais.
 
 ---
 
-## 11. Logging
+## 12. Mapa de Navegação
 
-- **Serilog** com configuração via appsettings (`ReadFrom.Configuration`)
-- **Sinks:** Console + File
-- **Enriquecimento:** `LogContext`
-- **`LoggingBehavior`:** loga cada Command/Query com:
-  - Nome do request
-  - Payload completo (serializado)
-  - Tempo de execução em ms
-  - Status (sucesso ✅ / erro ❌)
+| O que procuro | Onde encontro |
+|---|---|
+| **Entidades de domínio** | `src/SportHub.Domain/entities/` |
+| **Enums** | `src/SportHub.Domain/Enums/` |
+| **Value Objects** | `src/SportHub.Domain/ValueObjects/` |
+| **Interfaces (contratos)** | `src/SportHub.Application/Common/Interfaces/` |
+| **Erros tipados** | `src/SportHub.Application/Common/Errors/` |
+| **CQRS interfaces** | `src/SportHub.Application/CQRS/` |
+| **UseCases (Commands/Queries/Handlers)** | `src/SportHub.Application/UseCases/{Domínio}/{Ação}/` |
+| **Validators** | Junto ao Command/Query no UseCase correspondente |
+| **Services de aplicação** | `src/SportHub.Application/Services/` |
+| **Settings/Config** | `src/SportHub.Application/Settings/` |
+| **Authorization Policies** | `src/SportHub.Application/Security/` |
+| **Repositórios** | `src/SportHub.Infrastructure/Repositories/` |
+| **DbContexts** | `src/SportHub.Infrastructure/Persistence/` |
+| **EF Configurations** | `src/SportHub.Infrastructure/Persistence/Configurations/` |
+| **Migrations** | `src/SportHub.Infrastructure/Persistence/Migrations/` |
+| **Interceptors EF** | `src/SportHub.Infrastructure/Persistence/Interceptors/` |
+| **Security (Password, Auth Handlers)** | `src/SportHub.Infrastructure/Security/` |
+| **Services de infra (Seeders, Tenant)** | `src/SportHub.Infrastructure/Services/` |
+| **Tenant Middleware** | `src/SportHub.Infrastructure/Middleware/TenantResolutionMiddleware.cs` |
+| **Endpoints (Minimal APIs)** | `src/SportHub.Api/Endpoints/` |
+| **DI / Service Registration** | `src/SportHub.Api/Extensions/ServiceExtensions.cs` |
+| **Endpoint Registration** | `src/SportHub.Api/Extensions/AppExtensions.cs` |
+| **Exception Handler** | `src/SportHub.Api/Middleware/CustomExecptionHandler.cs` |
+| **MediatR Behaviors** | `src/SportHub.Api/Behaviors/` + `src/SportHub.Application/Behaviors/` |
+| **Result → IResult conversion** | `src/SportHub.Api/Extensions/ResultExtensions/ResultExtensions.cs` |
+| **Configuração (appsettings)** | `src/SportHub.Api/appsettings.*.json` |
+| **Docker** | `docker-compose.yml` |
+| **Testes** | `tests/SportHub.Tests/` |
 
 ---
 
-## 12. Mapa de Navegação (Referências Rápidas)
+## 13. Guia de Padronização (Style Guide)
 
-| O que fazer | Onde olhar |
-|------------|-----------|
-| Criar novo use case | `src/SportHub.Application/UseCases/{Domínio}/{Feature}/` |
-| Adicionar entidade | `src/SportHub.Domain/entities/` + `Infrastructure/Persistence/Configurations/` |
-| Expor novo endpoint | `src/SportHub.Api/Endpoints/` + registrar em `AppExtensions.UseEndpoints()` |
-| Novo repositório | Interface em `Application/Common/Interfaces/` + impl em `Infrastructure/Repositories/` + DI em `ServiceExtensions` |
-| Novo serviço | Interface em `Application/Common/Interfaces/` + impl em `Application/Services/` ou `Infrastructure/Services/` + DI em `ServiceExtensions` |
-| Nova policy de auth | `Application/Security/PolicyNames.cs` + `ServiceExtensions.AddAuthentication()` |
-| Novo prefixo de cache | `Application/Common/Enums/CacheKeyPrefix.cs` |
-| Novo tipo de erro | `Application/Common/Errors/` (herdar `Error` com metadado `StatusCode`) |
-| Configuração de settings | `Application/Settings/` + seção em appsettings + `ServiceExtensions.AddSettings()` |
-| Nova validação customizada | `Application/Extensions/Validation/` |
-| Regras de negócio (reserva) | `Application/Services/ReservationService.cs` |
-| Configuração de entidade EF | `Infrastructure/Persistence/Configurations/` |
-| Seed data | `Infrastructure/Services/CustomUserSeeder.cs` e `SportSeeder.cs` |
+### 13.1. Criando um novo UseCase
+
+1. Crie pasta `UseCases/{Domínio}/{Ação}/`
+2. Crie o Command/Query como `record` implementando `ICommand<TResponse>` ou `IQuery<TResponse>`
+3. Crie o Handler implementando `ICommandHandler<TCmd, TResp>` ou `IQueryHandler<TQuery, TResp>`
+4. Crie o Validator como `AbstractValidator<TCommand>`
+5. Retorne `Result.Ok(...)` para sucesso ou `Result.Fail(new ErrorType("msg"))` para erro
+6. **Nunca** lance exceções para erros de negócio — use o Result Pattern
+
+### 13.2. Criando um novo Endpoint
+
+1. Crie `{Entidade}Endpoints.cs` em `Api/Endpoints/`
+2. Use `static class` com extension method `Map{Entidade}Endpoints`
+3. Use `ISender` (MediatR) para despachar commands/queries
+4. Converta resultado com `.ToIResult()` ou `.ToIResult(StatusCodes.Status201Created)`
+5. Registre em `AppExtensions.UseEndpoints()`
+6. Documente com `.WithName()`, `.WithSummary()`, `.Produces<T>()`
+
+### 13.3. Criando uma nova Entidade
+
+1. Crie em `Domain/entities/`
+2. Herde de `AuditEntity` e implemente `IEntity`
+3. Crie `IEntityTypeConfiguration<T>` em `Infrastructure/Persistence/Configurations/`
+4. Adicione `DbSet<T>` no `ApplicationDbContext`
+5. Crie `I{Entidade}Repository` em `Application/Common/Interfaces/`
+6. Implemente `{Entidade}Repository : BaseRepository<T>` em `Infrastructure/Repositories/`
+7. Registre no DI em `ServiceExtensions.AddRepositories()`
+
+### 13.4. Regras de Ouro
+
+- **Result Pattern sempre**: handlers retornam `Result<T>`, nunca lançam exceções para erros de negócio
+- **FluentValidation**: toda validação de input via Validator + `ValidationBehavior` pipeline
+- **Interfaces no Application**: todas as abstrações (`I*`) ficam em `Application/Common/Interfaces/`
+- **Implementações no Infrastructure**: repositórios, services concretos, security handlers
+- **DI manual**: todo registro é explícito em `ServiceExtensions` (não há auto-scan)
+- **Scoped por padrão**: services e repos são Scoped (exceto `ValidationBehavior` que é Transient)
+- **Tenant-aware**: todo código que acessa dados de tenant deve usar `ApplicationDbContext` (que já tem schema correto via interceptor)

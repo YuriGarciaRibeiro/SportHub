@@ -2,9 +2,10 @@ namespace Domain.Enums;
 
 public enum UserRole
 {
-    Admin,
-    EstablishmentMember,
-    User
+    User = 0,
+    EstablishmentMember = 1,
+    Admin = 2,
+    SuperAdmin = 99
 }
 
 public static class UserRoleExtensions

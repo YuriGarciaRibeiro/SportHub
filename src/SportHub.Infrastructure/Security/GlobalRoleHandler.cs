@@ -1,44 +1,48 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Application.Common.Interfaces;
 using Application.Security;
+using Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Security;
 
 public class GlobalRoleHandler : AuthorizationHandler<GlobalRoleRequirement>
 {
-    private readonly IEstablishmentRoleService _svc;
     private readonly ILogger<GlobalRoleHandler> _logger;
 
-    public GlobalRoleHandler(IEstablishmentRoleService svc, ILogger<GlobalRoleHandler> logger)
+    public GlobalRoleHandler(ILogger<GlobalRoleHandler> logger)
     {
-        _svc = svc;
         _logger = logger;
     }
 
-    protected override async Task HandleRequirementAsync(
+    protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         GlobalRoleRequirement requirement)
     {
-        _logger.LogInformation($"Checking global role: {requirement.RequiredRole}");
+        _logger.LogInformation("Checking global role: {RequiredRole}", requirement.RequiredRole);
 
-        var subClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
-        if (subClaim is null || !Guid.TryParse(subClaim.Value, out var userId))
+        // The user's role is stored in the JWT claim as a string (e.g. "Owner", "Manager", "Staff")
+        var roleClaim = context.User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (roleClaim is null)
         {
-            _logger.LogWarning("User ID not found in claims.");
-            return;
+            _logger.LogWarning("Role claim not found.");
+            return Task.CompletedTask;
         }
 
-        var hasRole = await _svc.HasRoleAnywhereAsync(userId, requirement.RequiredRole);
-        if (hasRole)
+        if (Enum.TryParse<EstablishmentRole>(roleClaim, ignoreCase: true, out var userRole)
+            && userRole >= requirement.RequiredRole)
         {
-            _logger.LogInformation($"User has global role: {requirement.RequiredRole}");
+            _logger.LogInformation("User has required role {RequiredRole} (has {UserRole})",
+                requirement.RequiredRole, userRole);
             context.Succeed(requirement);
         }
         else
         {
-            _logger.LogWarning($"User does not have global role: {requirement.RequiredRole}");
+            _logger.LogWarning("User with role {UserRole} does not satisfy {RequiredRole}",
+                roleClaim, requirement.RequiredRole);
         }
+
+        return Task.CompletedTask;
     }
 }

@@ -28,8 +28,16 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
             var response = await next();
 
             stopwatch.Stop();
-            _logger.LogInformation("✅ Handled {RequestName} in {ElapsedMilliseconds}ms - Response: {@Response}",
-                requestName, stopwatch.ElapsedMilliseconds, response);
+            try
+            {
+                _logger.LogInformation("✅ Handled {RequestName} in {ElapsedMilliseconds}ms - Response: {@Response}",
+                    requestName, stopwatch.ElapsedMilliseconds, response);
+            }
+            catch
+            {
+                _logger.LogInformation("✅ Handled {RequestName} in {ElapsedMilliseconds}ms (response not serializable)",
+                    requestName, stopwatch.ElapsedMilliseconds);
+            }
 
             return response;
         }

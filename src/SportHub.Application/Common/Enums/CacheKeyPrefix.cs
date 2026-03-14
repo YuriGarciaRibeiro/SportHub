@@ -6,6 +6,7 @@ public enum CacheKeyPrefix
     CourtAvailability,
     ReservationList,
     EstablishmentSummary,
-    GetAvailability
-
+    GetAvailability,
+    TenantBySlug,
+    TenantBranding
 }

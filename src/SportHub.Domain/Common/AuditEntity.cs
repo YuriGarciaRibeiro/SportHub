@@ -4,8 +4,8 @@ namespace SportHub.Domain.Common;
 
 public abstract class AuditEntity
 {
-    public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
-    public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; private set; }
+    public DateTime UpdatedAt { get; private set; }
     public Guid CreatedBy { get; private set; }
     public Guid UpdatedBy { get; private set; }
 
@@ -13,27 +13,30 @@ public abstract class AuditEntity
     public Guid? DeletedBy { get; private set; }
     public DateTime? DeletedAt { get; private set; }
 
-    public void SetCreated(Guid userId)
+    public void SetCreated(Guid userId, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         CreatedBy = userId;
         UpdatedBy = userId;
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = CreatedAt;
+        CreatedAt = now;
+        UpdatedAt = now;
     }
 
-    public void SetUpdated(Guid userId)
+    public void SetUpdated(Guid userId, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         UpdatedBy = userId;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = now;
     }
 
-    public void MarkAsDeleted(Guid userId)
+    public void MarkAsDeleted(Guid userId, DateTime? utcNow = null)
     {
+        var now = utcNow ?? DateTime.UtcNow;
         IsDeleted = true;
         DeletedBy = userId;
-        DeletedAt = DateTime.UtcNow;
+        DeletedAt = now;
     }
-    
+
     public void Restore()
     {
         IsDeleted = false;

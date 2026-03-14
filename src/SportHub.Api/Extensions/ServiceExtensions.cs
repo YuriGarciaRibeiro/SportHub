@@ -17,6 +17,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Api.Middleware;
@@ -32,24 +33,36 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IJwtService, JwtService>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IUserService, UserService>();
-        builder.Services.AddScoped<IEstablishmentService, EstablishmentService>();
-        builder.Services.AddScoped<IEstablishmentRoleService, EstablishmentRoleService>();
-        builder.Services.AddScoped<IAuthorizationHandler, EstablishmentHandler>();
         builder.Services.AddScoped<IAuthorizationHandler, GlobalRoleHandler>();
+        builder.Services.AddScoped<IAuthorizationHandler, SuperAdminHandler>();
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IReservationService, ReservationService>();
         builder.Services.AddScoped<ICacheService, CacheService>();
+
+        // Unit of Work
+        builder.Services.AddScoped<IUnitOfWork>(sp =>
+            sp.GetRequiredService<ApplicationDbContext>());
+
+        // TimeProvider para testabilidade de datas
+        builder.Services.AddSingleton(TimeProvider.System);
+
+        // Tenant
+        builder.Services.AddScoped<ITenantContext, TenantContext>();
+        builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
+        builder.Services.AddScoped<ITenantUsersQueryService, TenantUsersQueryService>();
+
         return builder;
     }
 
     public static WebApplicationBuilder AddRepositories(this WebApplicationBuilder builder)
     {
-        builder.Services.AddScoped<IEstablishmentsRepository, EstablishmentsRepository>();
-        builder.Services.AddScoped<IEstablishmentUsersRepository, EstablishmentUsersRepository>();
         builder.Services.AddScoped<IUsersRepository, UsersRepository>();
         builder.Services.AddScoped<ICourtsRepository, CourtsRepository>();
         builder.Services.AddScoped<ISportsRepository, SportsRepository>();
         builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+
+        // Tenant
+        builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 
         return builder;
     }
@@ -64,9 +77,25 @@ public static class ServiceExtensions
 
     public static WebApplicationBuilder AddDatabase(this WebApplicationBuilder builder, IConfiguration configuration)
     {
-        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        // DbContext do schema public (tenants globais) — Scoped
+        builder.Services.AddDbContext<TenantDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+            options.UseNpgsql(connectionString, npgsql =>
+                npgsql.MigrationsAssembly("SportHub.Infrastructure")
+                      .MigrationsHistoryTable("__EFMigrationsHistory_Global", "public"));
+        });
+
+        // DbContext por tenant (schema dinâmico) — Scoped
+        // ✅ SEM interceptor — o schema é configurado via HasDefaultSchema no OnModelCreating
+        builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(connectionString, npgsql =>
+                npgsql.MigrationsAssembly("SportHub.Infrastructure")
+                      .MigrationsHistoryTable("__EFMigrationsHistory"));
+            options.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
+            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         return builder;
@@ -77,13 +106,35 @@ public static class ServiceExtensions
     public static WebApplication ExecuteMigrations(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        db.Database.Migrate();
+        // 1. Migrações Globais (TenantDbContext - schema public)
+        var tenantDb = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
+        tenantDb.Database.Migrate();
+        logger.LogInformation("Database principal (Tenants) migrado com sucesso.");
+
+        var connectionString = tenantDb.Database.GetConnectionString();
+        if (connectionString is null) return app;
+
+        var factory = new ApplicationDbContextFactory(connectionString);
+
+        // 1.5. Migrações do schema public (ApplicationDbContext)
+        using (var publicCtx = factory.CreateForPublic())
+        {
+            publicCtx.Database.Migrate();
+            logger.LogInformation("ApplicationDbContext migrado no schema public.");
+        }
+
+        // 2. Migrações dos Tenants
+        foreach (var tenant in tenantDb.Tenants.ToList())
+        {
+            logger.LogInformation("Migrando schema {Schema}", tenant.GetSchemaName());
+            using var tenantCtx = factory.CreateForTenant(tenant);
+            tenantCtx.Database.Migrate();
+        }
 
         return app;
     }
-
 
     public static WebApplicationBuilder AddMediatR(this WebApplicationBuilder builder)
     {
@@ -124,7 +175,7 @@ public static class ServiceExtensions
         });
         builder.Services.AddAuthorization(options =>
         {
-            // Policies globais (verifica se tem o cargo em qualquer estabelecimento)
+            // Policies globais (role no tenant)
             options.AddPolicy(PolicyNames.IsStaff, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Staff)));
 
@@ -134,15 +185,9 @@ public static class ServiceExtensions
             options.AddPolicy(PolicyNames.IsOwner, policy =>
                 policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Owner)));
 
-            // Policies específicas do estabelecimento (verifica cargo no estabelecimento específico)
-            options.AddPolicy(PolicyNames.IsEstablishmentStaff, policy =>
-                policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Staff)));
-
-            options.AddPolicy(PolicyNames.IsEstablishmentManager, policy =>
-                policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Manager)));
-
-            options.AddPolicy(PolicyNames.IsEstablishmentOwner, policy =>
-                policy.Requirements.Add(new EstablishmentRequirement(EstablishmentRole.Owner)));
+            // SuperAdmin — operador da plataforma
+            options.AddPolicy(PolicyNames.IsSuperAdmin, policy =>
+                policy.Requirements.Add(new SuperAdminRequirement()));
         });
 
         return builder;
@@ -159,6 +204,7 @@ public static class ServiceExtensions
     {
         builder.Services.AddTransient<CustomUserSeeder>();
         builder.Services.AddTransient<SportSeeder>();
+        builder.Services.AddTransient<SuperAdminSeeder>();
         return builder;
     }
 
@@ -176,7 +222,37 @@ public static class ServiceExtensions
     public static WebApplicationBuilder AddCaching(this WebApplicationBuilder builder)
     {
         builder.Services.AddRedis(builder.Configuration);
-        
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddCors(this WebApplicationBuilder builder)
+    {
+        var origins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.SetIsOriginAllowed(origin =>
+                {
+                    // Permitir origens configuradas explicitamente
+                    if (origins.Contains(origin)) return true;
+
+                    // Permitir qualquer subdomínio de localhost em dev
+                    var host = new Uri(origin).Host;
+                    if (host == "localhost" || host.EndsWith(".localhost")) return true;
+
+                    return false;
+                })
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+            });
+        });
+
         return builder;
     }
 }

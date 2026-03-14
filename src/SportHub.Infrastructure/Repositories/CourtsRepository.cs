@@ -14,13 +14,20 @@ public class CourtsRepository : BaseRepository<Court>, ICourtsRepository
         _dbContext = dbContext;
     }
 
-    public async Task<IEnumerable<Court>> GetByEstablishmentIdAsync(Guid establishmentId)
+    public new async Task<List<Court>> GetAllAsync()
     {
         return await _dbContext.Courts
-            .Where(c => c.EstablishmentId == establishmentId)
             .Include(c => c.Sports)
             .AsSplitQuery()
             .AsNoTracking()
             .ToListAsync();
+    }
+
+    public new async Task<Court?> GetByIdAsync(Guid id)
+    {
+        return await _dbContext.Courts
+            .Include(c => c.Sports)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
 }

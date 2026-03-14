@@ -1,68 +1,41 @@
 ---
 trigger: model_decision
-description: Usar sempre que precisar tomar decisão arquitetural ou técnicas
+description: Usar sempre que precisar tomar decisão arquitetural ou técnica no projeto SportHub
 ---
 
 # Regra: Consultar Tech Spec do Codebase
 
-Antes de tomar qualquer decisão arquitetural, técnica ou de design de código no projeto **SportHub**, consulte o documento completo de especificação técnica em `documentos/techspec-codebase.md`.
+Antes de tomar qualquer decisão arquitetural, criar novos componentes ou modificar padrões existentes, **consulte obrigatoriamente** o arquivo `documentos/techspec-codebase.md` que contém a documentação técnica completa do projeto SportHub.
 
 ## Stack e Arquitetura
 
-- **.NET 9** (C# 13) — ASP.NET Core **Minimal APIs**
-- **Clean Architecture** com 4 camadas: `Domain` → `Application` → `Infrastructure` → `Api`
-- **CQRS** via MediatR 13 com `ICommand<T>`/`IQuery<T>` retornando `Result<T>` (FluentResults 4.0)
-- **FluentValidation** 12 com `ValidationBehavior` no pipeline MediatR
-- **PostgreSQL 16** (EF Core 9 + Npgsql) + **Redis 7** (IDistributedCache)
-- **JWT Bearer** (HMAC-SHA256) com Authorization Policies por estabelecimento
+- **.NET 10 (Preview)** com **Minimal APIs** e **Clean Architecture** (4 camadas: Domain → Application → Infrastructure → Api)
+- **PostgreSQL 16** multi-schema (schema-per-tenant) + **Redis 7** (cache) + **EF Core 9**
+- **CQRS** via MediatR 13 com interfaces customizadas (`ICommand`/`IQuery`/`ICommandHandler`/`IQueryHandler`)
+- **Result Pattern** via FluentResults 4.0 (nunca lançar exceções para erros de negócio)
+- **FluentValidation 12** com `ValidationBehavior` no pipeline MediatR
+- **JWT Bearer** (HMAC-SHA256, 2h hardcoded) + Authorization Policies (IsStaff, IsManager, IsOwner, IsSuperAdmin)
 
-## Regras Obrigatórias ao Criar/Modificar Código
+## Padrões Obrigatórios
 
-### Use Cases (Application Layer)
-- Cada use case em pasta própria: `UseCases/{Domínio}/{Feature}/`
-- Arquivos: `{Feature}Command.cs` ou `{Feature}Query.cs` + `{Feature}Handler.cs` + `{Feature}Validator.cs` + `{Feature}Response.cs`
-- Commands implementam `ICommand<T>`, Queries implementam `IQuery<T>`
-- Handlers implementam `ICommandHandler<,>` ou `IQueryHandler<,>`
-- Retornar `Result.Ok(...)` ou `Result.Fail(new {ErrorType}("..."))` — **nunca lançar exceções**
+1. **UseCases**: pasta `UseCases/{Domínio}/{Ação}/` com Command/Query (record) + Handler + Validator
+2. **Handlers retornam `Result<T>`** — use `Result.Ok(...)` ou `Result.Fail(new ErrorType("msg"))`
+3. **Erros tipados**: `BadRequest` (422!), `NotFound` (404), `Unauthorized` (401), `Conflict` (409), `Forbidden` (403)
+4. **Endpoints**: static class com extension method, usar `ISender` + `.ToIResult()`, registrar em `AppExtensions`
+5. **Entidades**: herdar `AuditEntity` + implementar `IEntity`, criar Configuration EF, DbSet, Repository + interface
+6. **DI manual**: registrar tudo explicitamente em `ServiceExtensions` (AddServices/AddRepositories)
+7. **Tenant-aware**: dados de tenant via `ApplicationDbContext` (schema resolvido pelo interceptor)
 
-### Erros Tipados (Application/Common/Errors/)
-- `NotFound` → 404 | `BadRequest` → **422** | `Conflict` → 409 | `Forbidden` → 403 | `Unauthorized` → 401
-- Erros genéricos `Result.Fail("msg")` resultam em status 400
+## Gotchas Críticos
 
-### Entidades (Domain Layer)
-- Herdar `AuditEntity` + implementar `IEntity` (exceto tabelas de junção)
-- Soft delete automático via `SaveChangesAsync` — nunca deletar fisicamente
-- Value Objects como Owned Entities no EF Core
-
-### Repositórios (Infrastructure Layer)
-- Herdar `BaseRepository<T>` (constraint: `IEntity`)
-- Interface em `Application/Common/Interfaces/`, implementação em `Infrastructure/Repositories/`
-- Usar `AsSplitQuery()` + `AsNoTracking()` em queries de leitura com Include
-- Registrar DI em `ServiceExtensions.AddRepositories()`
-
-### Endpoints (Api Layer)
-- Minimal API com `MapGroup` em classes estáticas `{Entidade}Endpoints`
-- Usar `ISender` + `result.ToIResult()` para conversão automática para ProblemDetails
-- Registrar em `AppExtensions.UseEndpoints()`
-- Documentar com `.WithName()`, `.WithSummary()`, `.Produces<>()`
-
-### Cache (Redis)
-- Usar `ICacheService.GenerateCacheKey(CacheKeyPrefix.X, ...)` para chaves
-- TTL padrão: 30 minutos
-- Novos prefixos em `Application/Common/Enums/CacheKeyPrefix.cs`
-
-### Validação
-- Um `AbstractValidator<TCommand>` por Command, no mesmo diretório
-- Registrado automaticamente — nunca chamar validators manualmente
-- Extensão `Password()` disponível para validação de senha
-
-### Gotchas Críticos
-1. `BadRequest` retorna **422**, não 400
-2. `JwtService` ignora `ExpiryMinutes` do appsettings (hardcoded 2h)
-3. `EstablishmentUser` não implementa `IEntity` (chave composta)
-4. `EstablishmentHandler` dá bypass para `Admin` **e** `User` — só verifica `EstablishmentMember`
-5. `BaseRepository.AddAsync` faz commit imediato (SaveChanges por operação)
-6. `SportsEndpoints` usa prefixo `/api/sports` (diferente dos demais)
+- `BadRequest` = HTTP **422** (não 400)
+- `JwtService` ignora `ExpiryMinutes` do appsettings (hardcoded 2h)
+- `Tenant` NÃO implementa `IEntity` nem `AuditEntity` — repo separado com `TenantDbContext`
+- `BaseRepository` faz `SaveChangesAsync` por operação (sem Unit of Work)
+- `CacheService` está em Application mas com namespace `Infrastructure.Services`
+- Soft Delete automático no `SaveChangesAsync` do `ApplicationDbContext`
+- Schema dinâmico via `SET search_path` no `TenantSchemaConnectionInterceptor`
 
 ## Referência Completa
-Consulte `documentos/techspec-codebase.md` para detalhes sobre: relações de entidades, fluxo de reservas, configuração de quadras, seeders, pipeline behaviors, configuração de DI e mapa de navegação.
+
+Para detalhes sobre modelo de dados, mapa de navegação, pipeline de middleware, provisioning de tenants e guia de padronização, consulte: **`documentos/techspec-codebase.md`**

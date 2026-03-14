@@ -16,9 +16,15 @@ public class UsersRepository : BaseRepository<User>, IUsersRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _dbContext.Users
-            .Include(u => u.Establishments)
             .FirstOrDefaultAsync(u => u.Email == email);
     }
+
+    public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
+    {
+        return await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+    }
+
     public async Task<bool> EmailExistsAsync(string email)
     {
         return await _dbContext.Users.AnyAsync(u => u.Email == email);

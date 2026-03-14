@@ -12,9 +12,12 @@ public static class AppExtensions
     public static WebApplication UseEndpoints(this WebApplication app)
     {
         app.MapAuthEndpoints();
-        app.MapEstablishmentsEndpoints();
         app.MapSportsEndpoints();
         app.MapCourtsEndpoints();
+        app.MapAdminStatsEndpoints();
+
+        // Tenant endpoints (fora do middleware de tenant — acessível sem subdomínio)
+        app.MapTenantEndpoints();
 
         return app;
     }

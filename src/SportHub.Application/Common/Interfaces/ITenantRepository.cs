@@ -1,0 +1,14 @@
+using Domain.Entities;
+
+namespace Application.Common.Interfaces;
+
+public interface ITenantRepository
+{
+    Task<Tenant?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<Tenant?> GetBySlugAsync(string slug, CancellationToken ct = default);
+    Task<Tenant?> GetByCustomDomainAsync(string domain, CancellationToken ct = default);
+    Task AddAsync(Tenant tenant, CancellationToken ct = default);
+    Task UpdateAsync(Tenant tenant, CancellationToken ct = default);
+    Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default);
+    Task<List<Tenant>> GetAllAsync(CancellationToken ct = default);
+}

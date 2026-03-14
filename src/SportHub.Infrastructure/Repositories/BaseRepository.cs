@@ -22,22 +22,23 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
     public async Task<List<T>> GetAllAsync() =>
         await _dbSet.ToListAsync();
 
-    public async Task AddAsync(T entity)
+    public Task AddAsync(T entity)
     {
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        _dbSet.Add(entity);
+        return Task.CompletedTask;
+        // ✅ SEM SaveChangesAsync — o handler decide quando commitar
     }
 
-    public async Task UpdateAsync(T entity)
+    public Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
-    public async Task RemoveAsync(T entity)
+    public Task RemoveAsync(T entity)
     {
         _dbSet.Remove(entity);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
     public async Task<List<T>> GetByIdsAsync(IEnumerable<Guid> ids)
@@ -58,6 +59,6 @@ public class BaseRepository<T> : IBaseRepository<T> where T : class, IEntity
     public Task AddManyAsync(IEnumerable<T> entities)
     {
         _dbSet.AddRange(entities);
-        return _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 }

@@ -6,11 +6,13 @@ public class ReservationService : IReservationService
 {
     private readonly IReservationRepository _reservationRepository;
     private readonly ICourtsRepository _courtRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ReservationService(IReservationRepository reservationRepository, ICourtsRepository courtRepository)
+    public ReservationService(IReservationRepository reservationRepository, ICourtsRepository courtRepository, IUnitOfWork unitOfWork)
     {
         _reservationRepository = reservationRepository;
         _courtRepository = courtRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<List<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day)
@@ -74,6 +76,7 @@ public class ReservationService : IReservationService
         };
 
         await _reservationRepository.AddAsync(reservation);
+        await _unitOfWork.SaveChangesAsync();
         return Result.Ok(reservation.Id);
     }
 

@@ -15,8 +15,10 @@ public class User : AuditEntity, IEntity
     public UserRole Role { get; set; } = UserRole.User;
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
-    
+
     public string FullName => $"{FirstName} {LastName}";
 
-    public ICollection<EstablishmentUser> Establishments { get; set; } = new List<EstablishmentUser>();
+    // Refresh Token
+    public string? RefreshToken { get; set; }
+    public DateTime? RefreshTokenExpiresAt { get; set; }
 }

@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
 using Application.UseCases.Auth.Login;
+using Application.UseCases.Auth.RefreshToken;
 
 namespace SportHub.Api.Endpoints;
 
@@ -12,7 +13,7 @@ public static class AuthEndpoints
 {
     public static RouteGroupBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group =app.MapGroup("/auth")
+        var group = app.MapGroup("/auth")
             .WithTags("Auth");
 
         group.MapPost("/register", async (
@@ -48,6 +49,20 @@ public static class AuthEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)
         .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+
+        group.MapPost("/refresh", async (
+            RefreshTokenCommand command,
+            ISender sender) =>
+        {
+            Result<AuthResponse> result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("RefreshToken")
+        .WithSummary("Refresh access token using a valid refresh token")
+        .AllowAnonymous()
+        .Produces<AuthResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
         return group;
     }

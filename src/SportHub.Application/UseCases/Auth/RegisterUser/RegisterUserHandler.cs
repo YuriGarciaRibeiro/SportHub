@@ -11,15 +11,18 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
     private readonly IUsersRepository _usersRepository;
     private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public RegisterUserHandler(
         IUsersRepository usersRepository,
         IPasswordService passwordService,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        IUnitOfWork unitOfWork)
     {
         _usersRepository = usersRepository;
         _passwordService = passwordService;
         _jwtService = jwtService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -45,6 +48,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
         };
 
         await _usersRepository.AddAsync(user);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var (token, expiresAt) = _jwtService.GenerateToken(
             user.Id, user.FullName, user.Role.ToString(), user.Email);

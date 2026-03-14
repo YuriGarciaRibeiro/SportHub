@@ -2,5 +2,6 @@ namespace Application.Common.Interfaces;
 
 public interface IJwtService
 {
-    (string Token, DateTime ExpiresAt) GenerateToken(Guid userId, string fullName,string role, string email);
+    (string Token, DateTime ExpiresAt) GenerateToken(Guid userId, string fullName, string role, string email);
+    (string RefreshToken, DateTime ExpiresAt) GenerateRefreshToken();
 }
