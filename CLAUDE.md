@@ -1,53 +1,43 @@
 ---
 trigger: model_decision
-description: Usar sempre que precisar tomar decisão arquitetural ou técnica no backend SportHub
+description: Usar sempre que precisar tomar decisão arquitetural ou técnica no projeto SportHub
 ---
 
 # Regra: Consultar Tech Spec do Codebase
 
-Antes de tomar qualquer decisão arquitetural, criar novos arquivos, modificar padrões existentes ou responder perguntas técnicas sobre o backend SportHub, **consulte obrigatoriamente** o documento `documentos/techspec-codebase.md`.
+Antes de tomar qualquer decisão arquitetural, criar novos componentes ou modificar padrões existentes, **consulte obrigatoriamente** o arquivo `documentos/techspec-codebase.md` (v5.0) que contém a documentação técnica completa do projeto SportHub.
 
-## Quando usar
+## Stack e Arquitetura
 
-- Criar novos UseCases (Commands, Queries, Handlers, Validators)
-- Adicionar endpoints Minimal API
-- Criar/modificar entidades, repositórios ou serviços
-- Implementar autorização (policies, handlers)
-- Tratar erros (Result Pattern, ProblemDetails)
-- Trabalhar com multi-tenancy (schemas, middleware, provisioning)
-- Registrar dependências no DI container
-- Qualquer decisão sobre padrões de código ou convenções
+- **.NET 10 (Preview)** com **Minimal APIs** e **Clean Architecture** (4 camadas: Domain → Application → Infrastructure → Api)
+- **PostgreSQL 16** multi-schema (schema-per-tenant via `HasDefaultSchema`) + **Redis 7** (cache) + **EF Core 9.0.7**
+- **CQRS** via MediatR 13 com interfaces customizadas (`ICommand`/`IQuery`/`ICommandHandler`/`IQueryHandler`)
+- **Result Pattern** via FluentResults 4.0 (nunca lançar exceções para erros de negócio)
+- **FluentValidation 12** com `ValidationBehavior` no pipeline MediatR
+- **JWT Bearer** (HMAC-SHA256, ExpiryMinutes configurável com fallback 2h) + Authorization Policies
+- **Unit of Work**: `ApplicationDbContext` implementa `IUnitOfWork` — handlers chamam `SaveChangesAsync()`
 
-## Stack resumida
+## Padrões Obrigatórios
 
-- **.NET 9** — Minimal APIs, Clean Architecture (4 camadas: Domain → Application → Infrastructure → Api)
-- **CQRS** via MediatR 13 com interfaces customizadas (`ICommand<T>`, `IQuery<T>`, `ICommandHandler`, `IQueryHandler`)
-- **Result Pattern** via FluentResults 4.0 — handlers nunca lançam exceptions para erros de negócio
-- **FluentValidation 12** — validators co-localizados com Commands/Queries, executados via `ValidationBehavior`
-- **PostgreSQL 16** multi-schema (schema-per-tenant) + **Redis 7** para cache
-- **JWT Bearer** (HMAC-SHA256, 2h hardcoded)
-- **EF Core 9** com Fluent API configurations, soft delete automático via `AuditEntity`
+1. **UseCases**: pasta `UseCases/{Domínio}/{Ação}/` com Command/Query (record) + Handler + Validator
+2. **Handlers retornam `Result<T>`** — use `Result.Ok(...)` ou `Result.Fail(new ErrorType("msg"))`
+3. **Erros tipados**: `BadRequest` (422!), `NotFound` (404), `Unauthorized` (401), `Conflict` (409), `Forbidden` (403)
+4. **Endpoints**: static class com extension method, usar `ISender` + `.ToIResult()`, registrar em `AppExtensions`
+5. **Entidades**: herdar `AuditEntity` + implementar `IEntity`, criar Configuration EF, DbSet, Repository + interface
+6. **DI manual**: registrar tudo explicitamente em `ServiceExtensions` (AddServices/AddRepositories)
+7. **Tenant-aware**: dados de tenant via `ApplicationDbContext` (schema via `HasDefaultSchema` no `OnModelCreating`)
+8. **Unit of Work**: repositórios NÃO fazem SaveChanges — handler chama `IUnitOfWork.SaveChangesAsync()` ao final
 
-## Padrões obrigatórios
+## Gotchas Críticos
 
-1. **UseCase = pasta** em `Application/UseCases/{Feature}/{Ação}/` com Command/Query + Handler + Validator
-2. **Erros tipados**: `BadRequest(422)`, `NotFound(404)`, `Conflict(409)`, `Unauthorized(401)`, `Forbidden(403)`
-3. **Endpoints**: usar `result.ToIResult()` para converter Result → HTTP, com `.Produces<T>()` e `.RequireAuthorization()`
-4. **DI**: Scoped para services/repos. Registrar em `ServiceExtensions.cs`
-5. **Entidades**: herdar `AuditEntity` + `IEntity` (exceto `EstablishmentUser` que tem chave composta e `Tenant` que é isolado)
-6. **Tenant**: `TenantDbContext` (public/singleton) vs `ApplicationDbContext` (schema dinâmico/scoped)
+- `BadRequest` = HTTP **422** (não 400) — 400 real só para UniqueViolation do PostgreSQL
+- `Tenant` NÃO implementa `IEntity` nem `AuditEntity` — repo separado com `TenantDbContext`
+- Soft Delete automático no `SaveChangesAsync` — nunca faz DELETE real em `AuditEntity`
+- Schema dinâmico via `HasDefaultSchema` no `OnModelCreating` (NÃO usa interceptor `SET search_path`)
+- `TenantModelCacheKeyFactory` gera chave por schema — EF Core compila modelo separado por tenant
+- Provisioning cria Owner User com senha padrão `Owner@123`
+- `/api/branding` e `/api/settings` estão fora do grupo SuperAdmin do `TenantEndpoints`
 
-## Gotchas críticos
+## Referência Completa
 
-- `BadRequest` = HTTP 422, não 400
-- `JwtService` ignora `ExpiryMinutes` — expiração é 2h hardcoded
-- `EstablishmentUser` sem `IEntity` (chave composta) — não usa `BaseRepository`
-- `EstablishmentHandler` faz bypass para `Admin` e `User` roles
-- `BaseRepository` chama `SaveChanges` por operação (sem Unit of Work)
-- Middleware order: `TenantResolution → Authentication → Authorization → Endpoints`
-- `TenantModelCacheKeyFactory` é essencial para schema dinâmico funcionar
-
-## Referência completa
-
-Toda a documentação detalhada está em **`documentos/techspec-codebase.md`** incluindo:
-modelo de dados, endpoints, mapa de navegação de arquivos, guia para novos devs e padrões de código.
+Para detalhes sobre modelo de dados, mapa de navegação, pipeline de middleware, provisioning de tenants e guia de padronização, consulte: **`documentos/techspec-codebase.md`**
