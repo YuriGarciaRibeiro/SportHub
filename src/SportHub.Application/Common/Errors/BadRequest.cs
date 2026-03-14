@@ -4,6 +4,6 @@ public class BadRequest : Error
 {
     public BadRequest(string message) : base(message)
     {
-        WithMetadata("StatusCode", 422);
+        WithMetadata("StatusCode", 400);
     }
 }

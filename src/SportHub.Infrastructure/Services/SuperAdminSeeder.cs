@@ -10,7 +10,7 @@ namespace Infrastructure.Services;
 
 /// <summary>
 /// Cria o usuário SuperAdmin no schema "public".
-/// Usa ApplicationDbContext com PublicSchemaTenantContext apontando para o schema "public".
+/// Usa ApplicationDbContextFactory.CreateForPublic() para obter o contexto.
 /// Executa apenas no startup, antes de qualquer request.
 /// </summary>
 public class SuperAdminSeeder
@@ -32,19 +32,9 @@ public class SuperAdminSeeder
     public async Task SeedAsync()
     {
         var connectionString = _tenantDbContext.Database.GetConnectionString()!;
+        var factory = new ApplicationDbContextFactory(connectionString);
 
-        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
-        optionsBuilder.ReplaceService<Microsoft.EntityFrameworkCore.Infrastructure.IModelCacheKeyFactory,
-            TenantModelCacheKeyFactory>();
-        optionsBuilder.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-
-        await using var db = new ApplicationDbContext(
-            optionsBuilder.Options,
-            new SuperAdminNullUserService(),
-            new PublicSchemaTenantContext(),
-            TimeProvider.System
-        );
+        await using var db = factory.CreateForPublic();
 
         var exists = await db.Users.AnyAsync(u => u.Email == _adminSettings.Email);
         if (exists)
@@ -67,21 +57,4 @@ public class SuperAdminSeeder
         db.Users.Add(superAdmin);
         await db.SaveChangesAsync();
     }
-}
-
-internal class PublicSchemaTenantContext : ITenantContext
-{
-    public Guid TenantId => Guid.Empty;
-    public string TenantSlug => "system";
-    public string TenantName => "System";
-    public string? LogoUrl => null;
-    public string? PrimaryColor => null;
-    public string Schema => "public";
-    public bool IsResolved => true;
-    public void Resolve(Tenant tenant) { }
-}
-
-internal class SuperAdminNullUserService : ICurrentUserService
-{
-    public Guid UserId => Guid.Empty;
 }

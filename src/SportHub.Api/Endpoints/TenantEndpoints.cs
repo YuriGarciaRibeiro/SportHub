@@ -1,11 +1,9 @@
-using Application.Common.Interfaces;
 using Application.Security;
 using Application.UseCases.Tenant.ActivateTenant;
 using Application.UseCases.Tenant.GetAllTenants;
 using Application.UseCases.Tenant.GetTenant;
 using Application.UseCases.Tenant.ProvisionTenant;
 using Application.UseCases.Tenant.SuspendTenant;
-using Application.UseCases.Tenant.UpdateSettings;
 using Application.UseCases.Tenant.UpdateTenant;
 using Application.UseCases.Tenant.GetTenantUsers;
 using Application.UseCases.Tenant.ProvisionTenantOwner;
@@ -123,42 +121,9 @@ public static class TenantEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
-        // GET /api/branding — público, sem auth, acessado com subdomínio
-        app.MapGet("/api/branding", (ITenantContext tenantCtx) =>
-        {
-            if (!tenantCtx.IsResolved)
-                return Results.NotFound(new { message = "Tenant não encontrado." });
-
-            return Results.Ok(new BrandingResponse(
-                tenantCtx.TenantName,
-                tenantCtx.LogoUrl,
-                tenantCtx.PrimaryColor
-            ));
-        })
-        .WithName("GetBranding")
-        .WithSummary("Retorna informações de branding do tenant atual (público, sem auth)")
-        .AllowAnonymous()
-        .WithTags("Tenants")
-        .Produces<BrandingResponse>();
-
-        // PUT /api/settings — authenticated tenant self-service
-        app.MapPut("/api/settings", async (UpdateSettingsCommand command, ISender sender) =>
-        {
-            var result = await sender.Send(command);
-            return result.ToIResult();
-        })
-        .WithName("UpdateSettings")
-        .WithSummary("Atualiza as configurações (nome, logo, cor) do tenant atual")
-        .RequireAuthorization()
-        .WithTags("Tenants")
-        .Produces(StatusCodes.Status204NoContent)
-        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
-
         return group;
     }
 }
 
 public record UpdateTenantBrandingRequest(string? LogoUrl, string? PrimaryColor);
-public record BrandingResponse(string Name, string? LogoUrl, string? PrimaryColor);
 public record ProvisionTenantOwnerRequest(string Email);

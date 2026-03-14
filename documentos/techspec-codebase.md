@@ -1,7 +1,7 @@
-# Tech Spec: SportHub API — v4.0
+# Tech Spec: SportHub API — Codebase v5.0
 
 > Última atualização: 2026-03-14
-> Gerado automaticamente a partir da análise do codebase
+> Gerado automaticamente a partir da análise completa do codebase
 
 ---
 
@@ -89,9 +89,9 @@ A multi-tenancy é a arquitetura central do sistema:
    ```
    Request → TenantResolutionMiddleware → extrai slug (subdomínio ou X-Tenant-Slug)
            → busca no Redis/DB → preenche ITenantContext (Scoped)
-           → TenantSchemaConnectionInterceptor → SET search_path TO "tenant_xxx"
+           → ApplicationDbContext.OnModelCreating → HasDefaultSchema(tenantContext.Schema)
    ```
-5. **TenantModelCacheKeyFactory**: garante que o EF Core não misture models de schemas diferentes
+5. **TenantModelCacheKeyFactory**: gera chave de cache por schema (`TenantModelCacheKey` inclui `_schema`), garantindo que o EF Core compile modelo separado por tenant
 6. **Provisioning**: `TenantProvisioningService` cria schema, executa migrations e faz seed
 
 #### Rotas Bypass (sem tenant):
@@ -232,11 +232,10 @@ Todas as respostas de erro seguem **RFC 9457 (Problem Details)**:
 ### 5.1. JWT Bearer
 
 - **Algoritmo**: HMAC-SHA256
-- **Expiração Access Token**: 2h (hardcoded em `JwtService`, ignora `JwtSettings.ExpiryMinutes`)
-- **Expiração Refresh Token**: 7 dias
+- **Expiração Access Token**: configurável via `JwtSettings.ExpiryMinutes` (fallback: 120min/2h se não configurado ou ≤ 0)
+- **Expiração Refresh Token**: 7 dias (hardcoded em `GenerateRefreshToken`)
 - **Claims**: `NameIdentifier` (userId), `Email`, `Name` (fullName), `Role`
-
-> ⚠️ **Gotcha**: `JwtSettings.ExpiryMinutes` existe no `appsettings.json` mas é **ignorado** — o `JwtService` usa `DateTime.UtcNow.AddHours(2)` hardcoded.
+- **Configuração** (`appsettings.json`): `Jwt:Key`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpiryMinutes` (padrão: 60)
 
 ### 5.2. Authorization Policies
 
@@ -317,7 +316,7 @@ Tenant (standalone, SEM IEntity, SEM AuditEntity)
 - `GetByIdAsync`, `GetAllAsync`, `AddAsync`, `UpdateAsync`, `RemoveAsync`
 - `GetByIdsAsync`, `ExistsAsync`, `Query()`, `AddManyAsync`
 
-> ⚠️ **Gotcha**: `BaseRepository` chama `SaveChangesAsync` em **cada operação** (Add, Update, Remove). Não há Unit of Work explícito.
+> ✅ **Unit of Work**: `BaseRepository` **não** chama `SaveChangesAsync` — apenas adiciona/atualiza/remove no `DbSet`. O handler é responsável por chamar `IUnitOfWork.SaveChangesAsync()` ao final da operação. `ApplicationDbContext` implementa `IUnitOfWork`.
 
 Repositórios específicos estendem `BaseRepository<T>`:
 - `UsersRepository` — `GetByEmailAsync`, `GetByRefreshTokenAsync`, `EmailExistsAsync`
@@ -333,7 +332,7 @@ Repositórios específicos estendem `BaseRepository<T>`:
 - TTL padrão: 30 minutos
 - Prefixos de chave via enum `CacheKeyPrefix`: `UserById`, `CourtAvailability`, `TenantBySlug`, etc.
 
-> ⚠️ **Gotcha**: `CacheService` está no projeto `Application` mas usa namespace `Infrastructure.Services`. Isso causa confusão nos imports.
+> `CacheService` está corretamente no projeto `Infrastructure` com namespace `Infrastructure.Services`. A interface `ICacheService` fica em `Application.Common.Interfaces`.
 
 **Redis configurado via** `RedisExtensions.AddRedis()` com `RedisOptions` (validação por DataAnnotations).
 
@@ -352,12 +351,21 @@ Repositórios específicos estendem `BaseRepository<T>`:
 - `CourtConfiguration` — `PricePerHour` com precision(10,2), index em Name
 - `ReservationConfiguration` / `SportConfiguration` — configurações básicas
 
-### 7.5. TenantSchemaConnectionInterceptor
+### 7.5. Schema Dinâmico via HasDefaultSchema
 
-`DbConnectionInterceptor` que executa `SET search_path TO "tenant_xxx", public;` ao abrir cada conexão:
-- Extrai slug do subdomínio (3+ partes) ou `subdomain.localhost` (2 partes)
-- Fallback: header `X-Tenant-Slug`
-- Converte slug em schema: `"arena-1"` → `"tenant_arena_1"`
+O isolamento de dados por tenant é feito via `HasDefaultSchema` no `OnModelCreating` do `ApplicationDbContext`:
+- `ITenantContext.Schema` retorna `tenant_{slug}` (convertendo hífens em underscores)
+- O EF Core qualifica todas as tabelas com o schema: `SELECT * FROM "tenant_arena1"."Users"`
+- `TenantModelCacheKeyFactory` gera chave de cache por schema para que modelos de schemas diferentes não compartilhem cache
+- **Não usa interceptor `SET search_path`** — o schema é nativo no modelo EF Core
+
+### 7.6. ApplicationDbContextFactory
+
+Factory para criar `ApplicationDbContext` fora do pipeline HTTP (migrations, provisioning, seeds):
+- `Create(schema)` — cria contexto para um schema específico
+- `CreateForTenant(tenant)` — cria contexto para o schema do tenant
+- `CreateForPublic()` — cria contexto para o schema `public`
+- Usa classes internas `FactoryTenantContext` e `FactoryCurrentUserService` para satisfazer dependências
 
 ---
 
@@ -369,13 +377,11 @@ Repositórios específicos estendem `BaseRepository<T>`:
 |---|---|---|---|
 | `AuthEndpoints` | `/auth` | Anônimo | ✅ |
 | `SportsEndpoints` | `/api/sports` | Misto (GET público) | ✅ |
-| `CourtsEndpoints` | `/api/courts` | Misto (GET público) | Misto (GET lista usa Repo direto) |
-| `AdminStatsEndpoints` | `/admin/stats` | RequireAuth | ❌ (Repos direto) |
+| `CourtsEndpoints` | `/api/courts` | Misto (GET/availability público) | ✅ |
+| `AdminStatsEndpoints` | `/admin/stats` | RequireAuth | ✅ |
 | `TenantEndpoints` | `/api/tenants` | SuperAdmin | ✅ |
 | Branding (`/api/branding`) | — | Anônimo | ❌ (ITenantContext direto) |
 | Settings (`/api/settings`) | — | RequireAuth | ✅ |
-
-> ⚠️ **Gotcha**: `AdminStatsEndpoints` e o GET `/api/courts` listagem NÃO usam MediatR — injetam repositórios diretamente no endpoint.
 
 ### 8.2. Registro de Endpoints
 
@@ -435,29 +441,27 @@ Request
 
 ### ⚠️ Obrigatório conhecer antes de contribuir:
 
-1. **`BadRequest` retorna 422, não 400** — O error type `BadRequest` em `Common/Errors/BadRequest.cs` tem metadata `StatusCode: 422`. O HTTP 400 real só ocorre para `DbUpdateException` com `UniqueViolation` do PostgreSQL.
+1. **`BadRequest` retorna 400** — O error type `BadRequest` em `Common/Errors/BadRequest.cs` tem metadata `StatusCode: 400`. O HTTP 422 é reservado para erros de validação do FluentValidation (via `CustomExceptionHandler`). O HTTP 400 real para `DbUpdateException` com `UniqueViolation` continua no `CustomExceptionHandler`.
 
-2. **`JwtService` ignora `ExpiryMinutes`** — `JwtSettings.ExpiryMinutes` existe no appsettings mas o `JwtService.GenerateToken` usa `DateTime.UtcNow.AddHours(2)` hardcoded.
+2. **`Tenant` não implementa `IEntity` nem `AuditEntity`** — `Tenant` é standalone (tem `Id` e `CreatedAt` próprios). O `TenantRepository` é completamente separado, opera via `TenantDbContext` no schema `public`, e não herda `BaseRepository<T>`.
 
-3. **`Tenant` não implementa `IEntity`** — `Tenant` é standalone, sem auditoria e sem `IEntity`. O `TenantRepository` é completamente separado e usa `TenantDbContext`.
+3. **Soft Delete automático** — `ApplicationDbContext.SaveChangesAsync` intercepta `EntityState.Deleted` e converte em `MarkAsDeleted(userId)`. **Nunca faz DELETE real** em entidades que herdam `AuditEntity`. Global Query Filter aplica `WHERE "IsDeleted" = false` automaticamente.
 
-4. **`BaseRepository` faz `SaveChanges` por operação** — Cada `AddAsync`, `UpdateAsync`, `RemoveAsync` chama `SaveChangesAsync`. Não há Unit of Work. Operações compostas (ex: criar user + atualizar refresh token) resultam em múltiplos SaveChanges.
+4. **Schema dinâmico via `HasDefaultSchema`** — O schema do tenant é definido em `OnModelCreating` via `builder.HasDefaultSchema(schema)`. `TenantModelCacheKeyFactory` gera chave de cache por schema. **Não usa interceptor `SET search_path`**.
 
-5. **`CacheService` namespace incorreto** — A classe está em `Application/Services/CacheService.cs` mas usa `namespace Infrastructure.Services`. Imports podem confundir.
+5. **Unit of Work explícito** — `BaseRepository` **não** chama `SaveChangesAsync`. O handler deve chamar `IUnitOfWork.SaveChangesAsync()` (implementado por `ApplicationDbContext`). Exceção: `ReservationService` chama `_unitOfWork.SaveChangesAsync()` internamente.
 
-6. **`AdminStatsEndpoints` e GET Courts não usam MediatR** — Diferente do padrão do projeto, esses endpoints injetam repos diretamente.
+6. **CORS permite qualquer subdomínio de localhost** — Em dev, `SetIsOriginAllowed` retorna true para qualquer `*.localhost`. Em produção, depende da lista configurada em `Cors:AllowedOrigins`.
 
-7. **Soft Delete automático** — `ApplicationDbContext.SaveChangesAsync` intercepta `EntityState.Deleted` e converte em `MarkAsDeleted`. Nunca faz DELETE real.
+7. **SuperAdmin seed acontece no startup** — `SuperAdminSeeder` executa em `Program.cs` antes de qualquer request. Usa `ApplicationDbContextFactory.CreateForPublic()` para criar o contexto no schema `public`.
 
-8. **Schema dinâmico via `SET search_path`** — O schema não é definido no `OnModelCreating`. É injetado por conexão via `TenantSchemaConnectionInterceptor`. O `TenantModelCacheKeyFactory` NÃO inclui schema na chave (intencional).
+8. **`UserRole.SuperAdmin = 99`** — Valor alto intencional para separação clara dos roles normais (0, 1, 2).
 
-9. **Migrations schema-agnostic** — As migrations do `ApplicationDbContext` são geradas sem `HasDefaultSchema`. O schema é aplicado em runtime pelo interceptor.
+9. **Provisioning cria Owner User** — `TenantProvisioningService.ProvisionAsync` cria automaticamente um user Admin com senha `Owner@123` no schema do tenant se `OwnerEmail` for fornecido.
 
-10. **CORS permite qualquer subdomínio de localhost** — Em dev, `SetIsOriginAllowed` retorna true para qualquer `*.localhost`.
+10. **Migrations em startup (dev)** — `ExecuteMigrations()` migra schema `public` (TenantDbContext + ApplicationDbContext) e **todos** os schemas de tenant existentes. Pode ser lento com muitos tenants.
 
-11. **SuperAdmin seed acontece no startup** — `SuperAdminSeeder` executa em `Program.cs` antes de qualquer request. Cria o user no schema `public`.
-
-12. **`UserRole.SuperAdmin = 99`** — Valor alto intencional para separação clara dos roles normais.
+11. **Branding e Settings são endpoints separados** — `/api/branding` (público, sem auth) está em `BrandingEndpoints.cs` e `/api/settings` (autenticado, tenant self-service) está em `SettingsEndpoints.cs`. Ambos são tenant-scoped (acessados via subdomínio) e **não** pertencem ao grupo SuperAdmin de `TenantEndpoints`.
 
 ---
 
@@ -467,7 +471,6 @@ Request
 |---|---|
 | **Entidades de domínio** | `src/SportHub.Domain/entities/` |
 | **Enums** | `src/SportHub.Domain/Enums/` |
-| **Value Objects** | `src/SportHub.Domain/ValueObjects/` |
 | **Interfaces (contratos)** | `src/SportHub.Application/Common/Interfaces/` |
 | **Erros tipados** | `src/SportHub.Application/Common/Errors/` |
 | **CQRS interfaces** | `src/SportHub.Application/CQRS/` |
@@ -480,14 +483,14 @@ Request
 | **DbContexts** | `src/SportHub.Infrastructure/Persistence/` |
 | **EF Configurations** | `src/SportHub.Infrastructure/Persistence/Configurations/` |
 | **Migrations** | `src/SportHub.Infrastructure/Persistence/Migrations/` |
-| **Interceptors EF** | `src/SportHub.Infrastructure/Persistence/Interceptors/` |
+| **DbContext Factory** | `src/SportHub.Infrastructure/Persistence/ApplicationDbContextFactory.cs` |
 | **Security (Password, Auth Handlers)** | `src/SportHub.Infrastructure/Security/` |
 | **Services de infra (Seeders, Tenant)** | `src/SportHub.Infrastructure/Services/` |
 | **Tenant Middleware** | `src/SportHub.Infrastructure/Middleware/TenantResolutionMiddleware.cs` |
 | **Endpoints (Minimal APIs)** | `src/SportHub.Api/Endpoints/` |
 | **DI / Service Registration** | `src/SportHub.Api/Extensions/ServiceExtensions.cs` |
 | **Endpoint Registration** | `src/SportHub.Api/Extensions/AppExtensions.cs` |
-| **Exception Handler** | `src/SportHub.Api/Middleware/CustomExecptionHandler.cs` |
+| **Exception Handler** | `src/SportHub.Api/Middleware/CustomExceptionHandler.cs` |
 | **MediatR Behaviors** | `src/SportHub.Api/Behaviors/` + `src/SportHub.Application/Behaviors/` |
 | **Result → IResult conversion** | `src/SportHub.Api/Extensions/ResultExtensions/ResultExtensions.cs` |
 | **Configuração (appsettings)** | `src/SportHub.Api/appsettings.*.json` |
@@ -534,4 +537,5 @@ Request
 - **Implementações no Infrastructure**: repositórios, services concretos, security handlers
 - **DI manual**: todo registro é explícito em `ServiceExtensions` (não há auto-scan)
 - **Scoped por padrão**: services e repos são Scoped (exceto `ValidationBehavior` que é Transient)
-- **Tenant-aware**: todo código que acessa dados de tenant deve usar `ApplicationDbContext` (que já tem schema correto via interceptor)
+- **Tenant-aware**: todo código que acessa dados de tenant deve usar `ApplicationDbContext` (que já tem schema correto via `HasDefaultSchema`)
+- **Unit of Work**: handlers devem chamar `IUnitOfWork.SaveChangesAsync()` ao final da operação — repositórios não fazem SaveChanges

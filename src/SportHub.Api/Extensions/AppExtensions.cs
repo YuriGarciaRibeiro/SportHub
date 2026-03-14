@@ -19,6 +19,10 @@ public static class AppExtensions
         // Tenant endpoints (fora do middleware de tenant — acessível sem subdomínio)
         app.MapTenantEndpoints();
 
+        // Endpoints tenant-scoped (acessados via subdomínio)
+        app.MapBrandingEndpoints();
+        app.MapSettingsEndpoints();
+
         return app;
     }
 }
