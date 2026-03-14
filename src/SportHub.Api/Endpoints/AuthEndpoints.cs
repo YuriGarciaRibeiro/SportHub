@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
 using Application.UseCases.Auth.Login;
 using Application.UseCases.Auth.RefreshToken;
+using Application.UseCases.Auth.GetCurrentUser;
+using Application.UseCases.Auth.UpdateCurrentUser;
+using SportHub.Application.UseCases.Auth.DeleteUser;
+using Application.Common.Interfaces;
 
 namespace SportHub.Api.Endpoints;
 
@@ -63,6 +67,47 @@ public static class AuthEndpoints
         .Produces<AuthResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // GET /auth/me — perfil do usuário logado
+        group.MapGet("/me", async (ISender sender) =>
+        {
+            var result = await sender.Send(new GetCurrentUserQuery());
+            return result.ToIResult();
+        })
+        .WithName("GetCurrentUser")
+        .WithSummary("Retorna o perfil do usuário autenticado")
+        .RequireAuthorization()
+        .Produces<UserProfileResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // PUT /auth/me — atualizar nome do usuário logado
+        group.MapPut("/me", async (UpdateCurrentUserCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UpdateCurrentUser")
+        .WithSummary("Atualiza o nome do usuário autenticado")
+        .RequireAuthorization()
+        .Produces<UserProfileResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // DELETE /auth/me — deletar própria conta (soft delete)
+        group.MapDelete("/me", async (ISender sender, ICurrentUserService currentUserService) =>
+        {
+            var result = await sender.Send(new DeleteUserCommand(currentUserService.UserId));
+            return result.ToIResult();
+        })
+        .WithName("DeleteCurrentUser")
+        .WithSummary("Deleta (soft) a conta do usuário autenticado")
+        .RequireAuthorization()
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
 
         return group;
     }

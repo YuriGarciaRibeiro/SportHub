@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Security;
 using Application.UseCases.Admin.GetAdminStats;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +13,7 @@ public static class AdminStatsEndpoints
     {
         var group = routes.MapGroup("/admin/stats")
             .WithTags("Admin")
-            .RequireAuthorization();
+            .RequireAuthorization(PolicyNames.IsManager);
 
         // GET /admin/stats — Retorna KPIs do dashboard para o tenant atual
         group.MapGet("/", async (ISender sender) =>

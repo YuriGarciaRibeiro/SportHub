@@ -14,7 +14,9 @@ public static class AppExtensions
         app.MapAuthEndpoints();
         app.MapSportsEndpoints();
         app.MapCourtsEndpoints();
+        app.MapReservationsEndpoints();
         app.MapAdminStatsEndpoints();
+        app.MapMembersEndpoints();
 
         // Tenant endpoints (fora do middleware de tenant — acessível sem subdomínio)
         app.MapTenantEndpoints();

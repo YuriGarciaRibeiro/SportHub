@@ -5,9 +5,9 @@ namespace Application.Security;
 
 public class GlobalRoleRequirement : IAuthorizationRequirement
 {
-    public EstablishmentRole RequiredRole { get; }
+    public UserRole RequiredRole { get; }
 
-    public GlobalRoleRequirement(EstablishmentRole requiredRole)
+    public GlobalRoleRequirement(UserRole requiredRole)
     {
         RequiredRole = requiredRole;
     }

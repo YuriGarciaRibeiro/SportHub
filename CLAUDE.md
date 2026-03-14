@@ -5,7 +5,7 @@ description: Usar sempre que precisar tomar decisão arquitetural ou técnica no
 
 # Regra: Consultar Tech Spec do Codebase
 
-Antes de tomar qualquer decisão arquitetural, criar novos componentes ou modificar padrões existentes, **consulte obrigatoriamente** o arquivo `documentos/techspec-codebase.md` (v5.0) que contém a documentação técnica completa do projeto SportHub.
+Antes de tomar qualquer decisão arquitetural, criar novos componentes ou modificar padrões existentes, **consulte obrigatoriamente** o arquivo `documentos/techspec-codebase.md` (v5.1) que contém a documentação técnica completa do projeto SportHub.
 
 ## Stack e Arquitetura
 
@@ -37,6 +37,8 @@ Antes de tomar qualquer decisão arquitetural, criar novos componentes ou modifi
 - `TenantModelCacheKeyFactory` gera chave por schema — EF Core compila modelo separado por tenant
 - Provisioning cria Owner User com senha padrão `Owner@123`
 - `/api/branding` e `/api/settings` estão fora do grupo SuperAdmin do `TenantEndpoints`
+- **`Include()` só na Infrastructure** — handlers da Application NÃO referenciam EF Core; repositórios expõem métodos específicos com navegação já inclusa
+- **`ICurrentUserService`** expõe `UserId` e `EstablishmentRole?` — use para verificar permissão dentro de handlers quando a policy de rota não for suficiente
 
 ## Referência Completa
 

@@ -17,6 +17,7 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("tenant_placeholder")
                 .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -34,7 +35,7 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("SportsId");
 
-                    b.ToTable("CourtSport");
+                    b.ToTable("CourtSport", "tenant_placeholder");
                 });
 
             modelBuilder.Entity("Domain.Entities.Court", b =>
@@ -103,7 +104,7 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("Name");
 
-                    b.ToTable("Courts");
+                    b.ToTable("Courts", "tenant_placeholder");
                 });
 
             modelBuilder.Entity("Domain.Entities.Reservation", b =>
@@ -153,7 +154,7 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("CourtId", "StartTimeUtc");
 
-                    b.ToTable("Reservations");
+                    b.ToTable("Reservations", "tenant_placeholder");
                 });
 
             modelBuilder.Entity("Domain.Entities.Sport", b =>
@@ -201,7 +202,7 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Sports");
+                    b.ToTable("Sports", "tenant_placeholder");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -277,7 +278,7 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
 
                     b.HasIndex("Role");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", "tenant_placeholder");
                 });
 
             modelBuilder.Entity("CourtSport", b =>

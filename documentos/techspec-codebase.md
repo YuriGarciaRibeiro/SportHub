@@ -1,4 +1,4 @@
-# Tech Spec: SportHub API — Codebase v5.0
+# Tech Spec: SportHub API — Codebase v5.1
 
 > Última atualização: 2026-03-14
 > Gerado automaticamente a partir da análise completa do codebase
@@ -156,23 +156,35 @@ Cada UseCase fica em pasta própria: `UseCases/{Domínio}/{Ação}/`
 ```
 UseCases/
 ├── Auth/
-│   ├── AuthResponse.cs          ← DTO compartilhado
+│   ├── AuthResponse.cs              ← DTO compartilhado
 │   ├── Login/
-│   │   ├── LoginCommand.cs
-│   │   ├── LoginHandler.cs
-│   │   └── LoginValidator.cs
 │   ├── RegisterUser/
-│   │   ├── RegisterUserCommand.cs
-│   │   ├── RegisterUserHandler.cs
-│   │   └── RegisterUserValidator.cs
-│   └── RefreshToken/
+│   ├── RefreshToken/
+│   ├── DeleteUser/                  ← soft delete da própria conta
+│   ├── GetCurrentUser/              ← GET /auth/me
+│   └── UpdateCurrentUser/           ← PUT /auth/me
 ├── Tenant/
 │   ├── ProvisionTenant/
 │   ├── GetAllTenants/
 │   └── ...
 ├── Court/
+│   ├── CreateCourt/
+│   ├── UpdateCourt/                 ← PUT /api/courts/{id} (IsOwner)
+│   ├── DeleteCourt/                 ← DELETE /api/courts/{id} (IsOwner)
+│   ├── GetAllCourts/
+│   ├── GetCourtById/
+│   └── GetAvailability/
 ├── Sport/
+│   ├── CreateSport/
+│   ├── UpdateSport/
+│   ├── DeleteSport/
+│   ├── GetAllSports/
+│   └── GetSportById/                ← GET /api/sports/{id}
 └── Reservation/
+    ├── CreateReservation/
+    ├── GetMyReservations/           ← GET /api/reservations/me
+    ├── GetCourtReservations/        ← GET /api/courts/{id}/reservations (IsOwner)
+    └── CancelReservation/           ← DELETE /api/courts/{id}/reservations/{rid}
 ```
 
 ### 4.3. Tratamento de Erros
@@ -322,8 +334,10 @@ Repositórios específicos estendem `BaseRepository<T>`:
 - `UsersRepository` — `GetByEmailAsync`, `GetByRefreshTokenAsync`, `EmailExistsAsync`
 - `CourtsRepository` — override `GetAllAsync`/`GetByIdAsync` com `.Include(Sports)` e `.AsSplitQuery()`
 - `SportsRepository` — `ExistsByNameAsync` (ILike), `GetByNameAsync`, `GetSportsByIdsAsync`
-- `ReservationRepository` — `GetByCourtAndDayAsync`, `ExistsConflictAsync`
+- `ReservationRepository` — `GetByCourtAndDayAsync`, `ExistsConflictAsync`, `GetByUserAsync`, `GetByCourtAsync`
 - `TenantRepository` — standalone (usa `TenantDbContext`), `GetBySlugAsync`, `SlugExistsAsync`
+
+> **Nota sobre queries com navegação**: `Include()` (EF Core) só pode ser usado na camada Infrastructure (repositórios). Handlers na camada Application **não** devem referenciar `Microsoft.EntityFrameworkCore`. Quando um handler precisa de dados com relacionamentos, o repositório deve expor um método específico que já inclua os `Include` necessários.
 
 ### 7.2. Caching (Redis)
 
@@ -375,13 +389,51 @@ Factory para criar `ApplicationDbContext` fora do pipeline HTTP (migrations, pro
 
 | Grupo | Rota Base | Auth | Usa MediatR |
 |---|---|---|---|
-| `AuthEndpoints` | `/auth` | Anônimo | ✅ |
+| `AuthEndpoints` | `/auth` | Misto | ✅ |
 | `SportsEndpoints` | `/api/sports` | Misto (GET público) | ✅ |
 | `CourtsEndpoints` | `/api/courts` | Misto (GET/availability público) | ✅ |
+| `ReservationsEndpoints` | `/api/reservations`, `/api/courts/{id}/reservations` | RequireAuth / IsOwner | ✅ |
 | `AdminStatsEndpoints` | `/admin/stats` | RequireAuth | ✅ |
 | `TenantEndpoints` | `/api/tenants` | SuperAdmin | ✅ |
 | Branding (`/api/branding`) | — | Anônimo | ❌ (ITenantContext direto) |
 | Settings (`/api/settings`) | — | RequireAuth | ✅ |
+
+#### Mapa completo de rotas (v5.1)
+
+| Método | Rota | Auth | UseCase |
+|---|---|---|---|
+| `POST` | `/auth/register` | Anônimo | `RegisterUserCommand` |
+| `POST` | `/auth/login` | Anônimo | `LoginCommand` |
+| `POST` | `/auth/refresh` | Anônimo | `RefreshTokenCommand` |
+| `GET` | `/auth/me` | RequireAuth | `GetCurrentUserQuery` |
+| `PUT` | `/auth/me` | RequireAuth | `UpdateCurrentUserCommand` |
+| `DELETE` | `/auth/me` | RequireAuth | `DeleteUserCommand` |
+| `GET` | `/api/sports` | Anônimo | `GetAllSportsQuery` |
+| `GET` | `/api/sports/{id}` | Anônimo | `GetSportByIdQuery` |
+| `POST` | `/api/sports` | RequireAuth | `CreateSportCommand` |
+| `PUT` | `/api/sports/{id}` | RequireAuth | `UpdateSportCommand` |
+| `DELETE` | `/api/sports/{id}` | RequireAuth | `DeleteSportCommand` |
+| `GET` | `/api/courts` | Anônimo | `GetAllCourtsQuery` |
+| `GET` | `/api/courts/{id}` | RequireAuth | `GetCourtByIdQuery` |
+| `POST` | `/api/courts` | RequireAuth | `CreateCourtCommand` |
+| `PUT` | `/api/courts/{id}` | `IsOwner` | `UpdateCourtCommand` |
+| `DELETE` | `/api/courts/{id}` | `IsOwner` | `DeleteCourtCommand` |
+| `GET` | `/api/courts/{id}/availability/{date}` | Anônimo | `GetAvailabilityQuery` |
+| `POST` | `/api/courts/{id}/reservations` | RequireAuth | `CreateReservationCommand` |
+| `GET` | `/api/courts/{id}/reservations` | `IsOwner` | `GetCourtReservationsQuery` |
+| `DELETE` | `/api/courts/{id}/reservations/{rid}` | RequireAuth | `CancelReservationCommand` |
+| `GET` | `/api/reservations/me` | RequireAuth | `GetMyReservationsQuery` |
+| `GET` | `/admin/stats` | RequireAuth | `GetAdminStatsQuery` |
+| `POST` | `/api/tenants` | SuperAdmin | `ProvisionTenantCommand` |
+| `GET` | `/api/tenants` | SuperAdmin | `GetAllTenantsQuery` |
+| `GET` | `/api/tenants/{id}` | SuperAdmin | `GetTenantQuery` |
+| `GET` | `/api/tenants/{id}/users` | SuperAdmin | `GetTenantUsersQuery` |
+| `POST` | `/api/tenants/{id}/owner` | SuperAdmin | `ProvisionTenantOwnerCommand` |
+| `PATCH` | `/api/tenants/{id}/branding` | SuperAdmin | `UpdateTenantCommand` |
+| `POST` | `/api/tenants/{id}/suspend` | SuperAdmin | `SuspendTenantCommand` |
+| `POST` | `/api/tenants/{id}/activate` | SuperAdmin | `ActivateTenantCommand` |
+| `GET` | `/api/branding` | Anônimo | — (ITenantContext direto) |
+| `PUT` | `/api/settings` | RequireAuth | `UpdateSettingsCommand` |
 
 ### 8.2. Registro de Endpoints
 
@@ -390,8 +442,11 @@ Todos registrados em `AppExtensions.UseEndpoints()`:
 app.MapAuthEndpoints();
 app.MapSportsEndpoints();
 app.MapCourtsEndpoints();
+app.MapReservationsEndpoints();
 app.MapAdminStatsEndpoints();
 app.MapTenantEndpoints();
+app.MapBrandingEndpoints();
+app.MapSettingsEndpoints();
 ```
 
 ### 8.3. Middleware Pipeline
@@ -415,12 +470,16 @@ Request
 | `JwtService` | `IJwtService` | Gera access tokens (2h) e refresh tokens (7d) |
 | `CacheService` | `ICacheService` | Wrapper Redis com serialização JSON |
 | `ReservationService` | `IReservationService` | Lógica de disponibilidade e reserva de slots |
-| `CurrentUserService` | `ICurrentUserService` | Extrai `UserId` do JWT (ClaimTypes.NameIdentifier) |
+| `CurrentUserService` | `ICurrentUserService` | Extrai `UserId` e `EstablishmentRole?` do JWT |
 | `UserService` | `IUserService` | CRUD de roles e busca de users |
 | `TenantContext` | `ITenantContext` | Estado Scoped do tenant resolvido |
 | `TenantProvisioningService` | `ITenantProvisioningService` | Provisiona schema + migrations + seed |
 | `TenantUsersQueryService` | `ITenantUsersQueryService` | Consulta users de um tenant específico (cross-schema) |
 | `PasswordService` | `IPasswordService` | Hash/verify com PBKDF2-SHA256 |
+
+**`ICurrentUserService`** expõe:
+- `UserId` — extraído de `ClaimTypes.NameIdentifier`
+- `EstablishmentRole?` — extraído de `ClaimTypes.Role` (parse de `EstablishmentRole` enum); `null` se claim ausente ou inválido
 
 ---
 

@@ -1,3 +1,4 @@
+using Application.Security;
 using Application.UseCases.Tenant.UpdateSettings;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ public static class SettingsEndpoints
 {
     public static IEndpointRouteBuilder MapSettingsEndpoints(this IEndpointRouteBuilder app)
     {
-        // PUT /api/settings — authenticated tenant self-service
+        // PUT /api/settings — IsOwner
         app.MapPut("/api/settings", async (UpdateSettingsCommand command, ISender sender) =>
         {
             var result = await sender.Send(command);
@@ -17,7 +18,7 @@ public static class SettingsEndpoints
         })
         .WithName("UpdateSettings")
         .WithSummary("Atualiza as configurações (nome, logo, cor) do tenant atual")
-        .RequireAuthorization()
+        .RequireAuthorization(PolicyNames.IsOwner)
         .WithTags("Settings")
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)

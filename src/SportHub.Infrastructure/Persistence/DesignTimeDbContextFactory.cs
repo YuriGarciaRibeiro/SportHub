@@ -29,6 +29,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
 internal class NullCurrentUserService : ICurrentUserService
 {
     public Guid UserId => Guid.Empty;
+    public Domain.Enums.UserRole? UserRole => null;
 }
 
 internal class PlaceholderTenantContext : ITenantContext

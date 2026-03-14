@@ -27,4 +27,30 @@ public class ReservationRepository : BaseRepository<Reservation>, IReservationRe
         return await _dbContext.Reservations
             .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
     }
+
+    public async Task<List<Reservation>> GetByUserAsync(Guid userId)
+    {
+        return await _dbContext.Reservations
+            .Include(r => r.Court)
+            .Where(r => r.UserId == userId)
+            .OrderByDescending(r => r.StartTimeUtc)
+            .ToListAsync();
+    }
+
+    public async Task<List<Reservation>> GetByCourtAsync(Guid courtId, DateTime? date = null)
+    {
+        var query = _dbContext.Reservations
+            .Include(r => r.Court)
+            .Where(r => r.CourtId == courtId);
+
+        if (date.HasValue)
+        {
+            var dateUtc = DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Utc);
+            query = query.Where(r => r.StartTimeUtc.Date == dateUtc);
+        }
+
+        return await query
+            .OrderByDescending(r => r.StartTimeUtc)
+            .ToListAsync();
+    }
 }

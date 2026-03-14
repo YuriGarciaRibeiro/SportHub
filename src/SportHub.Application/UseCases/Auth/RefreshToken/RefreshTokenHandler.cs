@@ -48,6 +48,7 @@ public class RefreshTokenHandler : ICommandHandler<RefreshTokenCommand, AuthResp
             UserId = user.Id,
             FullName = user.FullName,
             Email = user.Email,
+            Role = user.Role.ToString(),
             Token = newAccessToken,
             ExpiresAt = newAccessExpiresAt,
             RefreshToken = newRefreshToken,

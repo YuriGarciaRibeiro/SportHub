@@ -177,13 +177,13 @@ public static class ServiceExtensions
         {
             // Policies globais (role no tenant)
             options.AddPolicy(PolicyNames.IsStaff, policy =>
-                policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Staff)));
+                policy.Requirements.Add(new GlobalRoleRequirement(UserRole.Staff)));
 
             options.AddPolicy(PolicyNames.IsManager, policy =>
-                policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Manager)));
+                policy.Requirements.Add(new GlobalRoleRequirement(UserRole.Manager)));
 
             options.AddPolicy(PolicyNames.IsOwner, policy =>
-                policy.Requirements.Add(new GlobalRoleRequirement(EstablishmentRole.Owner)));
+                policy.Requirements.Add(new GlobalRoleRequirement(UserRole.Owner)));
 
             // SuperAdmin — operador da plataforma
             options.AddPolicy(PolicyNames.IsSuperAdmin, policy =>

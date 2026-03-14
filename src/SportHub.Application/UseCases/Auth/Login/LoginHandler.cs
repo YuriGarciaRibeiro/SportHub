@@ -63,6 +63,7 @@ public class LoginHandler : ICommandHandler<LoginCommand, AuthResponse>
                 UserId = user.Id,
                 FullName = fullName,
                 Email = user.Email,
+                Role = user.Role.ToString(),
                 Token = accessToken,
                 ExpiresAt = accessExpiresAt,
                 RefreshToken = refreshToken,

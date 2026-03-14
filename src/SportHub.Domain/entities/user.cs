@@ -12,7 +12,7 @@ public class User : AuditEntity, IEntity
     public string LastName { get; set; } = null!;
     public string PasswordHash { get; set; } = null!;
     public string Salt { get; set; } = null!;
-    public UserRole Role { get; set; } = UserRole.User;
+    public UserRole Role { get; set; } = UserRole.Customer;
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
 

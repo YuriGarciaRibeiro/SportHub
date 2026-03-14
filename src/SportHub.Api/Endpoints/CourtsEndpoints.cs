@@ -1,10 +1,13 @@
 using Application.Common.Interfaces;
 using Application.UseCases.Court.CreateCourt;
+using Application.UseCases.Court.DeleteCourt;
 using Application.UseCases.Court.GetAllCourts;
 using Application.UseCases.Court.GetCourtById;
 using Application.UseCases.Court.GetAvailability;
+using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Reservations.CreateReservation;
 using Application.CQRS;
+using Application.Security;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
@@ -46,7 +49,7 @@ public static class CourtsEndpoints
         .Produces<CourtPublicResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
-        // POST /courts — Create a new court (requires auth)
+        // POST /courts — IsManager
         group.MapPost("/", async (
             CourtRequest request,
             ISender sender) =>
@@ -59,7 +62,7 @@ public static class CourtsEndpoints
         })
         .WithName("CreateCourt")
         .WithSummary("Cria uma nova quadra no tenant atual")
-        .RequireAuthorization()
+        .RequireAuthorization(PolicyNames.IsManager)
         .Produces(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
@@ -95,6 +98,32 @@ public static class CourtsEndpoints
         .RequireAuthorization()
         .Produces<CreateReservationResponse>(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // PUT /courts/{id} — IsManager
+        group.MapPut("/{id:guid}", async (Guid id, CourtRequest request, ISender sender) =>
+        {
+            var command = new UpdateCourtCommand { Id = id, Court = request };
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UpdateCourt")
+        .WithSummary("Atualiza os dados de uma quadra")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .Produces<CourtPublicResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // DELETE /courts/{id} — IsManager
+        group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new DeleteCourtCommand(id));
+            return result.ToIResult();
+        })
+        .WithName("DeleteCourt")
+        .WithSummary("Remove uma quadra (soft delete)")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
     }
 }

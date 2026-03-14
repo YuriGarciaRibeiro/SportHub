@@ -21,7 +21,7 @@ public class GlobalRoleHandler : AuthorizationHandler<GlobalRoleRequirement>
     {
         _logger.LogInformation("Checking global role: {RequiredRole}", requirement.RequiredRole);
 
-        // The user's role is stored in the JWT claim as a string (e.g. "Owner", "Manager", "Staff")
+        // The user's role is stored in the JWT claim as a string (e.g. "Owner", "Manager", "Staff", "Customer")
         var roleClaim = context.User.FindFirst(ClaimTypes.Role)?.Value;
 
         if (roleClaim is null)
@@ -30,7 +30,7 @@ public class GlobalRoleHandler : AuthorizationHandler<GlobalRoleRequirement>
             return Task.CompletedTask;
         }
 
-        if (Enum.TryParse<EstablishmentRole>(roleClaim, ignoreCase: true, out var userRole)
+        if (Enum.TryParse<UserRole>(roleClaim, ignoreCase: true, out var userRole)
             && userRole >= requirement.RequiredRole)
         {
             _logger.LogInformation("User has required role {RequiredRole} (has {UserRole})",

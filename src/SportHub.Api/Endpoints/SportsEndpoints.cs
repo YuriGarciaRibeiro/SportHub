@@ -1,6 +1,8 @@
+using Application.Security;
 using Application.UseCases.Sport.CreateSport;
 using Application.UseCases.Sport.DeleteSport;
 using Application.UseCases.Sport.GetAllSports;
+using Application.UseCases.Sport.GetSportById;
 using Application.UseCases.Sport.UpdateSport;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +29,19 @@ public static class SportsEndpoints
         .AllowAnonymous()
         .Produces<List<SportSummaryResponse>>(StatusCodes.Status200OK);
 
-        // POST /api/sports — autenticado
+        // GET /api/sports/{id} — público
+        group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new GetSportByIdQuery(id));
+            return result.ToIResult();
+        })
+        .WithName("GetSportById")
+        .WithSummary("Retorna os detalhes de um esporte pelo ID")
+        .AllowAnonymous()
+        .Produces<SportSummaryResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /api/sports — IsManager
         group.MapPost("/", async (CreateSportCommand command, ISender sender) =>
         {
             var result = await sender.Send(command);
@@ -37,13 +51,13 @@ public static class SportsEndpoints
         })
         .WithName("CreateSport")
         .WithSummary("Cria um novo esporte no tenant atual")
-        .RequireAuthorization()
+        .RequireAuthorization(PolicyNames.IsManager)
         .Produces<CreateSportResponse>(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
-        // PUT /api/sports/{id} — autenticado
+        // PUT /api/sports/{id} — IsManager
         group.MapPut("/{id:guid}", async (Guid id, UpdateSportCommand command, ISender sender) =>
         {
             command.Id = id;
@@ -52,13 +66,13 @@ public static class SportsEndpoints
         })
         .WithName("UpdateSport")
         .WithSummary("Atualiza um esporte existente")
-        .RequireAuthorization()
+        .RequireAuthorization(PolicyNames.IsManager)
         .Produces<UpdateSportResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
-        // DELETE /api/sports/{id} — autenticado
+        // DELETE /api/sports/{id} — IsManager
         group.MapDelete("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var result = await sender.Send(new DeleteSportCommand { Id = id });
@@ -66,7 +80,7 @@ public static class SportsEndpoints
         })
         .WithName("DeleteSport")
         .WithSummary("Remove um esporte")
-        .RequireAuthorization()
+        .RequireAuthorization(PolicyNames.IsManager)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
     }

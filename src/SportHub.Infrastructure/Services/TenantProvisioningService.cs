@@ -115,7 +115,7 @@ public class TenantProvisioningService : ITenantProvisioningService
             LastName = lastNameParts,
             PasswordHash = passwordHash,
             Salt = salt,
-            Role = Domain.Enums.UserRole.Admin,
+            Role = Domain.Enums.UserRole.Owner,
             IsActive = true
         };
 

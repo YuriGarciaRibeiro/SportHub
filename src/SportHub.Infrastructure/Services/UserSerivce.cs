@@ -54,7 +54,7 @@ public class UserService : IUserService
 
         if (user.Role == role)
         {
-            user.Role = UserRole.User;
+            user.Role = UserRole.Customer;
             await _usersRepository.UpdateAsync(user);
         }
 

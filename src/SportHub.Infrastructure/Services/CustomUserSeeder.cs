@@ -38,7 +38,7 @@ public class CustomUserSeeder
             LastName = _adminSettings.LastName,
             PasswordHash = passwordHash,
             Salt = salt,
-            Role = UserRole.Admin,
+            Role = UserRole.Owner,
             IsActive = true,
         };
 

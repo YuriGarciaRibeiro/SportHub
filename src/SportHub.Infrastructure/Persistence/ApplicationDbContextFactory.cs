@@ -84,5 +84,6 @@ public class ApplicationDbContextFactory
     private sealed class FactoryCurrentUserService : ICurrentUserService
     {
         public Guid UserId => Guid.Empty;
+        public Domain.Enums.UserRole? UserRole => null;
     }
 }

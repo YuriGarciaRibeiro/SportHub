@@ -43,7 +43,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
             Email = request.Email,
             PasswordHash = passwordHash,
             Salt = salt,
-            Role = UserRole.User,
+            Role = UserRole.Customer,
             IsActive = true
         };
 
@@ -58,6 +58,7 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
             UserId = user.Id,
             FullName = user.FullName,
             Email = user.Email,
+            Role = user.Role.ToString(),
             Token = token,
             ExpiresAt = expiresAt
         });
