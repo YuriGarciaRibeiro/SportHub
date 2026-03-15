@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -94,5 +95,57 @@ public class ReservationRepository : IReservationRepository
         return await query
             .OrderByDescending(r => r.StartTimeUtc)
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<Reservation>> GetPagedAsync(
+        int page,
+        int pageSize,
+        Guid? courtId = null,
+        Guid? userId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
+    {
+        var query = _dbContext.Reservations
+            .Include(r => r.Court)
+            .Include(r => r.User)
+            .AsQueryable();
+
+        if (courtId.HasValue)
+        {
+            query = query.Where(r => r.CourtId == courtId.Value);
+        }
+
+        if (userId.HasValue)
+        {
+            query = query.Where(r => r.UserId == userId.Value);
+        }
+
+        if (startDate.HasValue)
+        {
+            var startUtc = DateTime.SpecifyKind(startDate.Value.Date, DateTimeKind.Utc);
+            query = query.Where(r => r.StartTimeUtc >= startUtc);
+        }
+
+        if (endDate.HasValue)
+        {
+            var endUtc = DateTime.SpecifyKind(endDate.Value.Date.AddDays(1), DateTimeKind.Utc);
+            query = query.Where(r => r.StartTimeUtc < endUtc);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(r => r.StartTimeUtc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Reservation>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

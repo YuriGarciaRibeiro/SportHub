@@ -1,3 +1,4 @@
+using Application.Common.Models;
 using Application.Security;
 using Application.UseCases.Tenant.ActivateTenant;
 using Application.UseCases.Tenant.GetAllTenants;
@@ -7,6 +8,7 @@ using Application.UseCases.Tenant.SuspendTenant;
 using Application.UseCases.Tenant.UpdateTenant;
 using Application.UseCases.Tenant.GetTenantUsers;
 using Application.UseCases.Tenant.ProvisionTenantOwner;
+using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
@@ -38,14 +40,30 @@ public static class TenantEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
         // GET /api/tenants — Lista todos os tenants
-        group.MapGet("/", async (ISender sender) =>
+        group.MapGet("/", async (
+            [FromQuery] int? page,
+            [FromQuery] int? pageSize,
+            [FromQuery] string? name,
+            [FromQuery] string? slug,
+            [FromQuery] TenantStatus? status,
+            [FromQuery] string? searchTerm,
+            ISender sender) =>
         {
-            var result = await sender.Send(new GetAllTenantsQuery());
+            var filter = new GetTenantsFilter
+            {
+                Page = page is > 0 ? page.Value : 1,
+                PageSize = pageSize is > 0 ? pageSize.Value : 10,
+                Name = name,
+                Slug = slug,
+                Status = status,
+                SearchTerm = searchTerm
+            };
+            var result = await sender.Send(new GetAllTenantsQuery(filter));
             return result.ToIResult();
         })
         .WithName("GetAllTenants")
-        .WithSummary("Lista todos os tenants da plataforma")
-        .Produces<List<GetAllTenantsResponse>>();
+        .WithSummary("Lista todos os tenants da plataforma com filtros e paginação")
+        .Produces<PagedResult<GetAllTenantsResponse>>();
 
         // GET /api/tenants/{id}
         group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>

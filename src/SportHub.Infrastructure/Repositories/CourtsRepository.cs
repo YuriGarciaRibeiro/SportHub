@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -64,5 +65,63 @@ public class CourtsRepository : ICourtsRepository
     {
         _dbSet.AddRange(entities);
         return Task.CompletedTask;
+    }
+
+    public async Task<PagedResult<Court>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? name = null,
+        Guid? sportId = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        string? searchTerm = null)
+    {
+        var query = _dbContext.Courts
+            .Include(c => c.Sports)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            query = query.Where(c => c.Name.Contains(name));
+        }
+
+        if (sportId.HasValue)
+        {
+            query = query.Where(c => c.Sports.Any(s => s.Id == sportId.Value));
+        }
+
+        if (minPrice.HasValue)
+        {
+            query = query.Where(c => c.PricePerHour >= minPrice.Value);
+        }
+
+        if (maxPrice.HasValue)
+        {
+            query = query.Where(c => c.PricePerHour <= maxPrice.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var search = searchTerm.ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(c => c.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Court>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

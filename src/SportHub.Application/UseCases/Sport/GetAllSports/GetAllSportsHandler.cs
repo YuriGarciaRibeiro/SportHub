@@ -1,9 +1,10 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Application.CQRS;
 
 namespace Application.UseCases.Sport.GetAllSports;
 
-public class GetAllSportsHandler : IQueryHandler<GetAllSportsQuery, List<SportSummaryResponse>>
+public class GetAllSportsHandler : IQueryHandler<GetAllSportsQuery, PagedResult<SportSummaryResponse>>
 {
     private readonly ISportsRepository _sportsRepository;
 
@@ -12,14 +13,26 @@ public class GetAllSportsHandler : IQueryHandler<GetAllSportsQuery, List<SportSu
         _sportsRepository = sportsRepository;
     }
 
-    public async Task<Result<List<SportSummaryResponse>>> Handle(GetAllSportsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<SportSummaryResponse>>> Handle(GetAllSportsQuery request, CancellationToken cancellationToken)
     {
-        var sports = await _sportsRepository.GetAllAsync();
+        var filter = request.Filter;
 
-        var response = sports
-            .Select(s => new SportSummaryResponse(s.Id, s.Name, s.Description, s.ImageUrl))
-            .ToList();
+        var pagedSports = await _sportsRepository.GetPagedAsync(
+            page: filter.Page,
+            pageSize: filter.PageSize,
+            name: filter.Name,
+            searchTerm: filter.SearchTerm);
 
-        return Result.Ok(response);
+        var result = new PagedResult<SportSummaryResponse>
+        {
+            Items = pagedSports.Items
+                .Select(s => new SportSummaryResponse(s.Id, s.Name, s.Description, s.ImageUrl))
+                .ToList(),
+            TotalCount = pagedSports.TotalCount,
+            Page = pagedSports.Page,
+            PageSize = pagedSports.PageSize
+        };
+
+        return Result.Ok(result);
     }
 }

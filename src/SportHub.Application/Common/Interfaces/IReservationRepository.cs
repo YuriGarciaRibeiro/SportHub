@@ -1,3 +1,4 @@
+using Application.Common.Models;
 using Domain.Entities;
 
 namespace Application.Common.Interfaces;
@@ -17,4 +18,11 @@ public interface IReservationRepository
     Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc);
     Task<List<Reservation>> GetByUserAsync(Guid userId);
     Task<List<Reservation>> GetByCourtAsync(Guid courtId, DateTime? date = null);
+    Task<PagedResult<Reservation>> GetPagedAsync(
+        int page,
+        int pageSize,
+        Guid? courtId = null,
+        Guid? userId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null);
 }

@@ -1,4 +1,6 @@
+using Application.Common.Models;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Common.Interfaces;
 
@@ -16,4 +18,13 @@ public interface IUsersRepository
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByRefreshTokenAsync(string refreshToken);
     Task<bool> EmailExistsAsync(string email);
+    Task<PagedResult<User>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? email = null,
+        string? firstName = null,
+        string? lastName = null,
+        UserRole? role = null,
+        bool? isActive = null,
+        string? searchTerm = null);
 }

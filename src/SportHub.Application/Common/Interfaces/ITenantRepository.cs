@@ -1,4 +1,6 @@
+using Application.Common.Models;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Common.Interfaces;
 
@@ -11,4 +13,12 @@ public interface ITenantRepository
     Task UpdateAsync(Tenant tenant, CancellationToken ct = default);
     Task<bool> SlugExistsAsync(string slug, CancellationToken ct = default);
     Task<List<Tenant>> GetAllAsync(CancellationToken ct = default);
+    Task<PagedResult<Tenant>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? name = null,
+        string? slug = null,
+        TenantStatus? status = null,
+        string? searchTerm = null,
+        CancellationToken ct = default);
 }

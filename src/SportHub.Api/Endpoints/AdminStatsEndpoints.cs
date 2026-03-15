@@ -19,9 +19,7 @@ public static class AdminStatsEndpoints
         group.MapGet("/", async (ISender sender) =>
         {
             var result = await sender.Send(new GetAdminStatsQuery());
-            return result.IsSuccess
-                ? Results.Ok(result.Value)
-                : result.ToIResult();
+            return result.ToIResult();
         })
         .WithName("GetAdminStats")
         .WithSummary("Retorna KPIs do dashboard para o tenant atual")

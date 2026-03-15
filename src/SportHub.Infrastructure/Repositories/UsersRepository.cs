@@ -1,5 +1,7 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,5 +72,69 @@ public class UsersRepository : IUsersRepository
     public async Task<bool> EmailExistsAsync(string email)
     {
         return await _dbContext.Users.AnyAsync(u => u.Email == email);
+    }
+
+    public async Task<PagedResult<User>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? email = null,
+        string? firstName = null,
+        string? lastName = null,
+        UserRole? role = null,
+        bool? isActive = null,
+        string? searchTerm = null)
+    {
+        var query = _dbSet.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            query = query.Where(u => u.Email.Contains(email));
+        }
+
+        if (!string.IsNullOrWhiteSpace(firstName))
+        {
+            query = query.Where(u => u.FirstName.Contains(firstName));
+        }
+
+        if (!string.IsNullOrWhiteSpace(lastName))
+        {
+            query = query.Where(u => u.LastName.Contains(lastName));
+        }
+
+        if (role.HasValue)
+        {
+            query = query.Where(u => u.Role == role.Value);
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(u => u.IsActive == isActive.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var search = searchTerm.ToLower();
+            query = query.Where(u => 
+                u.Email.ToLower().Contains(search) ||
+                u.FirstName.ToLower().Contains(search) ||
+                u.LastName.ToLower().Contains(search));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(u => u.FirstName)
+            .ThenBy(u => u.LastName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<User>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

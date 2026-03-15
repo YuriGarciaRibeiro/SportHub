@@ -1,3 +1,4 @@
+using Application.Common.Models;
 using Domain.Entities;
 
 namespace Application.Common.Interfaces;
@@ -16,4 +17,9 @@ public interface ISportsRepository
     Task<Sport?> GetByNameAsync(string name);
     Task<IEnumerable<Sport>> GetSportsByIdsAsync(IEnumerable<Guid> ids);
     Task<bool> ExistsByNameAsync(string name);
+    Task<PagedResult<Sport>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? name = null,
+        string? searchTerm = null);
 }

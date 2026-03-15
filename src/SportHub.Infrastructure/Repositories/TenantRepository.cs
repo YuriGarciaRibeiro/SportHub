@@ -1,5 +1,7 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,4 +55,56 @@ public class TenantRepository : ITenantRepository
             .AsNoTracking()
             .OrderBy(t => t.Name)
             .ToListAsync(ct);
+
+    public async Task<PagedResult<Tenant>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? name = null,
+        string? slug = null,
+        TenantStatus? status = null,
+        string? searchTerm = null,
+        CancellationToken ct = default)
+    {
+        var query = _context.Tenants.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            query = query.Where(t => t.Name.Contains(name));
+        }
+
+        if (!string.IsNullOrWhiteSpace(slug))
+        {
+            query = query.Where(t => t.Slug.Contains(slug.ToLowerInvariant()));
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(t => t.Status == status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var search = searchTerm.ToLower();
+            query = query.Where(t => 
+                t.Name.ToLower().Contains(search) ||
+                t.Slug.ToLower().Contains(search) ||
+                (t.OwnerEmail != null && t.OwnerEmail.ToLower().Contains(search)));
+        }
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderBy(t => t.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return new PagedResult<Tenant>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

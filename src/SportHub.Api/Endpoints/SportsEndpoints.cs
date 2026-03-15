@@ -1,3 +1,4 @@
+using Application.Common.Models;
 using Application.Security;
 using Application.UseCases.Sport.CreateSport;
 using Application.UseCases.Sport.DeleteSport;
@@ -19,15 +20,27 @@ public static class SportsEndpoints
             .WithOpenApi();
 
         // GET /api/sports — público
-        group.MapGet("/", async (ISender sender) =>
+        group.MapGet("/", async (
+            [FromQuery] int? page,
+            [FromQuery] int? pageSize,
+            [FromQuery] string? name,
+            [FromQuery] string? searchTerm,
+            ISender sender) =>
         {
-            var result = await sender.Send(new GetAllSportsQuery());
+            var filter = new GetSportsFilter
+            {
+                Page = page is > 0 ? page.Value : 1,
+                PageSize = pageSize is > 0 ? pageSize.Value : 10,
+                Name = name,
+                SearchTerm = searchTerm
+            };
+            var result = await sender.Send(new GetAllSportsQuery(filter));
             return result.ToIResult();
         })
         .WithName("GetAllSports")
-        .WithSummary("Lista todos os esportes disponíveis")
+        .WithSummary("Lista todos os esportes disponíveis com filtros e paginação")
         .AllowAnonymous()
-        .Produces<List<SportSummaryResponse>>(StatusCodes.Status200OK);
+        .Produces<PagedResult<SportSummaryResponse>>(StatusCodes.Status200OK);
 
         // GET /api/sports/{id} — público
         group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>

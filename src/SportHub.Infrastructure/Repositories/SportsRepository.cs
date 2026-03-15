@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -72,5 +73,43 @@ public class SportsRepository : ISportsRepository
         return await _dbContext.Sports
             .Where(s => ids.Contains(s.Id))
             .ToListAsync();
+    }
+
+    public async Task<PagedResult<Sport>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? name = null,
+        string? searchTerm = null)
+    {
+        var query = _dbSet.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            query = query.Where(s => s.Name.Contains(name));
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var search = searchTerm.ToLower();
+            query = query.Where(s => 
+                s.Name.ToLower().Contains(search) ||
+                s.Description.ToLower().Contains(search));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(s => s.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return new PagedResult<Sport>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

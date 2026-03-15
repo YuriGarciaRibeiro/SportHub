@@ -1,4 +1,5 @@
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Application.UseCases.Court.CreateCourt;
 using Application.UseCases.Court.DeleteCourt;
 using Application.UseCases.Court.GetAllCourts;
@@ -22,26 +23,40 @@ public static class CourtsEndpoints
             .WithTags("Courts");
 
         // GET /courts — List all courts for the current tenant (public)
-        group.MapGet("/", async (ISender sender) =>
+        group.MapGet("/", async (
+            [FromQuery] int? page,
+            [FromQuery] int? pageSize,
+            [FromQuery] string? name,
+            [FromQuery] Guid? sportId,
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] string? searchTerm,
+            ISender sender) =>
         {
-            var result = await sender.Send(new GetAllCourtsQuery());
-            return result.IsSuccess
-                ? Results.Ok(result.Value)
-                : result.ToIResult();
+            var filter = new GetCourtsFilter
+            {
+                Page = page is > 0 ? page.Value : 1,
+                PageSize = pageSize is > 0 ? pageSize.Value : 10,
+                Name = name,
+                SportId = sportId,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SearchTerm = searchTerm
+            };
+            var result = await sender.Send(new GetAllCourtsQuery(filter));
+            return result.ToIResult();
         })
         .WithName("GetCourts")
-        .WithSummary("Lista todas as quadras do tenant atual (público)")
+        .WithSummary("Lista todas as quadras do tenant atual com filtros e paginação (público)")
         .AllowAnonymous()
-        .Produces<IEnumerable<CourtPublicResponse>>(StatusCodes.Status200OK);
+        .Produces<PagedResult<CourtPublicResponse>>(StatusCodes.Status200OK);
 
         // GET /courts/{id} — Obter uma quadra específica do tenant
         group.MapGet("/{id:guid}", async (Guid id, ISender sender) =>
         {
             var query = new GetCourtByIdQuery(id);
             var result = await sender.Send(query);
-            return result.IsSuccess
-                ? Results.Ok(result.Value)
-                : result.ToIResult();
+            return result.ToIResult();
         })
         .WithName("GetCourtById")
         .WithSummary("Obtém os detalhes de uma quadra específica no tenant atual")
@@ -57,7 +72,7 @@ public static class CourtsEndpoints
             var command = new CreateCourtCommand(request);
             var result = await sender.Send(command);
             return result.IsSuccess
-                ? Results.StatusCode(StatusCodes.Status201Created)
+                ? Results.Created()
                 : result.ToIResult();
         })
         .WithName("CreateCourt")
