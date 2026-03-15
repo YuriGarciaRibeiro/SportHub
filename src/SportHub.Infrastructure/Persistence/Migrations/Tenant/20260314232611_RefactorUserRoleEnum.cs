@@ -10,62 +10,15 @@ namespace SportHub.Infrastructure.Persistence.Migrations.Tenant
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.EnsureSchema(
-                name: "tenant_placeholder");
-
-            migrationBuilder.RenameTable(
-                name: "Users",
-                newName: "Users",
-                newSchema: "tenant_placeholder");
-
-            migrationBuilder.RenameTable(
-                name: "Sports",
-                newName: "Sports",
-                newSchema: "tenant_placeholder");
-
-            migrationBuilder.RenameTable(
-                name: "Reservations",
-                newName: "Reservations",
-                newSchema: "tenant_placeholder");
-
-            migrationBuilder.RenameTable(
-                name: "CourtSport",
-                newName: "CourtSport",
-                newSchema: "tenant_placeholder");
-
-            migrationBuilder.RenameTable(
-                name: "Courts",
-                newName: "Courts",
-                newSchema: "tenant_placeholder");
+            // No-op: RenameTable operations removed.
+            // The schema is set dynamically per-tenant via HasDefaultSchema in OnModelCreating.
+            // The Role column type (text) is unchanged — no DDL needed.
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameTable(
-                name: "Users",
-                schema: "tenant_placeholder",
-                newName: "Users");
-
-            migrationBuilder.RenameTable(
-                name: "Sports",
-                schema: "tenant_placeholder",
-                newName: "Sports");
-
-            migrationBuilder.RenameTable(
-                name: "Reservations",
-                schema: "tenant_placeholder",
-                newName: "Reservations");
-
-            migrationBuilder.RenameTable(
-                name: "CourtSport",
-                schema: "tenant_placeholder",
-                newName: "CourtSport");
-
-            migrationBuilder.RenameTable(
-                name: "Courts",
-                schema: "tenant_placeholder",
-                newName: "Courts");
+            // No-op: nothing to revert.
         }
     }
 }

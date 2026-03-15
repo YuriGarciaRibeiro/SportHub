@@ -5,12 +5,54 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class ReservationRepository : BaseRepository<Reservation>, IReservationRepository
+public class ReservationRepository : IReservationRepository
 {
     private readonly ApplicationDbContext _dbContext;
-    public ReservationRepository(ApplicationDbContext dbContext) : base(dbContext)
+    private readonly DbSet<Reservation> _dbSet;
+
+    public ReservationRepository(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
+        _dbSet = dbContext.Set<Reservation>();
+    }
+
+    public async Task<Reservation?> GetByIdAsync(Guid id) =>
+        await _dbSet.FindAsync(id);
+
+    public async Task<List<Reservation>> GetAllAsync() =>
+        await _dbSet.ToListAsync();
+
+    public Task AddAsync(Reservation entity)
+    {
+        _dbSet.Add(entity);
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateAsync(Reservation entity)
+    {
+        _dbSet.Update(entity);
+        return Task.CompletedTask;
+    }
+
+    public Task RemoveAsync(Reservation entity)
+    {
+        _dbSet.Remove(entity);
+        return Task.CompletedTask;
+    }
+
+    public async Task<List<Reservation>> GetByIdsAsync(IEnumerable<Guid> ids) =>
+        await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync();
+
+    public async Task<bool> ExistsAsync(Guid id) =>
+        await _dbSet.AnyAsync(e => e.Id == id);
+
+    public IQueryable<Reservation> Query() =>
+        _dbSet.AsQueryable();
+
+    public Task AddManyAsync(IEnumerable<Reservation> entities)
+    {
+        _dbSet.AddRange(entities);
+        return Task.CompletedTask;
     }
 
     public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day)

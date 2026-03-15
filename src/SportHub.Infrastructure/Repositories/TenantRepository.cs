@@ -7,7 +7,7 @@ namespace Infrastructure.Repositories;
 
 /// <summary>
 /// Repositório de tenants. Opera SEMPRE no schema "public" via TenantDbContext.
-/// Não herda BaseRepository porque Tenant não implementa IEntity.
+/// Implementa métodos diretamente porque Tenant não implementa IEntity.
 /// </summary>
 public class TenantRepository : ITenantRepository
 {

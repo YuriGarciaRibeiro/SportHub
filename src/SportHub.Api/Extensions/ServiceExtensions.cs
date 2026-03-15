@@ -118,13 +118,6 @@ public static class ServiceExtensions
 
         var factory = new ApplicationDbContextFactory(connectionString);
 
-        // 1.5. Migrações do schema public (ApplicationDbContext)
-        using (var publicCtx = factory.CreateForPublic())
-        {
-            publicCtx.Database.Migrate();
-            logger.LogInformation("ApplicationDbContext migrado no schema public.");
-        }
-
         // 2. Migrações dos Tenants
         foreach (var tenant in tenantDb.Tenants.ToList())
         {

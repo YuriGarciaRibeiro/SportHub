@@ -2,8 +2,17 @@ using Domain.Entities;
 
 namespace Application.Common.Interfaces;
 
-public interface IReservationRepository : IBaseRepository<Reservation>
+public interface IReservationRepository
 {
+    Task<Reservation?> GetByIdAsync(Guid id);
+    Task<List<Reservation>> GetAllAsync();
+    Task AddAsync(Reservation entity);
+    Task UpdateAsync(Reservation entity);
+    Task RemoveAsync(Reservation entity);
+    Task<List<Reservation>> GetByIdsAsync(IEnumerable<Guid> ids);
+    Task<bool> ExistsAsync(Guid id);
+    IQueryable<Reservation> Query();
+    Task AddManyAsync(IEnumerable<Reservation> entities);
     Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day);
     Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc);
     Task<List<Reservation>> GetByUserAsync(Guid userId);
