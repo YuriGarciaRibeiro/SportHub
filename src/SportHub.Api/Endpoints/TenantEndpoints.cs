@@ -77,14 +77,17 @@ public static class TenantEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
         // GET /api/tenants/{id}/users
-        group.MapGet("/{id:guid}/users", async (Guid id, ISender sender) =>
+        group.MapGet("/{id:guid}/users", async (
+            Guid id,
+            [AsParameters] GetTenantUsersFilter filter,
+            ISender sender) =>
         {
-            var result = await sender.Send(new GetTenantUsersQuery(id));
+            var result = await sender.Send(new GetTenantUsersQuery(id, filter));
             return result.ToIResult();
         })
         .WithName("GetTenantUsers")
-        .WithSummary("Retorna os usuários específicos de um tenant")
-        .Produces<List<GetTenantUsersResponse>>()
+        .WithSummary("Retorna os usuários específicos de um tenant com paginação")
+        .Produces<PagedResult<GetTenantUsersResponse>>()
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
         // POST /api/tenants/{id}/owner

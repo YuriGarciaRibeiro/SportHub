@@ -82,7 +82,8 @@ public class UsersRepository : IUsersRepository
         string? lastName = null,
         UserRole? role = null,
         bool? isActive = null,
-        string? searchTerm = null)
+        string? searchTerm = null,
+        IEnumerable<UserRole>? allowedRoles = null)
     {
         var query = _dbSet.AsQueryable();
 
@@ -104,6 +105,12 @@ public class UsersRepository : IUsersRepository
         if (role.HasValue)
         {
             query = query.Where(u => u.Role == role.Value);
+        }
+
+        if (allowedRoles != null)
+        {
+            var roleList = allowedRoles.ToList();
+            query = query.Where(u => roleList.Contains(u.Role));
         }
 
         if (isActive.HasValue)

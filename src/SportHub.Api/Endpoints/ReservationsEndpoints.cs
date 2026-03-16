@@ -1,3 +1,4 @@
+using Application.Common.Models;
 using Application.Security;
 using Application.UseCases.Reservations.CancelReservation;
 using Application.UseCases.Reservations.GetCourtReservations;
@@ -13,32 +14,34 @@ public static class ReservationsEndpoints
     public static void MapReservationsEndpoints(this IEndpointRouteBuilder app)
     {
         // GET /api/reservations/me — reservas do usuário autenticado
-        app.MapGet("/api/reservations/me", async (ISender sender) =>
+        app.MapGet("/api/reservations/me", async (
+            [AsParameters] GetMyReservationsFilter filter,
+            ISender sender) =>
         {
-            var result = await sender.Send(new GetMyReservationsQuery());
+            var result = await sender.Send(new GetMyReservationsQuery(filter));
             return result.ToIResult();
         })
         .WithName("GetMyReservations")
         .WithSummary("Lista as reservas do usuário autenticado")
         .WithTags("Reservations")
         .RequireAuthorization()
-        .Produces<List<ReservationResponse>>(StatusCodes.Status200OK)
+        .Produces<PagedResult<ReservationResponse>>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
         // GET /api/courts/{courtId}/reservations — reservas de uma quadra (Staff+)
         app.MapGet("/api/courts/{courtId:guid}/reservations", async (
             Guid courtId,
-            DateTime? date,
+            [AsParameters] GetCourtReservationsFilter filter,
             ISender sender) =>
         {
-            var result = await sender.Send(new GetCourtReservationsQuery(courtId, date));
+            var result = await sender.Send(new GetCourtReservationsQuery(courtId, filter));
             return result.ToIResult();
         })
         .WithName("GetCourtReservations")
         .WithSummary("Lista as reservas de uma quadra (Staff/Manager/Owner)")
         .WithTags("Reservations")
         .RequireAuthorization(PolicyNames.IsStaff)
-        .Produces<List<ReservationResponse>>(StatusCodes.Status200OK)
+        .Produces<PagedResult<ReservationResponse>>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
         // DELETE /api/courts/{courtId}/reservations/{id} — cancelar reserva

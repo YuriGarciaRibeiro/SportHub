@@ -111,14 +111,10 @@ public class ReservationRepository : IReservationRepository
             .AsQueryable();
 
         if (courtId.HasValue)
-        {
             query = query.Where(r => r.CourtId == courtId.Value);
-        }
 
         if (userId.HasValue)
-        {
             query = query.Where(r => r.UserId == userId.Value);
-        }
 
         if (startDate.HasValue)
         {
@@ -147,5 +143,52 @@ public class ReservationRepository : IReservationRepository
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    public async Task<List<CustomerReservationMetrics>> GetMetricsByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken ct = default)
+    {
+        var ids = userIds.ToList();
+        return await _dbContext.Reservations
+            .Where(r => ids.Contains(r.UserId))
+            .GroupBy(r => r.UserId)
+            .Select(g => new CustomerReservationMetrics
+            {
+                UserId = g.Key,
+                TotalReservations = g.Count(),
+                TotalSpent = g.Sum(r => (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour),
+                LastReservationAt = g.Max(r => (DateTime?)r.StartTimeUtc)
+            })
+            .ToListAsync(ct);
+    }
+
+    public async Task<CustomerReservationMetrics?> GetMetricsByUserIdAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await _dbContext.Reservations
+            .Where(r => r.UserId == userId)
+            .GroupBy(r => r.UserId)
+            .Select(g => new CustomerReservationMetrics
+            {
+                UserId = g.Key,
+                TotalReservations = g.Count(),
+                TotalSpent = g.Sum(r => (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour),
+                LastReservationAt = g.Max(r => (DateTime?)r.StartTimeUtc)
+            })
+            .FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<List<CourtFrequency>> GetTopCourtsByUserAsync(Guid userId, int top, CancellationToken ct = default)
+    {
+        return await _dbContext.Reservations
+            .Where(r => r.UserId == userId)
+            .GroupBy(r => new { r.CourtId, r.Court.Name })
+            .Select(g => new CourtFrequency
+            {
+                CourtId = g.Key.CourtId,
+                CourtName = g.Key.Name,
+                Count = g.Count()
+            })
+            .OrderByDescending(x => x.Count)
+            .Take(top)
+            .ToListAsync(ct);
     }
 }

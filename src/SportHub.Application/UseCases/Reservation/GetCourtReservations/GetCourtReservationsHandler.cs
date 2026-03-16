@@ -1,11 +1,12 @@
 using Application.Common.Errors;
 using Application.Common.Interfaces;
+using Application.Common.Models;
 using Application.CQRS;
 using Application.UseCases.Reservations.GetMyReservations;
 
 namespace Application.UseCases.Reservations.GetCourtReservations;
 
-public class GetCourtReservationsHandler : IQueryHandler<GetCourtReservationsQuery, List<ReservationResponse>>
+public class GetCourtReservationsHandler : IQueryHandler<GetCourtReservationsQuery, PagedResult<ReservationResponse>>
 {
     private readonly IReservationRepository _reservationRepository;
     private readonly ICourtsRepository _courtsRepository;
@@ -18,23 +19,34 @@ public class GetCourtReservationsHandler : IQueryHandler<GetCourtReservationsQue
         _courtsRepository = courtsRepository;
     }
 
-    public async Task<Result<List<ReservationResponse>>> Handle(GetCourtReservationsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<ReservationResponse>>> Handle(GetCourtReservationsQuery request, CancellationToken cancellationToken)
     {
         var courtExists = await _courtsRepository.ExistsAsync(request.CourtId);
         if (!courtExists)
             return Result.Fail(new NotFound($"Quadra com ID {request.CourtId} não encontrada."));
 
-        var reservations = await _reservationRepository.GetByCourtAsync(request.CourtId, request.Date);
+        var filter = request.Filter;
 
-        var response = reservations
-            .Select(r => new ReservationResponse(
+        var paged = await _reservationRepository.GetPagedAsync(
+            page: filter.Page ?? 1,
+            pageSize: filter.PageSize ?? 10,
+            courtId: request.CourtId,
+            startDate: filter.StartDate,
+            endDate: filter.EndDate);
+
+        var result = new PagedResult<ReservationResponse>
+        {
+            Items = [..paged.Items.Select(r => new ReservationResponse(
                 r.Id,
                 r.CourtId,
                 r.Court.Name,
                 r.StartTimeUtc,
-                r.EndTimeUtc))
-            .ToList();
+                r.EndTimeUtc))],
+            TotalCount = paged.TotalCount,
+            Page = paged.Page,
+            PageSize = paged.PageSize
+        };
 
-        return Result.Ok(response);
+        return Result.Ok(result);
     }
 }

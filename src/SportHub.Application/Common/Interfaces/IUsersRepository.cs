@@ -26,5 +26,6 @@ public interface IUsersRepository
         string? lastName = null,
         UserRole? role = null,
         bool? isActive = null,
-        string? searchTerm = null);
+        string? searchTerm = null,
+        IEnumerable<UserRole>? allowedRoles = null);
 }

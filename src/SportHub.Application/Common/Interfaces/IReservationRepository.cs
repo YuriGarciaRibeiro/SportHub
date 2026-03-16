@@ -25,4 +25,22 @@ public interface IReservationRepository
         Guid? userId = null,
         DateTime? startDate = null,
         DateTime? endDate = null);
+    Task<List<CustomerReservationMetrics>> GetMetricsByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken ct = default);
+    Task<CustomerReservationMetrics?> GetMetricsByUserIdAsync(Guid userId, CancellationToken ct = default);
+    Task<List<CourtFrequency>> GetTopCourtsByUserAsync(Guid userId, int top, CancellationToken ct = default);
+}
+
+public class CustomerReservationMetrics
+{
+    public Guid UserId { get; set; }
+    public int TotalReservations { get; set; }
+    public decimal TotalSpent { get; set; }
+    public DateTime? LastReservationAt { get; set; }
+}
+
+public class CourtFrequency
+{
+    public Guid CourtId { get; set; }
+    public string CourtName { get; set; } = null!;
+    public int Count { get; set; }
 }
