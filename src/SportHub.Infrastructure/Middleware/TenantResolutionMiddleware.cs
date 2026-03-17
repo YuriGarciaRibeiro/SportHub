@@ -29,7 +29,9 @@ public class TenantResolutionMiddleware
         "/health",
         "/scalar",
         "/openapi",
-        "/auth/superadmin"
+        "/auth/superadmin",
+        "/auth/register",
+        "/auth/me"
     ];
 
     /// <summary>
@@ -38,6 +40,7 @@ public class TenantResolutionMiddleware
     private static readonly string[] _optionalTenantPaths =
     [
         "/auth/login",
+        "/auth/refresh",
         "/api/branding"
     ];
 
