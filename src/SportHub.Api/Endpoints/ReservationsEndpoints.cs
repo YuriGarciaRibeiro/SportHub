@@ -1,6 +1,7 @@
 using Application.Common.Models;
 using Application.Security;
 using Application.UseCases.Reservations.CancelReservation;
+using Application.UseCases.Reservations.GetAllReservations;
 using Application.UseCases.Reservations.GetCourtReservations;
 using Application.UseCases.Reservations.GetMyReservations;
 using MediatR;
@@ -43,6 +44,21 @@ public static class ReservationsEndpoints
         .RequireAuthorization(PolicyNames.IsStaff)
         .Produces<PagedResult<ReservationResponse>>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // GET /api/reservations — todas as reservas (Staff+), com filtro opcional de data
+        app.MapGet("/api/reservations", async (
+            [AsParameters] GetAllReservationsFilter filter,
+            ISender sender) =>
+        {
+            var result = await sender.Send(new GetAllReservationsQuery(filter));
+            return result.ToIResult();
+        })
+        .WithName("GetAllReservations")
+        .WithSummary("Lista todas as reservas do tenant (Staff/Manager/Owner)")
+        .WithTags("Reservations")
+        .RequireAuthorization(PolicyNames.IsStaff)
+        .Produces<PagedResult<ReservationResponse>>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
 
         // DELETE /api/courts/{courtId}/reservations/{id} — cancelar reserva
         app.MapDelete("/api/courts/{courtId:guid}/reservations/{id:guid}", async (
