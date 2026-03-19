@@ -5,6 +5,7 @@ using Application.UseCases.Sport.DeleteSport;
 using Application.UseCases.Sport.GetAllSports;
 using Application.UseCases.Sport.GetSportById;
 using Application.UseCases.Sport.UpdateSport;
+using Application.UseCases.Sport.UploadSportImage;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
@@ -96,5 +97,35 @@ public static class SportsEndpoints
         .RequireAuthorization(PolicyNames.IsManager)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /api/sports/{id}/upload-image — IsManager
+        group.MapPost("/{id:guid}/upload-image", async (
+            Guid id,
+            IFormFile file,
+            ISender sender) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.UnprocessableEntity(new { detail = "Nenhum arquivo enviado." });
+
+            await using var stream = file.OpenReadStream();
+
+            var command = new UploadSportImageCommand(
+                id,
+                stream,
+                file.FileName,
+                file.ContentType,
+                file.Length);
+
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UploadSportImage")
+        .WithSummary("Faz upload de imagem para o esporte e atualiza ImageUrl")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .DisableAntiforgery()
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces<UploadSportImageResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
     }
 }

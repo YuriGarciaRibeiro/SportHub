@@ -1,5 +1,6 @@
 using Application.Security;
 using Application.UseCases.Tenant.UpdateSettings;
+using Application.UseCases.Tenant.UploadTenantLogo;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Extensions.ResultExtensions;
@@ -23,6 +24,35 @@ public static class SettingsEndpoints
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /api/settings/upload-logo — IsOwner
+        app.MapPost("/api/settings/upload-logo", async (
+            IFormFile file,
+            ISender sender) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.UnprocessableEntity(new { detail = "Nenhum arquivo enviado." });
+
+            await using var stream = file.OpenReadStream();
+
+            var command = new UploadTenantLogoCommand(
+                stream,
+                file.FileName,
+                file.ContentType,
+                file.Length);
+
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UploadTenantLogo")
+        .WithSummary("Faz upload do logo do tenant e atualiza LogoUrl")
+        .RequireAuthorization(PolicyNames.IsOwner)
+        .DisableAntiforgery()
+        .Accepts<IFormFile>("multipart/form-data")
+        .WithTags("Settings")
+        .Produces<UploadTenantLogoResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
         return app;
     }
