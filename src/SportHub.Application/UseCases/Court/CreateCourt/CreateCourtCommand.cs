@@ -2,7 +2,7 @@ using Application.CQRS;
 
 namespace Application.UseCases.Court.CreateCourt;
 
-public class CreateCourtCommand : ICommand
+public class CreateCourtCommand : ICommand<Guid>
 {
     public CreateCourtCommand(CourtRequest court)
     {

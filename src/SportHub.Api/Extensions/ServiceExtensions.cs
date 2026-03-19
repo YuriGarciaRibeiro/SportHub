@@ -53,6 +53,9 @@ public static class ServiceExtensions
         builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
         builder.Services.AddScoped<ITenantUsersQueryService, TenantUsersQueryService>();
 
+        // Storage (MinIO dev / AWS S3 prod)
+        builder.Services.AddStorage(builder.Configuration);
+
         return builder;
     }
 

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Court.CreateCourt;
 
-public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
+public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, Guid>
 {
     private readonly ICourtsRepository _courtsRepository;
     private readonly ISportsRepository _sportsRepository;
@@ -23,7 +23,7 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> Handle(CreateCourtCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateCourtCommand request, CancellationToken cancellationToken)
     {
         var sports = await _sportsRepository.GetSportsByIdsAsync(request.Court.Sports);
 
@@ -45,6 +45,6 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand>
 
         await _courtsRepository.AddAsync(court);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result.Ok();
+        return Result.Ok(court.Id);
     }
 }

@@ -6,6 +6,7 @@ using Application.UseCases.Court.GetAllCourts;
 using Application.UseCases.Court.GetCourtById;
 using Application.UseCases.Court.GetAvailability;
 using Application.UseCases.Court.UpdateCourt;
+using Application.UseCases.Court.UploadCourtImage;
 using Application.UseCases.Reservations.CreateReservation;
 using Application.CQRS;
 using Application.Security;
@@ -72,13 +73,13 @@ public static class CourtsEndpoints
             var command = new CreateCourtCommand(request);
             var result = await sender.Send(command);
             return result.IsSuccess
-                ? Results.Created()
+                ? Results.Created($"/api/courts/{result.Value}", new { id = result.Value })
                 : result.ToIResult();
         })
         .WithName("CreateCourt")
         .WithSummary("Cria uma nova quadra no tenant atual")
         .RequireAuthorization(PolicyNames.IsManager)
-        .Produces(StatusCodes.Status201Created)
+        .Produces<object>(StatusCodes.Status201Created)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
@@ -140,5 +141,35 @@ public static class CourtsEndpoints
         .RequireAuthorization(PolicyNames.IsManager)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /courts/{courtId}/upload-image — IsManager
+        group.MapPost("/{courtId:guid}/upload-image", async (
+            Guid courtId,
+            IFormFile file,
+            ISender sender) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.UnprocessableEntity(new { detail = "Nenhum arquivo enviado." });
+
+            await using var stream = file.OpenReadStream();
+
+            var command = new UploadCourtImageCommand(
+                courtId,
+                stream,
+                file.FileName,
+                file.ContentType,
+                file.Length);
+
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UploadCourtImage")
+        .WithSummary("Faz upload de imagem para a quadra e atualiza ImageUrl")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .DisableAntiforgery()
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces<UploadCourtImageResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
     }
 }
