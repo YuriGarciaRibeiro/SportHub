@@ -108,6 +108,7 @@ public class ReservationRepository : IReservationRepository
         var query = _dbContext.Reservations
             .Include(r => r.Court)
             .Include(r => r.User)
+            .Include(r => r.CreatedByUser)
             .AsQueryable();
 
         if (courtId.HasValue)
@@ -190,5 +191,164 @@ public class ReservationRepository : IReservationRepository
             .OrderByDescending(x => x.Count)
             .Take(top)
             .ToListAsync(ct);
+    }
+
+    public async Task<int> CountByDayAsync(DateTime day)
+    {
+        var startUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
+        var endUtc = startUtc.AddDays(1);
+        return await _dbContext.Reservations
+            .Where(r => r.StartTimeUtc >= startUtc && r.StartTimeUtc < endUtc)
+            .CountAsync();
+    }
+
+    public async Task<decimal> GetTotalRevenueByDayAsync(DateTime day)
+    {
+        var startUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
+        var endUtc = startUtc.AddDays(1);
+        var reservations = await _dbContext.Reservations
+            .Include(r => r.Court)
+            .Where(r => r.StartTimeUtc >= startUtc && r.StartTimeUtc < endUtc)
+            .ToListAsync();
+
+        return reservations.Sum(r =>
+            (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour);
+    }
+
+    public async Task<List<DailyRevenue>> GetDailyRevenueAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    {
+        var reservations = await _dbContext.Reservations
+            .Include(r => r.Court)
+            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Select(r => new
+            {
+                Date = r.StartTimeUtc.Date,
+                Revenue = (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour
+            })
+            .ToListAsync(ct);
+
+        return reservations
+            .GroupBy(r => r.Date)
+            .Select(g => new DailyRevenue
+            {
+                Date = DateOnly.FromDateTime(g.Key),
+                Revenue = g.Sum(r => r.Revenue)
+            })
+            .OrderBy(d => d.Date)
+            .ToList();
+    }
+
+    public async Task<int> CountByPeriodAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    {
+        return await _dbContext.Reservations
+            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .CountAsync(ct);
+    }
+
+    public async Task<List<CourtRevenue>> GetRevenueByCourtAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    {
+        var reservations = await _dbContext.Reservations
+            .Include(r => r.Court)
+            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Select(r => new
+            {
+                r.CourtId,
+                r.Court.Name,
+                Revenue = (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour
+            })
+            .ToListAsync(ct);
+
+        return reservations
+            .GroupBy(r => new { r.CourtId, r.Name })
+            .Select(g => new CourtRevenue
+            {
+                CourtId = g.Key.CourtId,
+                CourtName = g.Key.Name,
+                Revenue = g.Sum(r => r.Revenue),
+                Reservations = g.Count()
+            })
+            .OrderByDescending(c => c.Revenue)
+            .ToList();
+    }
+
+    public async Task<CancellationStats> GetCancellationStatsAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
+    {
+        var cancelled = await _dbContext.Reservations
+            .IgnoreQueryFilters()
+            .Include(r => r.Court)
+            .Where(r => r.IsDeleted && r.DeletedAt >= fromUtc && r.DeletedAt < toUtc)
+            .Select(r => new
+            {
+                Revenue = (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour
+            })
+            .ToListAsync(ct);
+
+        return new CancellationStats
+        {
+            Count = cancelled.Count,
+            Revenue = cancelled.Sum(r => r.Revenue)
+        };
+    }
+
+    public async Task<List<TopCustomer>> GetTopCustomersAsync(DateTime fromUtc, DateTime toUtc, int top, CancellationToken ct = default)
+    {
+        var reservations = await _dbContext.Reservations
+            .Include(r => r.Court)
+            .Include(r => r.User)
+            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Select(r => new
+            {
+                r.UserId,
+                r.User.FirstName,
+                r.User.LastName,
+                UserEmail = r.User.Email,
+                Revenue = (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour
+            })
+            .ToListAsync(ct);
+
+        return reservations
+            .GroupBy(r => new { r.UserId, r.FirstName, r.LastName, r.UserEmail })
+            .Select(g => new TopCustomer
+            {
+                UserId = g.Key.UserId,
+                Name = $"{g.Key.FirstName} {g.Key.LastName}".Trim(),
+                Email = g.Key.UserEmail ?? "—",
+                TotalSpent = g.Sum(r => r.Revenue),
+                Reservations = g.Count()
+            })
+            .OrderByDescending(c => c.TotalSpent)
+            .Take(top)
+            .ToList();
+    }
+
+    public async Task<List<CourtOccupancy>> GetCourtOccupancyTodayAsync(DateTime todayStartUtc, CancellationToken ct = default)
+    {
+        var todayEndUtc = todayStartUtc.AddDays(1);
+
+        var courts = await _dbContext.Courts.ToListAsync(ct);
+
+        var bookedSlotsByCourt = await _dbContext.Reservations
+            .Where(r => r.StartTimeUtc >= todayStartUtc && r.StartTimeUtc < todayEndUtc)
+            .GroupBy(r => r.CourtId)
+            .Select(g => new { CourtId = g.Key, BookedSlots = g.Count() })
+            .ToListAsync(ct);
+
+        var bookedMap = bookedSlotsByCourt.ToDictionary(x => x.CourtId, x => x.BookedSlots);
+
+        return courts.Select(c =>
+        {
+            var openingMinutes = c.OpeningTime.ToTimeSpan().TotalMinutes;
+            var closingMinutes = c.ClosingTime.ToTimeSpan().TotalMinutes;
+            var totalMinutes = closingMinutes - openingMinutes;
+            var totalSlots = (int)(totalMinutes / c.SlotDurationMinutes);
+
+            return new CourtOccupancy
+            {
+                CourtId = c.Id,
+                CourtName = c.Name,
+                TotalSlots = totalSlots > 0 ? totalSlots : 1,
+                BookedSlots = bookedMap.TryGetValue(c.Id, out var booked) ? booked : 0
+            };
+        }).ToList();
     }
 }

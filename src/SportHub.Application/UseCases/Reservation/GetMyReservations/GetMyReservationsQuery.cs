@@ -18,5 +18,10 @@ public record ReservationResponse(
     Guid CourtId,
     string CourtName,
     DateTime StartTimeUtc,
-    DateTime EndTimeUtc
+    DateTime EndTimeUtc,
+    string? UserName,
+    string? UserEmail,
+    string? CreatedByName,
+    string? CreatedByEmail,
+    string? CreatedByRole
 );

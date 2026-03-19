@@ -41,7 +41,12 @@ public class GetCourtReservationsHandler : IQueryHandler<GetCourtReservationsQue
                 r.CourtId,
                 r.Court.Name,
                 r.StartTimeUtc,
-                r.EndTimeUtc))],
+                r.EndTimeUtc,
+                r.User.FullName,
+                r.User.Email,
+                r.CreatedByUser?.FullName,
+                r.CreatedByUser?.Email,
+                r.CreatedByUser?.Role.ToString()))],
             TotalCount = paged.TotalCount,
             Page = paged.Page,
             PageSize = paged.PageSize

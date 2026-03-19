@@ -1,5 +1,6 @@
 using Api.Document;
 using Api.Extensions;
+using Infrastructure.Hubs;
 using Infrastructure.Middleware;
 using Infrastructure.Services;
 using Scalar.AspNetCore;
@@ -47,6 +48,7 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints();
+app.MapHub<ReservationHub>("/hubs/reservations");
 
 // Seed do SuperAdmin (schema public)
 using (var scope = app.Services.CreateScope())

@@ -12,4 +12,5 @@ public class ReservationRequest
 {
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
+    public Guid? TargetUserId { get; set; }
 }

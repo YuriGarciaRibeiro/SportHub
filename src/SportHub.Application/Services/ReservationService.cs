@@ -15,30 +15,28 @@ public class ReservationService : IReservationService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result<List<DateTime>>> GetAvailableSlotsAsync(Guid courtId, DateTime day)
+    private static readonly TimeZoneInfo BrazilTz = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
+
+    public async Task<Result<List<(DateTime SlotUtc, bool IsAvailable)>>> GetSlotsAsync(Guid courtId, DateTime day)
     {
         var court = await _courtRepository.GetByIdAsync(courtId);
         if (court == null) return Result.Fail(new NotFound("Court not found"));
 
-        var startHour = new TimeSpan(court.OpeningTime.Hour, court.OpeningTime.Minute, court.OpeningTime.Second);
-        var endHour = new TimeSpan(court.ClosingTime.Hour, court.ClosingTime.Minute, court.ClosingTime.Second);
+        var localDate = day.Date;
+        var openingLocal = DateTime.SpecifyKind(localDate + court.OpeningTime.ToTimeSpan(), DateTimeKind.Unspecified);
+        var closingLocal = DateTime.SpecifyKind(localDate + court.ClosingTime.ToTimeSpan(), DateTimeKind.Unspecified);
+        var openingUtc = TimeZoneInfo.ConvertTimeToUtc(openingLocal, BrazilTz);
+        var closingUtc = TimeZoneInfo.ConvertTimeToUtc(closingLocal, BrazilTz);
 
         var slotDuration = TimeSpan.FromMinutes(court.SlotDurationMinutes);
+        var existingReservations = await _reservationRepository.GetByCourtAndDayAsync(courtId, day);
 
-        var existingReservations = await _reservationRepository
-            .GetByCourtAndDayAsync(courtId, day);
-
-        var slots = new List<DateTime>();
-        for (var time = startHour; time + slotDuration <= endHour; time += slotDuration)
+        var slots = new List<(DateTime, bool)>();
+        for (var slotUtc = openingUtc; slotUtc + slotDuration <= closingUtc; slotUtc += slotDuration)
         {
-            var slotStart = day.Date + time;
-            var slotEnd = slotStart + slotDuration;
-
-            bool conflict = existingReservations.Any(r =>
-                slotStart < r.EndTimeUtc && slotEnd > r.StartTimeUtc);
-
-            if (!conflict)
-                slots.Add(slotStart);
+            var slotEnd = slotUtc + slotDuration;
+            var isAvailable = !existingReservations.Any(r => slotUtc < r.EndTimeUtc && slotEnd > r.StartTimeUtc);
+            slots.Add((slotUtc, isAvailable));
         }
 
         return slots;
@@ -47,8 +45,11 @@ public class ReservationService : IReservationService
 
     public async Task<Result<Guid>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc)
     {
-        var opening = DateTime.SpecifyKind(startUtc.Date + court.OpeningTime.ToTimeSpan(), DateTimeKind.Utc);
-        var closing = DateTime.SpecifyKind(startUtc.Date + court.ClosingTime.ToTimeSpan(), DateTimeKind.Utc);
+        var localDate = TimeZoneInfo.ConvertTimeFromUtc(startUtc, BrazilTz).Date;
+        var openingLocal = DateTime.SpecifyKind(localDate + court.OpeningTime.ToTimeSpan(), DateTimeKind.Unspecified);
+        var closingLocal = DateTime.SpecifyKind(localDate + court.ClosingTime.ToTimeSpan(), DateTimeKind.Unspecified);
+        var opening = TimeZoneInfo.ConvertTimeToUtc(openingLocal, BrazilTz);
+        var closing = TimeZoneInfo.ConvertTimeToUtc(closingLocal, BrazilTz);
 
         if (startUtc < opening || endUtc > closing)
             return Result.Fail("Reservation is outside of court operating hours");

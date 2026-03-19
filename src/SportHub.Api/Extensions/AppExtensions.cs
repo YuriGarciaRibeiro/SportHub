@@ -16,6 +16,7 @@ public static class AppExtensions
         app.MapCourtsEndpoints();
         app.MapReservationsEndpoints();
         app.MapAdminStatsEndpoints();
+        app.MapFinanceiroEndpoints();
         app.MapMembersEndpoints();
         app.MapCustomersEndpoints();
         app.MapUsersEndpoints();

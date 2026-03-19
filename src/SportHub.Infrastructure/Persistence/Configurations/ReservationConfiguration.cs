@@ -13,5 +13,10 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
         builder.HasIndex(r => r.CourtId);
         builder.HasIndex(r => r.UserId);
         builder.HasIndex(r => new { r.CourtId, r.StartTimeUtc });
+
+        builder.HasOne(r => r.CreatedByUser)
+               .WithMany()
+               .HasForeignKey("CreatedBy")
+               .OnDelete(DeleteBehavior.Restrict);
     }
 }

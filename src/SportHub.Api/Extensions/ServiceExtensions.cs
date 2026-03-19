@@ -38,6 +38,8 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IPasswordService, PasswordService>();
         builder.Services.AddScoped<IReservationService, ReservationService>();
         builder.Services.AddScoped<ICacheService, CacheService>();
+        builder.Services.AddScoped<IRealtimeNotificationService, RealtimeNotificationService>();
+        builder.Services.AddSignalR();
 
         // Unit of Work
         builder.Services.AddScoped<IUnitOfWork>(sp =>

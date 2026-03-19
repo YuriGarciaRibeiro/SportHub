@@ -14,4 +14,5 @@ public class Reservation : AuditEntity, IEntity
 
     public Court Court { get; set; } = null!;
     public User User { get; set; } = null!;
+    public User CreatedByUser { get; set; } = null!;
 }

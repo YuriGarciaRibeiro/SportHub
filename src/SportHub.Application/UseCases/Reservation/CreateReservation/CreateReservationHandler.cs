@@ -13,21 +13,33 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
     private readonly ICurrentUserService _currentUserService;
     private readonly ICourtsRepository _courtsRepository;
     private readonly ICacheService _cacheService;
+    private readonly IRealtimeNotificationService _notificationService;
+    private readonly ITenantContext _tenantContext;
     private readonly ILogger<CreateReservationHandler> _logger;
 
-    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtsRepository courtsRepository, ICacheService cacheService, ILogger<CreateReservationHandler> logger)
+    public CreateReservationHandler(IReservationService reservationService, ICurrentUserService currentUserService, ICourtsRepository courtsRepository, ICacheService cacheService, IRealtimeNotificationService notificationService, ITenantContext tenantContext, ILogger<CreateReservationHandler> logger)
     {
         _logger = logger;
         _courtsRepository = courtsRepository;
         _currentUserService = currentUserService;
         _reservationService = reservationService;
         _cacheService = cacheService;
+        _notificationService = notificationService;
+        _tenantContext = tenantContext;
     }
 
     public async Task<Result<CreateReservationResponse>> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
     {
-        var userId = _currentUserService.UserId;
-        
+        var currentUserId = _currentUserService.UserId;
+
+        // If a TargetUserId is provided (staff booking on behalf of a customer), use it as the reservation owner.
+        // Only staff members (role != null) are allowed to specify a different target user.
+        var targetUserId = request.Reservation.TargetUserId;
+        if (targetUserId.HasValue && _currentUserService.UserRole is null or Domain.Enums.UserRole.Customer)
+            return Result.Fail(new Forbidden("Only staff members can create reservations on behalf of others."));
+
+        var userId = targetUserId ?? currentUserId;
+
         var court = await _courtsRepository.GetByIdAsync(request.CourtId);
         if (court == null)
         {
@@ -47,6 +59,15 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
 
         var cacheKey = _cacheService.GenerateCacheKey(CacheKeyPrefix.GetAvailability, request.CourtId, request.Reservation.StartTime.ToString("yyyy-MM-dd"));
         await _cacheService.RemoveAsync(cacheKey, cancellationToken);
+
+        var payload = new ReservationCreatedPayload(
+            ReservationId: reservationResult.Value,
+            CourtId: request.CourtId,
+            UserId: userId,
+            StartTime: request.Reservation.StartTime.ToUniversalTime(),
+            EndTime: request.Reservation.EndTime.ToUniversalTime()
+        );
+        await _notificationService.NotifyReservationCreatedAsync(_tenantContext.Schema, payload, cancellationToken);
 
         return Result.Ok(new CreateReservationResponse
         {

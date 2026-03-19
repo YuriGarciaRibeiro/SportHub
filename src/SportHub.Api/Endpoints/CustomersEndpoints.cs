@@ -14,7 +14,7 @@ public static class CustomersEndpoints
     {
         var group = app.MapGroup("/api/customers")
             .WithTags("Customers")
-            .RequireAuthorization(PolicyNames.IsOwner);
+            .RequireAuthorization(PolicyNames.IsStaff);
 
         // GET /api/customers — Lista clientes com métricas agregadas
         group.MapGet("/", async (

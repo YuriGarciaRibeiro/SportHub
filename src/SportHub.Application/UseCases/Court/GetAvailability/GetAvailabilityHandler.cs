@@ -26,16 +26,15 @@ public class GetAvailabilityHandler : IQueryHandler<GetAvailabilityQuery, GetAva
             return Result.Ok(cachedResponse);
         }
 
-        var availableSlots = await reservationService.GetAvailableSlotsAsync(request.CourtId, request.Date);
-        if (availableSlots.IsFailed)
-        {
-            return Result.Fail(availableSlots.Errors);
-        }
+        var slotsResult = await reservationService.GetSlotsAsync(request.CourtId, request.Date);
+        if (slotsResult.IsFailed)
+            return Result.Fail(slotsResult.Errors);
 
         var response = new GetAvailabilityResponse
         {
             Date = request.Date,
-            AvailableSlotsUtc = availableSlots.Value
+            AvailableSlotsUtc = slotsResult.Value.Where(s => s.IsAvailable).Select(s => s.SlotUtc).ToList(),
+            SlotsUtc = slotsResult.Value.Select(s => new SlotInfo { StartUtc = s.SlotUtc, IsAvailable = s.IsAvailable }).ToList(),
         };
 
         await cacheService.SetAsync(cacheKey, response, TimeSpan.FromMinutes(30), cancellationToken);
