@@ -20,7 +20,14 @@ public class Tenant
 
     // Branding
     [JsonInclude] public string? LogoUrl { get; private set; }
+    [JsonInclude] public string? CoverImageUrl { get; private set; }
     [JsonInclude] public string? PrimaryColor { get; private set; }
+    [JsonInclude] public string? Tagline { get; private set; }
+
+    // Redes sociais globais da marca
+    [JsonInclude] public string? InstagramUrl { get; private set; }
+    [JsonInclude] public string? FacebookUrl { get; private set; }
+    [JsonInclude] public string? WhatsappNumber { get; private set; }
 
     // Futuro: domínio customizado do cliente
     [JsonInclude] public string? CustomDomain { get; private set; }
@@ -56,11 +63,24 @@ public class Tenant
         PrimaryColor = primaryColor;
     }
 
-    public void UpdateSettings(string name, string? logoUrl, string? primaryColor)
+    public void UpdateCoverImage(string? coverImageUrl)
+    {
+        CoverImageUrl = coverImageUrl;
+    }
+
+    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline)
     {
         Name = name;
         LogoUrl = logoUrl;
         PrimaryColor = primaryColor;
+        Tagline = tagline;
+    }
+
+    public void UpdateSocialMedia(string? instagramUrl, string? facebookUrl, string? whatsappNumber)
+    {
+        InstagramUrl = instagramUrl;
+        FacebookUrl = facebookUrl;
+        WhatsappNumber = whatsappNumber;
     }
 
     public void Suspend() => Status = TenantStatus.Suspended;
@@ -74,10 +94,4 @@ public class Tenant
         OwnerEmail = email;
     }
 
-    /// <summary>
-    /// Deriva o nome do schema PostgreSQL a partir do slug.
-    /// Ex: "academia-silva" → "tenant_academia_silva"
-    /// </summary>
-    public string GetSchemaName() =>
-        string.IsNullOrWhiteSpace(Slug) ? "public" : $"tenant_{Slug.Replace("-", "_")}";
 }

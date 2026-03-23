@@ -67,7 +67,7 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
             StartTime: request.Reservation.StartTime.ToUniversalTime(),
             EndTime: request.Reservation.EndTime.ToUniversalTime()
         );
-        await _notificationService.NotifyReservationCreatedAsync(_tenantContext.Schema, payload, cancellationToken);
+        await _notificationService.NotifyReservationCreatedAsync(_tenantContext.TenantSlug, payload, cancellationToken);
 
         return Result.Ok(new CreateReservationResponse
         {

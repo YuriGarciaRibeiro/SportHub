@@ -2,7 +2,7 @@ namespace Application.Common.Interfaces;
 
 public interface IRealtimeNotificationService
 {
-    Task NotifyReservationCreatedAsync(string tenantSchema, ReservationCreatedPayload payload, CancellationToken cancellationToken = default);
+    Task NotifyReservationCreatedAsync(string tenantSlug, ReservationCreatedPayload payload, CancellationToken cancellationToken = default);
 }
 
 public record ReservationCreatedPayload(

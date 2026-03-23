@@ -78,6 +78,6 @@ public class ReservationHub : Hub
                 await cache.SetAsync(cacheKey, tenant, TimeSpan.FromHours(1));
         }
 
-        return tenant?.GetSchemaName();
+        return tenant?.Slug;
     }
 }

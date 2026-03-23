@@ -10,18 +10,26 @@ public class ReservationRepository : IReservationRepository
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly DbSet<Reservation> _dbSet;
+    private readonly ITenantContext _tenantContext;
 
-    public ReservationRepository(ApplicationDbContext dbContext)
+    public ReservationRepository(ApplicationDbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Reservation>();
+        _tenantContext = tenantContext;
     }
 
-    public async Task<Reservation?> GetByIdAsync(Guid id) =>
-        await _dbSet.FindAsync(id);
+    public async Task<Reservation?> GetByIdAsync(Guid id)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.FirstOrDefaultAsync(r => r.Id == id && r.TenantId == tenantId);
+    }
 
-    public async Task<List<Reservation>> GetAllAsync() =>
-        await _dbSet.ToListAsync();
+    public async Task<List<Reservation>> GetAllAsync()
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.Where(r => r.TenantId == tenantId).ToListAsync();
+    }
 
     public Task AddAsync(Reservation entity)
     {
@@ -41,14 +49,23 @@ public class ReservationRepository : IReservationRepository
         return Task.CompletedTask;
     }
 
-    public async Task<List<Reservation>> GetByIdsAsync(IEnumerable<Guid> ids) =>
-        await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync();
+    public async Task<List<Reservation>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.Where(e => ids.Contains(e.Id) && e.TenantId == tenantId).ToListAsync();
+    }
 
-    public async Task<bool> ExistsAsync(Guid id) =>
-        await _dbSet.AnyAsync(e => e.Id == id);
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.AnyAsync(e => e.Id == id && e.TenantId == tenantId);
+    }
 
-    public IQueryable<Reservation> Query() =>
-        _dbSet.AsQueryable();
+    public IQueryable<Reservation> Query()
+    {
+        var tenantId = _tenantContext.TenantId;
+        return _dbSet.Where(r => r.TenantId == tenantId);
+    }
 
     public Task AddManyAsync(IEnumerable<Reservation> entities)
     {
@@ -58,33 +75,37 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day)
     {
+        var tenantId = _tenantContext.TenantId;
         var dateUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
 
         return await _dbContext.Reservations
-            .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
+            .Where(r => r.TenantId == tenantId && r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
             .ToListAsync();
     }
 
     public async Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Reservations
-            .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
+            .AnyAsync(r => r.TenantId == tenantId && r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
     }
 
     public async Task<List<Reservation>> GetByUserAsync(Guid userId)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Reservations
             .Include(r => r.Court)
-            .Where(r => r.UserId == userId)
+            .Where(r => r.TenantId == tenantId && r.UserId == userId)
             .OrderByDescending(r => r.StartTimeUtc)
             .ToListAsync();
     }
 
     public async Task<List<Reservation>> GetByCourtAsync(Guid courtId, DateTime? date = null)
     {
+        var tenantId = _tenantContext.TenantId;
         var query = _dbContext.Reservations
             .Include(r => r.Court)
-            .Where(r => r.CourtId == courtId);
+            .Where(r => r.TenantId == tenantId && r.CourtId == courtId);
 
         if (date.HasValue)
         {
@@ -105,10 +126,12 @@ public class ReservationRepository : IReservationRepository
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
+        var tenantId = _tenantContext.TenantId;
         var query = _dbContext.Reservations
             .Include(r => r.Court)
             .Include(r => r.User)
             .Include(r => r.CreatedByUser)
+            .Where(r => r.TenantId == tenantId)
             .AsQueryable();
 
         if (courtId.HasValue)
@@ -148,9 +171,10 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<List<CustomerReservationMetrics>> GetMetricsByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         var ids = userIds.ToList();
         return await _dbContext.Reservations
-            .Where(r => ids.Contains(r.UserId))
+            .Where(r => r.TenantId == tenantId && ids.Contains(r.UserId))
             .GroupBy(r => r.UserId)
             .Select(g => new CustomerReservationMetrics
             {
@@ -164,8 +188,9 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<CustomerReservationMetrics?> GetMetricsByUserIdAsync(Guid userId, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Reservations
-            .Where(r => r.UserId == userId)
+            .Where(r => r.TenantId == tenantId && r.UserId == userId)
             .GroupBy(r => r.UserId)
             .Select(g => new CustomerReservationMetrics
             {
@@ -179,8 +204,9 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<List<CourtFrequency>> GetTopCourtsByUserAsync(Guid userId, int top, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Reservations
-            .Where(r => r.UserId == userId)
+            .Where(r => r.TenantId == tenantId && r.UserId == userId)
             .GroupBy(r => new { r.CourtId, r.Court.Name })
             .Select(g => new CourtFrequency
             {
@@ -195,20 +221,22 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<int> CountByDayAsync(DateTime day)
     {
+        var tenantId = _tenantContext.TenantId;
         var startUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
         var endUtc = startUtc.AddDays(1);
         return await _dbContext.Reservations
-            .Where(r => r.StartTimeUtc >= startUtc && r.StartTimeUtc < endUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= startUtc && r.StartTimeUtc < endUtc)
             .CountAsync();
     }
 
     public async Task<decimal> GetTotalRevenueByDayAsync(DateTime day)
     {
+        var tenantId = _tenantContext.TenantId;
         var startUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
         var endUtc = startUtc.AddDays(1);
         var reservations = await _dbContext.Reservations
             .Include(r => r.Court)
-            .Where(r => r.StartTimeUtc >= startUtc && r.StartTimeUtc < endUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= startUtc && r.StartTimeUtc < endUtc)
             .ToListAsync();
 
         return reservations.Sum(r =>
@@ -217,9 +245,10 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<List<DailyRevenue>> GetDailyRevenueAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         var reservations = await _dbContext.Reservations
             .Include(r => r.Court)
-            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
             .Select(r => new
             {
                 Date = r.StartTimeUtc.Date,
@@ -240,16 +269,18 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<int> CountByPeriodAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Reservations
-            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
             .CountAsync(ct);
     }
 
     public async Task<List<CourtRevenue>> GetRevenueByCourtAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         var reservations = await _dbContext.Reservations
             .Include(r => r.Court)
-            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
             .Select(r => new
             {
                 r.CourtId,
@@ -273,10 +304,11 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<CancellationStats> GetCancellationStatsAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         var cancelled = await _dbContext.Reservations
             .IgnoreQueryFilters()
             .Include(r => r.Court)
-            .Where(r => r.IsDeleted && r.DeletedAt >= fromUtc && r.DeletedAt < toUtc)
+            .Where(r => r.TenantId == tenantId && r.IsDeleted && r.DeletedAt >= fromUtc && r.DeletedAt < toUtc)
             .Select(r => new
             {
                 Revenue = (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour
@@ -292,10 +324,11 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<List<TopCustomer>> GetTopCustomersAsync(DateTime fromUtc, DateTime toUtc, int top, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         var reservations = await _dbContext.Reservations
             .Include(r => r.Court)
             .Include(r => r.User)
-            .Where(r => r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= fromUtc && r.StartTimeUtc < toUtc)
             .Select(r => new
             {
                 r.UserId,
@@ -323,12 +356,13 @@ public class ReservationRepository : IReservationRepository
 
     public async Task<List<CourtOccupancy>> GetCourtOccupancyTodayAsync(DateTime todayStartUtc, CancellationToken ct = default)
     {
+        var tenantId = _tenantContext.TenantId;
         var todayEndUtc = todayStartUtc.AddDays(1);
 
-        var courts = await _dbContext.Courts.ToListAsync(ct);
+        var courts = await _dbContext.Courts.Where(c => c.TenantId == tenantId).ToListAsync(ct);
 
         var bookedSlotsByCourt = await _dbContext.Reservations
-            .Where(r => r.StartTimeUtc >= todayStartUtc && r.StartTimeUtc < todayEndUtc)
+            .Where(r => r.TenantId == tenantId && r.StartTimeUtc >= todayStartUtc && r.StartTimeUtc < todayEndUtc)
             .GroupBy(r => r.CourtId)
             .Select(g => new { CourtId = g.Key, BookedSlots = g.Count() })
             .ToListAsync(ct);

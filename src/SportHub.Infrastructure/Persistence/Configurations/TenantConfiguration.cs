@@ -27,11 +27,23 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(t => t.LogoUrl)
             .HasMaxLength(500);
 
+        builder.Property(t => t.CoverImageUrl)
+            .HasMaxLength(500);
+
         builder.Property(t => t.PrimaryColor)
             .HasMaxLength(7);
 
         builder.Property(t => t.CustomDomain)
             .HasMaxLength(253);
+
+        builder.Property(t => t.InstagramUrl)
+            .HasMaxLength(500);
+
+        builder.Property(t => t.FacebookUrl)
+            .HasMaxLength(500);
+
+        builder.Property(t => t.WhatsappNumber)
+            .HasMaxLength(20);
 
         builder.HasIndex(t => t.Slug).IsUnique();
         builder.HasIndex(t => t.CustomDomain).IsUnique();

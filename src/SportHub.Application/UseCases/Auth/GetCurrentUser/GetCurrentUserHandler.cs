@@ -28,7 +28,8 @@ public class GetCurrentUserHandler : IQueryHandler<GetCurrentUserQuery, UserProf
             user.LastName,
             user.Email,
             user.Role.ToString(),
-            user.LastLoginAt
+            user.LastLoginAt,
+            user.CreatedAt
         ));
     }
 }

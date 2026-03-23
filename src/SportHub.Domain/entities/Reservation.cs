@@ -6,6 +6,7 @@ namespace Domain.Entities;
 public class Reservation : AuditEntity, IEntity
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
     public Guid CourtId { get; set; }
     public Guid UserId { get; set; }
 

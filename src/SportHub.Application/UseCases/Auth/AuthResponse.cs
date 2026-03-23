@@ -10,4 +10,5 @@ public class AuthResponse
     public DateTime ExpiresAt { get; set; }
     public string RefreshToken { get; set; } = null!;
     public DateTime RefreshTokenExpiresAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

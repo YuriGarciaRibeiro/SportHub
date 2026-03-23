@@ -6,6 +6,7 @@ namespace Domain.Entities;
 public class Court : AuditEntity, IEntity
 {
     public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
 
     public string Name { get; set; } = null!;
     public string? ImageUrl { get; set; }
@@ -19,6 +20,12 @@ public class Court : AuditEntity, IEntity
 
     public string TimeZone { get; set; } = "America/Maceio";
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
+
+    public List<string> Amenities { get; set; } = [];
+    public List<string> ImageUrls { get; set; } = [];
+
+    public Guid LocationId { get; set; }
+    public Location? Location { get; set; }
 
     public IEnumerable<Sport> Sports { get; set; } = new List<Sport>();
 }

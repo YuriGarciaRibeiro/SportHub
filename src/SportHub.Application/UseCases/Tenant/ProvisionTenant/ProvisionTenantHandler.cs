@@ -19,13 +19,12 @@ public class ProvisionTenantHandler : ICommandHandler<ProvisionTenantCommand, Pr
     {
         var tenant = TenantEntity.Create(request.Slug, request.Name, request.OwnerFirstName, request.OwnerLastName, request.OwnerEmail);
 
-        await _provisioning.ProvisionAsync(tenant, ct);
+        await _provisioning.ProvisionAsync(tenant, request, ct);
 
         return Result.Ok(new ProvisionTenantResponse(
             tenant.Id,
             tenant.Slug,
-            tenant.Name,
-            tenant.GetSchemaName()
+            tenant.Name
         ));
     }
 }

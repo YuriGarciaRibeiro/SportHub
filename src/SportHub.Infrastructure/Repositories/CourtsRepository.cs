@@ -10,27 +10,34 @@ public class CourtsRepository : ICourtsRepository
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly DbSet<Court> _dbSet;
+    private readonly ITenantContext _tenantContext;
 
-    public CourtsRepository(ApplicationDbContext dbContext)
+    public CourtsRepository(ApplicationDbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Court>();
+        _tenantContext = tenantContext;
     }
 
     public async Task<Court?> GetByIdAsync(Guid id)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Courts
             .Include(c => c.Sports)
+            .Include(c => c.Location)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
     }
 
     public async Task<List<Court>> GetAllAsync()
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Courts
             .Include(c => c.Sports)
+            .Include(c => c.Location)
             .AsSplitQuery()
             .AsNoTracking()
+            .Where(c => c.TenantId == tenantId)
             .ToListAsync();
     }
 
@@ -52,14 +59,23 @@ public class CourtsRepository : ICourtsRepository
         return Task.CompletedTask;
     }
 
-    public async Task<List<Court>> GetByIdsAsync(IEnumerable<Guid> ids) =>
-        await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync();
+    public async Task<List<Court>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.Where(e => ids.Contains(e.Id) && e.TenantId == tenantId).ToListAsync();
+    }
 
-    public async Task<bool> ExistsAsync(Guid id) =>
-        await _dbSet.AnyAsync(e => e.Id == id);
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.AnyAsync(e => e.Id == id && e.TenantId == tenantId);
+    }
 
-    public IQueryable<Court> Query() =>
-        _dbSet.AsQueryable();
+    public IQueryable<Court> Query()
+    {
+        var tenantId = _tenantContext.TenantId;
+        return _dbSet.Where(c => c.TenantId == tenantId);
+    }
 
     public Task AddManyAsync(IEnumerable<Court> entities)
     {
@@ -74,12 +90,16 @@ public class CourtsRepository : ICourtsRepository
         Guid? sportId = null,
         decimal? minPrice = null,
         decimal? maxPrice = null,
-        string? searchTerm = null)
+        string? searchTerm = null,
+        Guid? locationId = null)
     {
+        var tenantId = _tenantContext.TenantId;
         var query = _dbContext.Courts
             .Include(c => c.Sports)
+            .Include(c => c.Location)
             .AsSplitQuery()
             .AsNoTracking()
+            .Where(c => c.TenantId == tenantId)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(name))
@@ -106,6 +126,11 @@ public class CourtsRepository : ICourtsRepository
         {
             var search = searchTerm.ToLower();
             query = query.Where(c => c.Name.ToLower().Contains(search));
+        }
+
+        if (locationId.HasValue)
+        {
+            query = query.Where(c => c.LocationId == locationId.Value);
         }
 
         var totalCount = await query.CountAsync();

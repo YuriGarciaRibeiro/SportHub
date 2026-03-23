@@ -14,6 +14,7 @@ public class SportConfiguration : IEntityTypeConfiguration<Sport>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.HasIndex(s => s.Name).IsUnique();
+        builder.HasIndex(s => s.TenantId);
+        builder.HasIndex(s => new { s.TenantId, s.Name }).IsUnique();
     }
 }

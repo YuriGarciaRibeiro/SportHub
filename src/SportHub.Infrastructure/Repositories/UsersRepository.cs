@@ -11,11 +11,13 @@ public class UsersRepository : IUsersRepository
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly DbSet<User> _dbSet;
+    private readonly ITenantContext _tenantContext;
 
-    public UsersRepository(ApplicationDbContext dbContext)
+    public UsersRepository(ApplicationDbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<User>();
+        _tenantContext = tenantContext;
     }
 
     public async Task<User?> GetByIdAsync(Guid id) =>
@@ -59,19 +61,26 @@ public class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByEmailAsync(string email)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.Email == email);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.TenantId == tenantId && u.Email == email && !u.IsDeleted);
     }
 
     public async Task<User?> GetByRefreshTokenAsync(string refreshToken)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Users
-            .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.TenantId == tenantId && u.RefreshToken == refreshToken && !u.IsDeleted);
     }
 
     public async Task<bool> EmailExistsAsync(string email)
     {
-        return await _dbContext.Users.AnyAsync(u => u.Email == email);
+        var tenantId = _tenantContext.TenantId;
+        return await _dbContext.Users
+            .IgnoreQueryFilters()
+            .AnyAsync(u => u.TenantId == tenantId && u.Email == email && !u.IsDeleted);
     }
 
     public async Task<PagedResult<User>> GetPagedAsync(

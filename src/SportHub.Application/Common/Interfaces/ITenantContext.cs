@@ -12,12 +12,13 @@ public interface ITenantContext
     string TenantSlug { get; }
     string TenantName { get; }
     string? LogoUrl { get; }
+    string? CoverImageUrl { get; }
     string? PrimaryColor { get; }
+    string? Tagline { get; }
+    string? InstagramUrl { get; }
+    string? FacebookUrl { get; }
+    string? WhatsappNumber { get; }
 
-    /// <summary>Nome do schema PostgreSQL. Ex: "tenant_academia_silva"</summary>
-    string Schema { get; }
-
-    /// <summary>False antes do middleware resolver. Handlers não devem executar se false.</summary>
     bool IsResolved { get; }
 
     void Resolve(Tenant tenant);

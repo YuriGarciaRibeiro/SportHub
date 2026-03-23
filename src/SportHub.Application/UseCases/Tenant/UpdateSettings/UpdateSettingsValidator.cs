@@ -17,5 +17,9 @@ public class UpdateSettingsValidator : AbstractValidator<UpdateSettingsCommand>
         RuleFor(x => x.LogoUrl)
             .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _)).WithMessage("A URL da logo é inválida.")
             .When(x => !string.IsNullOrEmpty(x.LogoUrl));
+
+        RuleFor(x => x.Tagline)
+            .MaximumLength(150).WithMessage("A tagline deve ter no máximo 150 caracteres.")
+            .When(x => !string.IsNullOrEmpty(x.Tagline));
     }
 }

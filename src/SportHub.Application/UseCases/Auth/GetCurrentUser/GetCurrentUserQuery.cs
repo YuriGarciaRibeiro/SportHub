@@ -10,5 +10,6 @@ public record UserProfileResponse(
     string LastName,
     string Email,
     string Role,
-    DateTime? LastLoginAt
+    DateTime? LastLoginAt,
+    DateTime CreatedAt
 );

@@ -3,4 +3,11 @@ using MediatR;
 
 namespace Application.UseCases.Tenant.UpdateSettings;
 
-public record UpdateSettingsCommand(string Name, string? LogoUrl, string? PrimaryColor) : ICommand<Unit>;
+public record UpdateSettingsCommand(
+    string Name,
+    string? LogoUrl,
+    string? PrimaryColor,
+    string? Tagline,
+    string? InstagramUrl,
+    string? FacebookUrl,
+    string? WhatsappNumber) : ICommand<Unit>;

@@ -40,6 +40,8 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, Guid>
             OpeningTime = request.Court.OpeningTime,
             ClosingTime = request.Court.ClosingTime,
             TimeZone = request.Court.TimeZone,
+            Amenities = request.Court.Amenities,
+            LocationId = request.Court.LocationId,
             Sports = sports.ToList()
         };
 

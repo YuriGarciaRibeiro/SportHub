@@ -13,10 +13,10 @@ public class RealtimeNotificationService : IRealtimeNotificationService
         _hubContext = hubContext;
     }
 
-    public async Task NotifyReservationCreatedAsync(string tenantSchema, ReservationCreatedPayload payload, CancellationToken cancellationToken = default)
+    public async Task NotifyReservationCreatedAsync(string tenantSlug, ReservationCreatedPayload payload, CancellationToken cancellationToken = default)
     {
         await _hubContext.Clients
-            .Group(tenantSchema)
+            .Group(tenantSlug)
             .SendAsync("ReservationCreated", payload, cancellationToken);
     }
 }

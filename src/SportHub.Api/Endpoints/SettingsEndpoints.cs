@@ -1,5 +1,6 @@
 using Application.Security;
 using Application.UseCases.Tenant.UpdateSettings;
+using Application.UseCases.Tenant.UploadTenantCover;
 using Application.UseCases.Tenant.UploadTenantLogo;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -51,6 +52,35 @@ public static class SettingsEndpoints
         .Accepts<IFormFile>("multipart/form-data")
         .WithTags("Settings")
         .Produces<UploadTenantLogoResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // POST /api/settings/upload-cover — IsOwner
+        app.MapPost("/api/settings/upload-cover", async (
+            IFormFile file,
+            ISender sender) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.UnprocessableEntity(new { detail = "Nenhum arquivo enviado." });
+
+            await using var stream = file.OpenReadStream();
+
+            var command = new UploadTenantCoverCommand(
+                stream,
+                file.FileName,
+                file.ContentType,
+                file.Length);
+
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UploadTenantCover")
+        .WithSummary("Faz upload da imagem de capa do tenant e atualiza CoverImageUrl")
+        .RequireAuthorization(PolicyNames.IsOwner)
+        .DisableAntiforgery()
+        .Accepts<IFormFile>("multipart/form-data")
+        .WithTags("Settings")
+        .Produces<UploadTenantCoverResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 

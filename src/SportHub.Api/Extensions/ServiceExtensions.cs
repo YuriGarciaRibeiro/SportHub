@@ -17,7 +17,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Api.Middleware;
@@ -66,6 +65,8 @@ public static class ServiceExtensions
         builder.Services.AddScoped<ISportsRepository, SportsRepository>();
         builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 
+        builder.Services.AddScoped<ILocationsRepository, LocationsRepository>();
+
         // Tenant
         builder.Services.AddScoped<ITenantRepository, TenantRepository>();
 
@@ -84,52 +85,23 @@ public static class ServiceExtensions
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-        // DbContext do schema public (tenants globais) — Scoped
-        builder.Services.AddDbContext<TenantDbContext>(options =>
-        {
-            options.UseNpgsql(connectionString, npgsql =>
-                npgsql.MigrationsAssembly("SportHub.Infrastructure")
-                      .MigrationsHistoryTable("__EFMigrationsHistory_Global", "public"));
-        });
-
-        // DbContext por tenant (schema dinâmico) — Scoped
-        // ✅ SEM interceptor — o schema é configurado via HasDefaultSchema no OnModelCreating
         builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             options.UseNpgsql(connectionString, npgsql =>
-                npgsql.MigrationsAssembly("SportHub.Infrastructure")
-                      .MigrationsHistoryTable("__EFMigrationsHistory"));
-            options.ReplaceService<IModelCacheKeyFactory, TenantModelCacheKeyFactory>();
-            options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+                npgsql.MigrationsAssembly("SportHub.Infrastructure"));
         });
 
         return builder;
     }
-
-
 
     public static WebApplication ExecuteMigrations(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-        // 1. Migrações Globais (TenantDbContext - schema public)
-        var tenantDb = scope.ServiceProvider.GetRequiredService<TenantDbContext>();
-        tenantDb.Database.Migrate();
-        logger.LogInformation("Database principal (Tenants) migrado com sucesso.");
-
-        var connectionString = tenantDb.Database.GetConnectionString();
-        if (connectionString is null) return app;
-
-        var factory = new ApplicationDbContextFactory(connectionString);
-
-        // 2. Migrações dos Tenants
-        foreach (var tenant in tenantDb.Tenants.ToList())
-        {
-            logger.LogInformation("Migrando schema {Schema}", tenant.GetSchemaName());
-            using var tenantCtx = factory.CreateForTenant(tenant);
-            tenantCtx.Database.Migrate();
-        }
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+        logger.LogInformation("Database migrado com sucesso.");
 
         return app;
     }

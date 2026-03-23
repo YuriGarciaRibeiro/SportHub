@@ -20,6 +20,17 @@ public class CourtConfiguration : IEntityTypeConfiguration<Court>
         builder.Property(c => c.ImageUrl)
             .HasMaxLength(512);
 
+        builder.Property(c => c.Amenities)
+            .HasColumnType("text[]");
+
+        builder.Property(c => c.ImageUrls)
+            .HasColumnType("text[]");
+
+        builder.Property(c => c.LocationId)
+            .IsRequired();
+
+        builder.HasIndex(c => c.TenantId);
         builder.HasIndex(c => c.Name);
+        builder.HasIndex(c => c.LocationId);
     }
 }

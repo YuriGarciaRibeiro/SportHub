@@ -60,7 +60,8 @@ public class RegisterUserHandler : ICommandHandler<RegisterUserCommand, AuthResp
             Email = user.Email,
             Role = user.Role.ToString(),
             Token = token,
-            ExpiresAt = expiresAt
+            ExpiresAt = expiresAt,
+            CreatedAt = user.CreatedAt
         });
     }
 }

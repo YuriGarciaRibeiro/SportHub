@@ -7,6 +7,8 @@ using Application.UseCases.Court.GetCourtById;
 using Application.UseCases.Court.GetAvailability;
 using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Court.UploadCourtImage;
+using Application.UseCases.Court.UploadCourtGalleryImage;
+using Application.UseCases.Court.DeleteCourtGalleryImage;
 using Application.UseCases.Reservations.CreateReservation;
 using Application.CQRS;
 using Application.Security;
@@ -61,7 +63,7 @@ public static class CourtsEndpoints
         })
         .WithName("GetCourtById")
         .WithSummary("Obtém os detalhes de uma quadra específica no tenant atual")
-        .RequireAuthorization()
+        .AllowAnonymous()
         .Produces<CourtPublicResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
@@ -171,5 +173,53 @@ public static class CourtsEndpoints
         .Produces<UploadCourtImageResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // POST /courts/{courtId}/gallery — IsManager
+        group.MapPost("/{courtId:guid}/gallery", async (
+            Guid courtId,
+            IFormFile file,
+            ISender sender) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.UnprocessableEntity(new { detail = "Nenhum arquivo enviado." });
+
+            await using var stream = file.OpenReadStream();
+
+            var command = new UploadCourtGalleryImageCommand(
+                courtId,
+                stream,
+                file.FileName,
+                file.ContentType,
+                file.Length);
+
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("UploadCourtGalleryImage")
+        .WithSummary("Adiciona uma imagem à galeria da quadra")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .DisableAntiforgery()
+        .Accepts<IFormFile>("multipart/form-data")
+        .Produces<UploadCourtGalleryImageResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // DELETE /courts/{courtId}/gallery — IsManager
+        group.MapDelete("/{courtId:guid}/gallery", async (
+            Guid courtId,
+            [FromBody] DeleteGalleryImageRequest request,
+            ISender sender) =>
+        {
+            var command = new DeleteCourtGalleryImageCommand(courtId, request.ImageUrl);
+            var result = await sender.Send(command);
+            return result.ToIResult(StatusCodes.Status204NoContent);
+        })
+        .WithName("DeleteCourtGalleryImage")
+        .WithSummary("Remove uma imagem da galeria da quadra")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
     }
 }
+
+public record DeleteGalleryImageRequest(string ImageUrl);

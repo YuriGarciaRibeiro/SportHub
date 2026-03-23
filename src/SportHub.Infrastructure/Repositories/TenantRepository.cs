@@ -7,15 +7,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-/// <summary>
-/// Repositório de tenants. Opera SEMPRE no schema "public" via TenantDbContext.
-/// Implementa métodos diretamente porque Tenant não implementa IEntity.
-/// </summary>
 public class TenantRepository : ITenantRepository
 {
-    private readonly TenantDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public TenantRepository(TenantDbContext context)
+    public TenantRepository(ApplicationDbContext context)
     {
         _context = context;
     }

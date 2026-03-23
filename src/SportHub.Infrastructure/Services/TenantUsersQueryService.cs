@@ -8,39 +8,34 @@ namespace Infrastructure.Services;
 
 public class TenantUsersQueryService : ITenantUsersQueryService
 {
-    private readonly TenantDbContext _globalCtx;
+    private readonly ApplicationDbContext _db;
 
-    public TenantUsersQueryService(TenantDbContext globalCtx)
+    public TenantUsersQueryService(ApplicationDbContext db)
     {
-        _globalCtx = globalCtx;
+        _db = db;
     }
 
     public async Task<List<UserDto>> GetAdminUsersAsync(Tenant tenant, CancellationToken ct = default)
     {
-        var connectionString = _globalCtx.Database.GetConnectionString()!;
-        var factory = new ApplicationDbContextFactory(connectionString);
-
-        await using var tenantDb = factory.CreateForTenant(tenant);
-
-        return await tenantDb.Users
+        return await _db.Users
+            .IgnoreQueryFilters()
+            .Where(u => u.TenantId == tenant.Id && !u.IsDeleted)
             .Select(u => new UserDto(u.Id, u.FirstName, u.LastName, u.Email, u.Role.ToString()))
             .ToListAsync(ct);
     }
 
     public async Task<PagedResult<UserDto>> GetPagedUsersAsync(Tenant tenant, int page, int pageSize, string? searchTerm = null, string? role = null, CancellationToken ct = default)
     {
-        var connectionString = _globalCtx.Database.GetConnectionString()!;
-        var factory = new ApplicationDbContextFactory(connectionString);
-
-        await using var tenantDb = factory.CreateForTenant(tenant);
-
-        var query = tenantDb.Users.AsQueryable();
+        var query = _db.Users
+            .IgnoreQueryFilters()
+            .Where(u => u.TenantId == tenant.Id && !u.IsDeleted)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
             query = query.Where(u =>
-                u.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                u.FirstName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                u.LastName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+                u.Email.Contains(searchTerm) ||
+                u.FirstName.Contains(searchTerm) ||
+                u.LastName.Contains(searchTerm));
 
         if (!string.IsNullOrWhiteSpace(role))
             query = query.Where(u => u.Role.ToString() == role);

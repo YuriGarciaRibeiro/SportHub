@@ -15,8 +15,12 @@ public class TenantContext : ITenantContext
     public string TenantSlug => _tenant?.Slug ?? string.Empty;
     public string TenantName => _tenant?.Name ?? string.Empty;
     public string? LogoUrl => _tenant?.LogoUrl;
+    public string? CoverImageUrl => _tenant?.CoverImageUrl;
     public string? PrimaryColor => _tenant?.PrimaryColor;
-    public string Schema => _tenant?.GetSchemaName() ?? "public";
+    public string? Tagline => _tenant?.Tagline;
+    public string? InstagramUrl => _tenant?.InstagramUrl;
+    public string? FacebookUrl => _tenant?.FacebookUrl;
+    public string? WhatsappNumber => _tenant?.WhatsappNumber;
     public bool IsResolved => _tenant is not null;
 
     public void Resolve(Tenant tenant)

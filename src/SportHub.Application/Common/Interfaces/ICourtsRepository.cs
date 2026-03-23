@@ -21,5 +21,6 @@ public interface ICourtsRepository
         Guid? sportId = null,
         decimal? minPrice = null,
         decimal? maxPrice = null,
-        string? searchTerm = null);
+        string? searchTerm = null,
+        Guid? locationId = null);
 }

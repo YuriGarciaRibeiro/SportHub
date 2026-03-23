@@ -52,7 +52,8 @@ public class RefreshTokenHandler : ICommandHandler<RefreshTokenCommand, AuthResp
             Token = newAccessToken,
             ExpiresAt = newAccessExpiresAt,
             RefreshToken = newRefreshToken,
-            RefreshTokenExpiresAt = newRefreshExpiresAt
+            RefreshTokenExpiresAt = newRefreshExpiresAt,
+            CreatedAt = user.CreatedAt
         });
     }
 }

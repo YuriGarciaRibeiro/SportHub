@@ -10,18 +10,26 @@ public class SportsRepository : ISportsRepository
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly DbSet<Sport> _dbSet;
+    private readonly ITenantContext _tenantContext;
 
-    public SportsRepository(ApplicationDbContext dbContext)
+    public SportsRepository(ApplicationDbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Sport>();
+        _tenantContext = tenantContext;
     }
 
-    public async Task<Sport?> GetByIdAsync(Guid id) =>
-        await _dbSet.FindAsync(id);
+    public async Task<Sport?> GetByIdAsync(Guid id)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.FirstOrDefaultAsync(s => s.Id == id && s.TenantId == tenantId);
+    }
 
-    public async Task<List<Sport>> GetAllAsync() =>
-        await _dbSet.AsNoTracking().ToListAsync();
+    public async Task<List<Sport>> GetAllAsync()
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.AsNoTracking().Where(s => s.TenantId == tenantId).ToListAsync();
+    }
 
     public Task AddAsync(Sport entity)
     {
@@ -41,14 +49,23 @@ public class SportsRepository : ISportsRepository
         return Task.CompletedTask;
     }
 
-    public async Task<List<Sport>> GetByIdsAsync(IEnumerable<Guid> ids) =>
-        await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync();
+    public async Task<List<Sport>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.Where(e => ids.Contains(e.Id) && e.TenantId == tenantId).ToListAsync();
+    }
 
-    public async Task<bool> ExistsAsync(Guid id) =>
-        await _dbSet.AnyAsync(e => e.Id == id);
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbSet.AnyAsync(e => e.Id == id && e.TenantId == tenantId);
+    }
 
-    public IQueryable<Sport> Query() =>
-        _dbSet.AsQueryable();
+    public IQueryable<Sport> Query()
+    {
+        var tenantId = _tenantContext.TenantId;
+        return _dbSet.Where(s => s.TenantId == tenantId);
+    }
 
     public Task AddManyAsync(IEnumerable<Sport> entities)
     {
@@ -58,20 +75,23 @@ public class SportsRepository : ISportsRepository
 
     public async Task<bool> ExistsByNameAsync(string name)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Sports
-            .AnyAsync(s => EF.Functions.ILike(s.Name, name));
+            .AnyAsync(s => s.TenantId == tenantId && EF.Functions.ILike(s.Name, name));
     }
 
     public async Task<Sport?> GetByNameAsync(string name)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Sports
-            .FirstOrDefaultAsync(s => EF.Functions.ILike(s.Name, name));
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId && EF.Functions.ILike(s.Name, name));
     }
 
     public async Task<IEnumerable<Sport>> GetSportsByIdsAsync(IEnumerable<Guid> ids)
     {
+        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Sports
-            .Where(s => ids.Contains(s.Id))
+            .Where(s => s.TenantId == tenantId && ids.Contains(s.Id))
             .ToListAsync();
     }
 
@@ -81,7 +101,8 @@ public class SportsRepository : ISportsRepository
         string? name = null,
         string? searchTerm = null)
     {
-        var query = _dbSet.AsNoTracking().AsQueryable();
+        var tenantId = _tenantContext.TenantId;
+        var query = _dbSet.AsNoTracking().Where(s => s.TenantId == tenantId).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(name))
         {

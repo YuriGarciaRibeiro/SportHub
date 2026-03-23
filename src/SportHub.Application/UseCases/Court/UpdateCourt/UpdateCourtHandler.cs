@@ -45,6 +45,8 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
         court.OpeningTime = request.Court.OpeningTime;
         court.ClosingTime = request.Court.ClosingTime;
         court.TimeZone = request.Court.TimeZone;
+        court.Amenities = request.Court.Amenities;
+        court.LocationId = request.Court.LocationId;
         court.Sports = sports.ToList();
 
         await _courtsRepository.UpdateAsync(court);
@@ -54,11 +56,15 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
             court.Id,
             court.Name,
             court.ImageUrl,
+            court.ImageUrls,
             court.PricePerHour,
             court.SlotDurationMinutes,
             court.OpeningTime.ToString("HH:mm"),
             court.ClosingTime.ToString("HH:mm"),
-            court.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList()
+            court.Amenities,
+            court.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList(),
+            court.LocationId,
+            court.Location?.Name
         );
 
         return Result.Ok(response);

@@ -27,7 +27,8 @@ public class GetAllCourtsHandler : IQueryHandler<GetAllCourtsQuery, PagedResult<
             sportId: filter.SportId,
             minPrice: filter.MinPrice,
             maxPrice: filter.MaxPrice,
-            searchTerm: filter.SearchTerm);
+            searchTerm: filter.SearchTerm,
+            locationId: filter.LocationId);
 
         var result = new PagedResult<CourtPublicResponse>
         {
@@ -35,11 +36,15 @@ public class GetAllCourtsHandler : IQueryHandler<GetAllCourtsQuery, PagedResult<
                 c.Id,
                 c.Name,
                 c.ImageUrl,
+                c.ImageUrls,
                 c.PricePerHour,
                 c.SlotDurationMinutes,
                 c.OpeningTime.ToString("HH:mm"),
                 c.ClosingTime.ToString("HH:mm"),
-                c.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList()
+                c.Amenities,
+                c.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList(),
+                c.LocationId,
+                c.Location?.Name
             )).ToList(),
             TotalCount = pagedCourts.TotalCount,
             Page = pagedCourts.Page,

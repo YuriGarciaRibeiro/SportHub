@@ -67,7 +67,8 @@ public class LoginHandler : ICommandHandler<LoginCommand, AuthResponse>
                 Token = accessToken,
                 ExpiresAt = accessExpiresAt,
                 RefreshToken = refreshToken,
-                RefreshTokenExpiresAt = refreshExpiresAt
+                RefreshTokenExpiresAt = refreshExpiresAt,
+                CreatedAt = user.CreatedAt
             });
         }
         catch (Exception ex)

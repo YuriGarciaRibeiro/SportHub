@@ -1,3 +1,4 @@
+using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Application.CQRS;
 using FluentResults;
@@ -19,18 +20,22 @@ public class GetCourtByIdHandler : IQueryHandler<GetCourtByIdQuery, CourtPublicR
         var court = await _courtRepository.GetByIdAsync(request.Id);
         if (court is null)
         {
-            return Result.Fail($"Quadra com ID {request.Id} não encontrada.");
+            return Result.Fail(new NotFound($"Quadra com ID {request.Id} não encontrada."));
         }
 
         var response = new CourtPublicResponse(
             court.Id,
             court.Name,
             court.ImageUrl,
+            court.ImageUrls,
             court.PricePerHour,
             court.SlotDurationMinutes,
             court.OpeningTime.ToString("HH:mm"),
             court.ClosingTime.ToString("HH:mm"),
-            court.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList()
+            court.Amenities,
+            court.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList(),
+            court.LocationId,
+            court.Location?.Name
         );
 
         return Result.Ok(response);

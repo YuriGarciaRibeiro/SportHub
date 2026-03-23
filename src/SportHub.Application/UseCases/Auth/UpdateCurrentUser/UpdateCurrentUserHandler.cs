@@ -40,7 +40,8 @@ public class UpdateCurrentUserHandler : ICommandHandler<UpdateCurrentUserCommand
             user.LastName,
             user.Email,
             user.Role.ToString(),
-            user.LastLoginAt
+            user.LastLoginAt,
+            user.CreatedAt
         ));
     }
 }

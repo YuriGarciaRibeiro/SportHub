@@ -27,6 +27,7 @@ public static class AppExtensions
         // Endpoints tenant-scoped (acessados via subdomínio)
         app.MapBrandingEndpoints();
         app.MapSettingsEndpoints();
+        app.MapLocationsEndpoints();
 
         return app;
     }

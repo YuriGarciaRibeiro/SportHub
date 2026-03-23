@@ -10,6 +10,7 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
     {
         builder.HasKey(r => r.Id);
 
+        builder.HasIndex(r => r.TenantId);
         builder.HasIndex(r => r.CourtId);
         builder.HasIndex(r => r.UserId);
         builder.HasIndex(r => new { r.CourtId, r.StartTimeUtc });
