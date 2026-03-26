@@ -1,6 +1,5 @@
 using Application.Common.Interfaces;
 using Application.CQRS;
-using FluentResults;
 
 namespace Application.UseCases.Admin.GetAdminStats;
 
