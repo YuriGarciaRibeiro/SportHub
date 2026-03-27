@@ -20,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Api.Middleware;
+using Hangfire;
 using SportHub.Infrastructure.Extensions;
 
 
@@ -38,6 +39,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<IReservationService, ReservationService>();
         builder.Services.AddScoped<ICacheService, CacheService>();
         builder.Services.AddScoped<IRealtimeNotificationService, RealtimeNotificationService>();
+        builder.Services.AddScoped<IPeakHoursCalculator, PeakHoursCalculator>();
         builder.Services.AddSignalR();
 
         // Unit of Work
@@ -50,7 +52,6 @@ public static class ServiceExtensions
         // Tenant
         builder.Services.AddScoped<ITenantContext, TenantContext>();
         builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
-        builder.Services.AddScoped<ITenantUsersQueryService, TenantUsersQueryService>();
 
         // Storage (MinIO dev / AWS S3 prod)
         builder.Services.AddStorage(builder.Configuration);
@@ -173,7 +174,6 @@ public static class ServiceExtensions
     public static WebApplicationBuilder AddSeeders(this WebApplicationBuilder builder)
     {
         builder.Services.AddTransient<CustomUserSeeder>();
-        builder.Services.AddTransient<SportSeeder>();
         builder.Services.AddTransient<SuperAdminSeeder>();
         return builder;
     }
@@ -192,6 +192,23 @@ public static class ServiceExtensions
     public static WebApplicationBuilder AddCaching(this WebApplicationBuilder builder)
     {
         builder.Services.AddRedis(builder.Configuration);
+
+        return builder;
+    }
+
+    public static WebApplicationBuilder AddBackgroundJobs(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgresStorage(builder.Configuration));
+
+        builder.Services.AddHangfireServer(options =>
+        {
+            options.WorkerCount = Environment.ProcessorCount * 2;
+            options.Queues = ["default", "critical"];
+        });
 
         return builder;
     }

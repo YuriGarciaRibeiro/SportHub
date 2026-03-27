@@ -18,6 +18,7 @@ public interface ITenantContext
     string? InstagramUrl { get; }
     string? FacebookUrl { get; }
     string? WhatsappNumber { get; }
+    bool PeakHoursEnabled { get; }
 
     bool IsResolved { get; }
 

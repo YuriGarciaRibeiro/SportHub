@@ -83,6 +83,7 @@ public class UsersRepository : IUsersRepository
             .AnyAsync(u => u.TenantId == tenantId && u.Email == email && !u.IsDeleted);
     }
 
+
     public async Task<PagedResult<User>> GetPagedAsync(
         int page,
         int pageSize,
@@ -144,6 +145,46 @@ public class UsersRepository : IUsersRepository
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
+
+        return new PagedResult<User>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<PagedResult<User>> GetPagedByTenantAsync(
+        Guid tenantId,
+        int page,
+        int pageSize,
+        string? searchTerm = null,
+        UserRole? role = null,
+        CancellationToken ct = default)
+    {
+        var query = _dbContext.Users
+            .IgnoreQueryFilters()
+            .Where(u => u.TenantId == tenantId && !u.IsDeleted)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+            query = query.Where(u =>
+                u.Email.Contains(searchTerm) ||
+                u.FirstName.Contains(searchTerm) ||
+                u.LastName.Contains(searchTerm));
+
+        if (role.HasValue)
+            query = query.Where(u => u.Role == role.Value);
+
+        var totalCount = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderBy(u => u.FirstName)
+            .ThenBy(u => u.LastName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
 
         return new PagedResult<User>
         {

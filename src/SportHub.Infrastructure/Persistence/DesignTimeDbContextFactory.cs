@@ -50,6 +50,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
         public string? InstagramUrl => null;
         public string? FacebookUrl => null;
         public string? WhatsappNumber => null;
+        public bool PeakHoursEnabled => false;
         public bool IsResolved => false;
         public void Resolve(Tenant tenant) { }
     }

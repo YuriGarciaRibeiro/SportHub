@@ -31,7 +31,7 @@ public class UpdateSettingsHandler : ICommandHandler<UpdateSettingsCommand, Unit
         if (tenant is null)
             return Result.Fail(new NotFound("Tenant não encontrado."));
 
-        tenant.UpdateSettings(request.Name, request.LogoUrl, request.PrimaryColor, request.Tagline);
+        tenant.UpdateSettings(request.Name, request.LogoUrl, request.PrimaryColor, request.Tagline, request.PeakHoursEnabled);
         tenant.UpdateSocialMedia(request.InstagramUrl, request.FacebookUrl, request.WhatsappNumber);
         await _repo.UpdateAsync(tenant, ct);
         await _unitOfWork.SaveChangesAsync(ct);

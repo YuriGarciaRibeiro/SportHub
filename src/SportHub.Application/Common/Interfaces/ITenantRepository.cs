@@ -21,4 +21,6 @@ public interface ITenantRepository
         TenantStatus? status = null,
         string? searchTerm = null,
         CancellationToken ct = default);
+
+    Task<List<Guid>> GetAllPeakHoursEnabledAsync(CancellationToken ct = default);
 }

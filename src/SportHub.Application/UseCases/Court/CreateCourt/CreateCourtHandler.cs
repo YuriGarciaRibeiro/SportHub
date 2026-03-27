@@ -42,7 +42,8 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, Guid>
             TimeZone = request.Court.TimeZone,
             Amenities = request.Court.Amenities,
             LocationId = request.Court.LocationId,
-            Sports = sports.ToList()
+            Sports = sports.ToList(),
+            PeakPricePerHour = request.Court.PeakPricePerHour
         };
 
         await _courtsRepository.AddAsync(court);

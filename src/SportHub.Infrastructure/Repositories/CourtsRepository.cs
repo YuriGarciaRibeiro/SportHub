@@ -3,6 +3,7 @@ using Application.Common.Models;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using SportHub.Infrastructure.Extensions;
 
 namespace Infrastructure.Repositories;
 
@@ -10,34 +11,32 @@ public class CourtsRepository : ICourtsRepository
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly DbSet<Court> _dbSet;
-    private readonly ITenantContext _tenantContext;
 
-    public CourtsRepository(ApplicationDbContext dbContext, ITenantContext tenantContext)
+    public CourtsRepository(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
         _dbSet = dbContext.Set<Court>();
-        _tenantContext = tenantContext;
     }
 
-    public async Task<Court?> GetByIdAsync(Guid id)
+    public async Task<Court?> GetByIdAsync(Guid id, GetCourtIncludeSettings? includeSettings = null)
     {
-        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Courts
-            .Include(c => c.Sports)
-            .Include(c => c.Location)
-            .AsSplitQuery()
-            .FirstOrDefaultAsync(c => c.Id == id && c.TenantId == tenantId);
+        .If(includeSettings?.AsNoTracking == true, q => q.AsNoTracking())
+        .If(includeSettings?.IncludeTenant == true, q => q.Include(c => c.Tenant))
+        .If(includeSettings?.IncludeSports == true, q => q.Include(c => c.Sports))
+        .If(includeSettings?.IncludeLocation == true, q => q.Include(c => c.Location))
+        .AsSplitQuery()
+        .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    public async Task<List<Court>> GetAllAsync()
+    public async Task<List<Court>> GetAllAsync(GetCourtIncludeSettings? includeSettings = null)
     {
-        var tenantId = _tenantContext.TenantId;
         return await _dbContext.Courts
-            .Include(c => c.Sports)
-            .Include(c => c.Location)
+            .If(includeSettings?.AsNoTracking == true, q => q.AsNoTracking())
+            .If(includeSettings?.IncludeTenant == true, q => q.Include(c => c.Tenant))
+            .If(includeSettings?.IncludeSports == true, q => q.Include(c => c.Sports))
+            .If(includeSettings?.IncludeLocation == true, q => q.Include(c => c.Location))
             .AsSplitQuery()
-            .AsNoTracking()
-            .Where(c => c.TenantId == tenantId)
             .ToListAsync();
     }
 
@@ -61,20 +60,17 @@ public class CourtsRepository : ICourtsRepository
 
     public async Task<List<Court>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
-        var tenantId = _tenantContext.TenantId;
-        return await _dbSet.Where(e => ids.Contains(e.Id) && e.TenantId == tenantId).ToListAsync();
+        return await _dbSet.Where(e => ids.Contains(e.Id)).ToListAsync();
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        var tenantId = _tenantContext.TenantId;
-        return await _dbSet.AnyAsync(e => e.Id == id && e.TenantId == tenantId);
+        return await _dbSet.AnyAsync(e => e.Id == id);
     }
 
     public IQueryable<Court> Query()
     {
-        var tenantId = _tenantContext.TenantId;
-        return _dbSet.Where(c => c.TenantId == tenantId);
+        return _dbSet.AsQueryable();
     }
 
     public Task AddManyAsync(IEnumerable<Court> entities)
@@ -93,34 +89,24 @@ public class CourtsRepository : ICourtsRepository
         string? searchTerm = null,
         Guid? locationId = null)
     {
-        var tenantId = _tenantContext.TenantId;
         var query = _dbContext.Courts
             .Include(c => c.Sports)
             .Include(c => c.Location)
             .AsSplitQuery()
             .AsNoTracking()
-            .Where(c => c.TenantId == tenantId)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(name))
-        {
             query = query.Where(c => c.Name.Contains(name));
-        }
 
         if (sportId.HasValue)
-        {
             query = query.Where(c => c.Sports.Any(s => s.Id == sportId.Value));
-        }
 
         if (minPrice.HasValue)
-        {
             query = query.Where(c => c.PricePerHour >= minPrice.Value);
-        }
 
         if (maxPrice.HasValue)
-        {
             query = query.Where(c => c.PricePerHour <= maxPrice.Value);
-        }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -129,9 +115,7 @@ public class CourtsRepository : ICourtsRepository
         }
 
         if (locationId.HasValue)
-        {
             query = query.Where(c => c.LocationId == locationId.Value);
-        }
 
         var totalCount = await query.CountAsync();
 
@@ -148,5 +132,29 @@ public class CourtsRepository : ICourtsRepository
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    public Task<List<Court>> GetByTenantIdsAsync(IEnumerable<Guid> tenantIds)
+    {
+        return _dbContext.Courts
+            .IgnoreQueryFilters()
+            .Include(c => c.Sports)
+            .Include(c => c.Location)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .Where(c => tenantIds.Contains(c.TenantId) && !c.IsDeleted)
+            .ToListAsync();
+    }
+
+    public async Task UpdateManyAsync(IEnumerable<Court> entities)
+    {
+        foreach (var court in entities)
+        {
+            await _dbContext.Courts
+                .Where(c => c.Id == court.Id)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(c => c.PeakStartTime, court.PeakStartTime)
+                    .SetProperty(c => c.PeakEndTime, court.PeakEndTime));
+        }
     }
 }

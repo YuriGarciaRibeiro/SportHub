@@ -3,10 +3,9 @@ using SportHub.Domain.Common;
 
 namespace Domain.Entities;
 
-public class Court : AuditEntity, IEntity
+public class Court : TenantEntity, IEntity
 {
     public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
 
     public string Name { get; set; } = null!;
     public string? ImageUrl { get; set; }
@@ -21,11 +20,16 @@ public class Court : AuditEntity, IEntity
     public string TimeZone { get; set; } = "America/Maceio";
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    public TimeOnly? PeakStartTime { get; set; } = null!;
+    public TimeOnly? PeakEndTime { get; set; } = null!;
+    public decimal? PeakPricePerHour { get; set; } = null;
+
     public List<string> Amenities { get; set; } = [];
     public List<string> ImageUrls { get; set; } = [];
 
     public Guid LocationId { get; set; }
     public Location? Location { get; set; }
 
-    public IEnumerable<Sport> Sports { get; set; } = new List<Sport>();
+    public List<Sport> Sports { get; set; } = [];
+    public Tenant Tenant { get; set; } = null!;
 }

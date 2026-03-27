@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SportHub.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326232808_AddPricingFieldsToReservation")]
+    partial class AddPricingFieldsToReservation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -230,24 +233,6 @@ namespace SportHub.Infrastructure.Migrations
 
                     b.Property<bool>("IsPeakHours")
                         .HasColumnType("boolean");
-
-                    b.Property<decimal?>("NormalPricePerSlot")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("NormalSlots")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("NormalSubtotal")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("PeakPricePerSlot")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("PeakSlots")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("PeakSubtotal")
-                        .HasColumnType("numeric");
 
                     b.Property<decimal>("PricePerHour")
                         .HasColumnType("numeric");

@@ -46,7 +46,8 @@ public static class BrandingEndpoints
                 tenantCtx.PrimaryColor,
                 tenantCtx.Tagline,
                 socialMedia,
-                locationResponses
+                locationResponses,
+                tenantCtx.PeakHoursEnabled
             ));
         })
         .WithName("GetBranding")
@@ -66,6 +67,7 @@ public record BrandingResponse(
     string? PrimaryColor,
     string? Tagline,
     SocialMediaResponse? SocialMedia,
-    List<LocationResponse> Locations);
+    List<LocationResponse> Locations,
+    bool PeakHoursEnabled);
 
 public record SocialMediaResponse(string? InstagramUrl, string? FacebookUrl, string? WhatsappNumber);

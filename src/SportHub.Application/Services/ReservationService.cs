@@ -1,5 +1,6 @@
 using Application.Common.Errors;
 using Application.Common.Interfaces;
+using Application.Services;
 using Domain.Entities;
 
 public class ReservationService : IReservationService
@@ -43,7 +44,7 @@ public class ReservationService : IReservationService
     }
 
 
-    public async Task<Result<Guid>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc)
+    public async Task<Result<Reservation>> ReserveAsync(Court court, Guid userId, DateTime startUtc, DateTime endUtc, bool peakHoursEnabled)
     {
         var localDate = TimeZoneInfo.ConvertTimeFromUtc(startUtc, BrazilTz).Date;
         var openingLocal = DateTime.SpecifyKind(localDate + court.OpeningTime.ToTimeSpan(), DateTimeKind.Unspecified);
@@ -67,18 +68,31 @@ public class ReservationService : IReservationService
         var hasConflict = await _reservationRepository.ExistsConflictAsync(court.Id, startUtc, endUtc);
         if (hasConflict)
             return Result.Fail("Time slot is already booked");
+        
+        var pricing = PricingCalculator.Calculate(court, peakHoursEnabled, startUtc, endUtc);
 
-        var reservation = new Reservation
+        Reservation reservation = new Reservation
         {
             CourtId = court.Id,
             UserId = userId,
             StartTimeUtc = startUtc,
-            EndTimeUtc = endUtc
+            EndTimeUtc = endUtc,
+            IsPeakHours = pricing.IsPeakHours,
+            PricePerHour = pricing.PeakSlots > 0 && pricing.NormalSlots == 0
+                ? court.PeakPricePerHour ?? court.PricePerHour
+                : court.PricePerHour,
+            TotalPrice = pricing.Subtotal,
+            NormalSlots = pricing.NormalSlots,
+            PeakSlots = pricing.PeakSlots,
+            NormalSubtotal = pricing.NormalSubtotal,
+            PeakSubtotal = pricing.PeakSubtotal,
+            NormalPricePerSlot = court.PricePerHour,
+            PeakPricePerSlot = court.PeakPricePerHour
         };
 
         await _reservationRepository.AddAsync(reservation);
         await _unitOfWork.SaveChangesAsync();
-        return Result.Ok(reservation.Id);
+        return Result.Ok(reservation);
     }
 
 

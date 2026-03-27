@@ -103,4 +103,13 @@ public class TenantRepository : ITenantRepository
             PageSize = pageSize
         };
     }
+
+    public Task<List<Guid>> GetAllPeakHoursEnabledAsync(CancellationToken ct = default)
+    {
+        return _context.Tenants
+            .AsNoTracking()
+            .Where(t => t.PeakHoursEnabled)
+            .Select(t => t.Id)
+            .ToListAsync(ct);
+    }
 }

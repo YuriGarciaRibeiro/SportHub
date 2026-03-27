@@ -23,5 +23,14 @@ public record ReservationResponse(
     string? UserEmail,
     string? CreatedByName,
     string? CreatedByEmail,
-    string? CreatedByRole
+    string? CreatedByRole,
+    decimal TotalPrice,
+    decimal PricePerHour,
+    bool IsPeakHours,
+    int NormalSlots,
+    int PeakSlots,
+    decimal NormalSubtotal,
+    decimal PeakSubtotal,
+    decimal? NormalPricePerSlot,
+    decimal? PeakPricePerSlot
 );

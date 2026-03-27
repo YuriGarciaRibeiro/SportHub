@@ -39,12 +39,17 @@ public class GetAllCourtsHandler : IQueryHandler<GetAllCourtsQuery, PagedResult<
                 c.ImageUrls,
                 c.PricePerHour,
                 c.SlotDurationMinutes,
+                c.MinBookingSlots,
+                c.MaxBookingSlots,
                 c.OpeningTime.ToString("HH:mm"),
                 c.ClosingTime.ToString("HH:mm"),
                 c.Amenities,
                 c.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList(),
                 c.LocationId,
-                c.Location?.Name
+                c.Location?.Name,
+                c.PeakPricePerHour,
+                c.PeakStartTime,
+                c.PeakEndTime
             )).ToList(),
             TotalCount = pagedCourts.TotalCount,
             Page = pagedCourts.Page,

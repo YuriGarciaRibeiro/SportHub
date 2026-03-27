@@ -27,7 +27,6 @@ public class CreateSportHandler : ICommandHandler<CreateSportCommand, CreateSpor
 
         var sport = new Domain.Entities.Sport
         {
-            Id = Guid.NewGuid(),
             Name = request.Name.Trim(),
             Description = request.Description?.Trim() ?? "",
             ImageUrl = request.ImageUrl?.Trim() ?? "",

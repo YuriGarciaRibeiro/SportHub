@@ -28,4 +28,12 @@ public interface IUsersRepository
         bool? isActive = null,
         string? searchTerm = null,
         IEnumerable<UserRole>? allowedRoles = null);
+
+    Task<PagedResult<User>> GetPagedByTenantAsync(
+        Guid tenantId,
+        int page,
+        int pageSize,
+        string? searchTerm = null,
+        UserRole? role = null,
+        CancellationToken ct = default);
 }

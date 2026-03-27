@@ -7,11 +7,16 @@ public record CourtPublicResponse(
     List<string> ImageUrls,
     decimal PricePerHour,
     int SlotDurationMinutes,
+    int MinBookingSlots,
+    int MaxBookingSlots,
     string OpensAt,
     string ClosesAt,
     List<string> Amenities,
     List<SportSummary> Sports,
     Guid? LocationId,
-    string? LocationName);
+    string? LocationName,
+    decimal? PeakPricePerHour,
+    TimeOnly? PeakStartTime,
+    TimeOnly? PeakEndTime);
 
 public record SportSummary(Guid Id, string Name);

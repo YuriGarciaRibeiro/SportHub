@@ -15,6 +15,7 @@ public interface IReservationRepository
     IQueryable<Reservation> Query();
     Task AddManyAsync(IEnumerable<Reservation> entities);
     Task<List<Reservation>> GetByCourtAndDayAsync(Guid courtId, DateTime day);
+    Task<List<Reservation>> GetByCourtIdsAndPeriodAsync(IEnumerable<Guid> courtIds, DateTime fromUtc, DateTime toUtc, CancellationToken ct = default);
     Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc);
     Task<List<Reservation>> GetByUserAsync(Guid userId);
     Task<List<Reservation>> GetByCourtAsync(Guid courtId, DateTime? date = null);

@@ -1,5 +1,7 @@
 using Api.Document;
 using Api.Extensions;
+using Hangfire;
+using Infrastructure.Jobs;
 using Infrastructure.Hubs;
 using Infrastructure.Middleware;
 using Infrastructure.Services;
@@ -23,7 +25,8 @@ builder.AddAuthentication()
         .AddSeeders()
         .AddSerilogLogging()
         .AddCaching()
-        .AddCors();
+        .AddCors()
+        .AddBackgroundJobs();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -49,6 +52,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseEndpoints();
 app.MapHub<ReservationHub>("/hubs/reservations");
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    // Em produção, adicione autorização: Authorization = [new HangfireAuthorizationFilter()]
+    Authorization = []
+});
+
+app.UseRecurringJobs();
 
 // Seed do SuperAdmin (schema public)
 using (var scope = app.Services.CreateScope())

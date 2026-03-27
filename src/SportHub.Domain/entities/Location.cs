@@ -3,10 +3,9 @@ using SportHub.Domain.Common;
 
 namespace Domain.Entities;
 
-public class Location : AuditEntity, IEntity
+public class Location : TenantEntity, IEntity
 {
     public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
 
     public string Name { get; set; } = null!;
     public Address? Address { get; set; }

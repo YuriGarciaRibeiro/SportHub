@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace SportHub.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326191647_AddTenantEntityBaseClass")]
+    partial class AddTenantEntityBaseClass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,9 +99,6 @@ namespace SportHub.Infrastructure.Migrations
 
                     b.Property<TimeOnly?>("PeakEndTime")
                         .HasColumnType("time without time zone");
-
-                    b.Property<decimal?>("PeakPricePerHour")
-                        .HasColumnType("numeric");
 
                     b.Property<TimeOnly?>("PeakStartTime")
                         .HasColumnType("time without time zone");
@@ -228,38 +228,11 @@ namespace SportHub.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsPeakHours")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal?>("NormalPricePerSlot")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("NormalSlots")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("NormalSubtotal")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("PeakPricePerSlot")
-                        .HasColumnType("numeric");
-
-                    b.Property<int>("PeakSlots")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("PeakSubtotal")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("PricePerHour")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime>("StartTimeUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("numeric");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -520,15 +493,7 @@ namespace SportHub.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Location");
-
-                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Domain.Entities.Location", b =>

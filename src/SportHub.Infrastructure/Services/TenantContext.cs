@@ -21,6 +21,7 @@ public class TenantContext : ITenantContext
     public string? InstagramUrl => _tenant?.InstagramUrl;
     public string? FacebookUrl => _tenant?.FacebookUrl;
     public string? WhatsappNumber => _tenant?.WhatsappNumber;
+    public bool PeakHoursEnabled => _tenant?.PeakHoursEnabled ?? false;
     public bool IsResolved => _tenant is not null;
 
     public void Resolve(Tenant tenant)

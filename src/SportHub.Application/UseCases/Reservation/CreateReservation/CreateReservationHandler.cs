@@ -40,14 +40,20 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
 
         var userId = targetUserId ?? currentUserId;
 
-        var court = await _courtsRepository.GetByIdAsync(request.CourtId);
+        var court = await _courtsRepository.GetByIdAsync(request.CourtId, new GetCourtIncludeSettings
+        {
+            IncludeSports = false,
+            IncludeLocation = false,
+            IncludeTenant = false,
+            AsNoTracking = true
+        });
         if (court == null)
         {
             _logger.LogWarning($"Court with ID {request.CourtId} not found.");
             return Result.Fail(new NotFound($"Court with ID {request.CourtId} not found."));
         }
 
-        var reservationResult = await _reservationService.ReserveAsync(court, userId, request.Reservation.StartTime.ToUniversalTime(), request.Reservation.EndTime.ToUniversalTime());
+        var reservationResult = await _reservationService.ReserveAsync(court, userId, request.Reservation.StartTime.ToUniversalTime(), request.Reservation.EndTime.ToUniversalTime(), _tenantContext.PeakHoursEnabled);
 
         if (reservationResult.IsFailed)
         {
@@ -55,13 +61,14 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
             return Result.Fail(reservationResult.Errors);
         }
 
+        var reservation = reservationResult.Value;
         _logger.LogInformation($"Reservation created successfully for Court ID {request.CourtId} by User ID {userId}.");
 
         var cacheKey = _cacheService.GenerateCacheKey(CacheKeyPrefix.GetAvailability, request.CourtId, request.Reservation.StartTime.ToString("yyyy-MM-dd"));
         await _cacheService.RemoveAsync(cacheKey, cancellationToken);
 
         var payload = new ReservationCreatedPayload(
-            ReservationId: reservationResult.Value,
+            ReservationId: reservation.Id,
             CourtId: request.CourtId,
             UserId: userId,
             StartTime: request.Reservation.StartTime.ToUniversalTime(),
@@ -71,7 +78,16 @@ public class CreateReservationHandler : ICommandHandler<CreateReservationCommand
 
         return Result.Ok(new CreateReservationResponse
         {
-            ReservationId = reservationResult.Value
+            ReservationId = reservation.Id,
+            TotalPrice = reservation.TotalPrice,
+            PricePerHour = reservation.PricePerHour,
+            IsPeakHours = reservation.IsPeakHours,
+            NormalSlots = reservation.NormalSlots,
+            PeakSlots = reservation.PeakSlots,
+            NormalSubtotal = reservation.NormalSubtotal,
+            PeakSubtotal = reservation.PeakSubtotal,
+            NormalPricePerSlot = reservation.NormalPricePerSlot,
+            PeakPricePerSlot = reservation.PeakPricePerSlot
         });
     }
 }

@@ -10,4 +10,5 @@ public record UpdateSettingsCommand(
     string? Tagline,
     string? InstagramUrl,
     string? FacebookUrl,
-    string? WhatsappNumber) : ICommand<Unit>;
+    string? WhatsappNumber,
+    bool PeakHoursEnabled) : ICommand<Unit>;

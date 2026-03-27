@@ -39,6 +39,8 @@ public class Tenant
 
     [JsonInclude] public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
+    [JsonInclude] public bool PeakHoursEnabled { get; private set; } = false;
+
     // Constructor for EF Core and JSON Deserialization (Cache)
     public Tenant() { }
 
@@ -68,12 +70,13 @@ public class Tenant
         CoverImageUrl = coverImageUrl;
     }
 
-    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline)
+    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline, bool peakHoursEnabled)
     {
         Name = name;
         LogoUrl = logoUrl;
         PrimaryColor = primaryColor;
         Tagline = tagline;
+        PeakHoursEnabled = peakHoursEnabled;
     }
 
     public void UpdateSocialMedia(string? instagramUrl, string? facebookUrl, string? whatsappNumber)

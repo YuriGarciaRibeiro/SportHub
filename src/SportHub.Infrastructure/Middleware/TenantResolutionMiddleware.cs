@@ -30,7 +30,6 @@ public class TenantResolutionMiddleware
         "/scalar",
         "/openapi",
         "/auth/superadmin",
-        "/auth/register",
         "/auth/me",
         "/hubs"
     ];

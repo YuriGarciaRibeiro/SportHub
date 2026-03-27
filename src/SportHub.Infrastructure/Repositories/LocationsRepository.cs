@@ -8,33 +8,27 @@ namespace Infrastructure.Repositories;
 public class LocationsRepository : ILocationsRepository
 {
     private readonly DbSet<Location> _dbSet;
-    private readonly ITenantContext _tenantContext;
 
-    public LocationsRepository(ApplicationDbContext dbContext, ITenantContext tenantContext)
+    public LocationsRepository(ApplicationDbContext dbContext)
     {
         _dbSet = dbContext.Set<Location>();
-        _tenantContext = tenantContext;
     }
 
     public async Task<List<Location>> GetAllAsync()
     {
-        var tenantId = _tenantContext.TenantId;
         return await _dbSet.AsNoTracking()
-            .Where(l => l.TenantId == tenantId)
             .OrderBy(l => l.Name)
             .ToListAsync();
     }
 
     public async Task<Location?> GetByIdAsync(Guid id)
     {
-        var tenantId = _tenantContext.TenantId;
-        return await _dbSet.FirstOrDefaultAsync(l => l.Id == id && l.TenantId == tenantId);
+        return await _dbSet.FirstOrDefaultAsync(l => l.Id == id);
     }
 
     public async Task<Location?> GetDefaultAsync()
     {
-        var tenantId = _tenantContext.TenantId;
-        return await _dbSet.FirstOrDefaultAsync(l => l.IsDefault && l.TenantId == tenantId);
+        return await _dbSet.FirstOrDefaultAsync(l => l.IsDefault);
     }
 
     public Task AddAsync(Location entity)

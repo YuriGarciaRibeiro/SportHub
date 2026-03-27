@@ -8,6 +8,7 @@ using Application.UseCases.Court.GetAvailability;
 using Application.UseCases.Court.UpdateCourt;
 using Application.UseCases.Court.UploadCourtImage;
 using Application.UseCases.Court.UploadCourtGalleryImage;
+using Application.UseCases.Court.CheckoutPreview;
 using Application.UseCases.Court.DeleteCourtGalleryImage;
 using Application.UseCases.Reservations.CreateReservation;
 using Application.CQRS;
@@ -99,6 +100,22 @@ public static class CourtsEndpoints
         .WithSummary("Get availability for a specific court on a given date")
         .AllowAnonymous()
         .Produces<List<DateTime>>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /courts/{courtId}/checkout-preview — calcula o preço antes de confirmar
+        group.MapPost("/{courtId:guid}/checkout-preview", async (
+            Guid courtId,
+            CheckoutPreviewRequest request,
+            ISender sender) =>
+        {
+            var query = new CheckoutPreviewQuery(courtId, request.StartTimeUtc, request.EndTimeUtc);
+            var result = await sender.Send(query);
+            return result.ToIResult();
+        })
+        .WithName("CheckoutPreview")
+        .WithSummary("Calcula o breakdown de preço para um período antes de confirmar a reserva")
+        .AllowAnonymous()
+        .Produces<CheckoutPreviewResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
 
         // POST /courts/{courtId}/reservations
@@ -223,3 +240,4 @@ public static class CourtsEndpoints
 }
 
 public record DeleteGalleryImageRequest(string ImageUrl);
+public record CheckoutPreviewRequest(DateTime StartTimeUtc, DateTime EndTimeUtc);

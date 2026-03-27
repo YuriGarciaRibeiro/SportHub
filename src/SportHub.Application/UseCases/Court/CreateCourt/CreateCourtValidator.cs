@@ -25,5 +25,10 @@ public class CreateCourtValidator : AbstractValidator<CourtRequest>
 
         RuleFor(c => c.Sports)
             .NotEmpty().WithMessage("A quadra deve ter pelo menos um esporte vinculado.");
+
+        RuleFor(c => c.PeakPricePerHour)
+            .GreaterThanOrEqualTo(0)
+            .When(c => c.PeakPricePerHour.HasValue)
+            .WithMessage("O preço de pico por hora deve ser maior ou igual a zero.");
     }
 }

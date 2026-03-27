@@ -9,6 +9,7 @@ namespace Infrastructure.Persistence;
 public class ApplicationDbContext : DbContext, IUnitOfWork
 {
     private readonly ICurrentUserService _currentUserService;
+    private readonly ITenantContext _tenantContext;
     private readonly TimeProvider _timeProvider;
 
     public ApplicationDbContext(
@@ -19,6 +20,7 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
         : base(options)
     {
         _currentUserService = currentUserService;
+        _tenantContext = tenantContext;
         _timeProvider = timeProvider;
     }
 
@@ -32,18 +34,26 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<Reservation> Reservations { get; set; } = null!;
     public DbSet<Location> Locations { get; set; } = null!;
 
+    private Guid CurrentTenantId => _tenantContext.TenantId;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-        ApplySoftDeleteFilter(builder);
+        ApplyGlobalFilters(builder);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var userId = _currentUserService.UserId;
         var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+
+        foreach (var entry in ChangeTracker.Entries<TenantEntity>())
+        {
+            if (entry.State == EntityState.Added && _tenantContext.IsResolved)
+                entry.Entity.TenantId = _tenantContext.TenantId;
+        }
 
         foreach (var entry in ChangeTracker.Entries<AuditEntity>())
         {
@@ -69,18 +79,34 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    private static void ApplySoftDeleteFilter(ModelBuilder builder)
+    private void ApplyGlobalFilters(ModelBuilder builder)
     {
+        var dbContextConst = Expression.Constant(this, typeof(ApplicationDbContext));
+        var currentTenantIdExpr = Expression.Property(dbContextConst, nameof(CurrentTenantId));
+
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
-            if (!typeof(AuditEntity).IsAssignableFrom(entityType.ClrType))
-                continue;
+            var clrType = entityType.ClrType;
+            var isTenant = typeof(TenantEntity).IsAssignableFrom(clrType);
+            var isAudit = typeof(AuditEntity).IsAssignableFrom(clrType);
 
-            var parameter = Expression.Parameter(entityType.ClrType, "e");
-            var isDeleted = Expression.Property(parameter, nameof(AuditEntity.IsDeleted));
-            var filter = Expression.Lambda(Expression.Not(isDeleted), parameter);
+            if (!isAudit) continue;
 
-            builder.Entity(entityType.ClrType).HasQueryFilter(filter);
+            var param = Expression.Parameter(clrType, "e");
+
+            // !e.IsDeleted
+            var isDeletedProp = Expression.Property(param, nameof(AuditEntity.IsDeleted));
+            Expression body = Expression.Not(isDeletedProp);
+
+            if (isTenant)
+            {
+                // e.TenantId == this.CurrentTenantId
+                var tenantIdProp = Expression.Property(param, nameof(TenantEntity.TenantId));
+                var tenantFilter = Expression.Equal(tenantIdProp, currentTenantIdExpr);
+                body = Expression.AndAlso(body, tenantFilter);
+            }
+
+            builder.Entity(clrType).HasQueryFilter(Expression.Lambda(body, param));
         }
     }
 }

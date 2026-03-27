@@ -27,7 +27,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
 
     public async Task<Result<CourtPublicResponse>> Handle(UpdateCourtCommand request, CancellationToken cancellationToken)
     {
-        var court = await _courtsRepository.GetByIdAsync(request.Id);
+        var court = await _courtsRepository.GetByIdAsync(request.Id, new GetCourtIncludeSettings { IncludeSports = true, AsNoTracking = false });
 
         if (court is null)
             return Result.Fail(new NotFound($"Quadra com ID {request.Id} não encontrada."));
@@ -47,9 +47,12 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
         court.TimeZone = request.Court.TimeZone;
         court.Amenities = request.Court.Amenities;
         court.LocationId = request.Court.LocationId;
-        court.Sports = sports.ToList();
+        court.Sports.Clear();
+        foreach (var sport in sports)
+            court.Sports.Add(sport);
+        court.PeakPricePerHour = request.Court.PeakPricePerHour;
 
-        await _courtsRepository.UpdateAsync(court);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var response = new CourtPublicResponse(
@@ -59,12 +62,17 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
             court.ImageUrls,
             court.PricePerHour,
             court.SlotDurationMinutes,
+            court.MinBookingSlots,
+            court.MaxBookingSlots,
             court.OpeningTime.ToString("HH:mm"),
             court.ClosingTime.ToString("HH:mm"),
             court.Amenities,
             court.Sports.Select(s => new SportSummary(s.Id, s.Name)).ToList(),
             court.LocationId,
-            court.Location?.Name
+            court.Location?.Name,
+            court.PeakPricePerHour,
+            court.PeakStartTime,
+            court.PeakEndTime
         );
 
         return Result.Ok(response);
