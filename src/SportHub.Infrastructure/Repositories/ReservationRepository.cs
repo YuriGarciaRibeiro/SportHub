@@ -3,6 +3,7 @@ using Application.Common.Models;
 using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using SportHub.Infrastructure.Extensions;
 
 namespace Infrastructure.Repositories;
 
@@ -19,9 +20,15 @@ public class ReservationRepository : IReservationRepository
         _tenantContext = tenantContext;
     }
 
-    public async Task<Reservation?> GetByIdAsync(Guid id)
+    public async Task<Reservation?> GetByIdAsync(Guid id, GetReservationSettings? includeSettings = null)
     {
-        return await _dbSet.FirstOrDefaultAsync(r => r.Id == id);
+         return await _dbContext.Reservations
+        .If(includeSettings?.AsNoTracking == true, q => q.AsNoTracking())
+        .If(includeSettings?.IncludeTenant == true, q => q.Include(r => r.Tenant))
+        .If(includeSettings?.IncludeCourt == true, q => q.Include(r => r.Court))
+        .If(includeSettings?.IncludeUser == true, q => q.Include(r => r.User))
+        .AsSplitQuery()
+        .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<List<Reservation>> GetAllAsync()

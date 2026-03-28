@@ -45,6 +45,7 @@ public static class BrandingEndpoints
                 tenantCtx.CoverImageUrl,
                 tenantCtx.PrimaryColor,
                 tenantCtx.Tagline,
+                tenantCtx.CancelationWindowHours,
                 socialMedia,
                 locationResponses,
                 tenantCtx.PeakHoursEnabled
@@ -66,6 +67,7 @@ public record BrandingResponse(
     string? CoverImageUrl,
     string? PrimaryColor,
     string? Tagline,
+    int? CancelationWindowHours,
     SocialMediaResponse? SocialMedia,
     List<LocationResponse> Locations,
     bool PeakHoursEnabled);

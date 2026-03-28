@@ -31,7 +31,13 @@ public class CancelReservationHandler : ICommandHandler<CancelReservationCommand
 
     public async Task<Result> Handle(CancelReservationCommand request, CancellationToken cancellationToken)
     {
-        var reservation = await _reservationRepository.GetByIdAsync(request.ReservationId);
+        var reservation = await _reservationRepository.GetByIdAsync(request.ReservationId, new GetReservationSettings
+        {
+            IncludeCourt = false,
+            IncludeTenant = true,
+            IncludeUser = false,
+            AsNoTracking = true
+        });
 
         if (reservation is null)
             return Result.Fail(new NotFound($"Reserva com ID {request.ReservationId} não encontrada."));
@@ -42,6 +48,9 @@ public class CancelReservationHandler : ICommandHandler<CancelReservationCommand
 
         if (reservation.UserId != currentUserId && !isManagerOrAbove)
             return Result.Fail(new Forbidden("Você não tem permissão para cancelar esta reserva."));
+        
+        if (DateTime.UtcNow + TimeSpan.FromHours(reservation.Tenant.CancelationWindowHours) > reservation.StartTimeUtc)
+            return Result.Fail(new BadRequest($"Reservas só podem ser canceladas com pelo menos {reservation.Tenant.CancelationWindowHours} horas de antecedência."));
 
         _logger.LogInformation("Cancelando reserva {ReservationId} por usuário {UserId}", request.ReservationId, currentUserId);
 

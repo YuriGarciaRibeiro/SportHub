@@ -41,6 +41,8 @@ public class Tenant
 
     [JsonInclude] public bool PeakHoursEnabled { get; private set; } = false;
 
+    [JsonInclude] public int CancelationWindowHours { get; private set; } = 0;
+
     // Constructor for EF Core and JSON Deserialization (Cache)
     public Tenant() { }
 
@@ -70,12 +72,13 @@ public class Tenant
         CoverImageUrl = coverImageUrl;
     }
 
-    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline, bool peakHoursEnabled)
+    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline, int? cancelationWindowHours, bool peakHoursEnabled)
     {
         Name = name;
         LogoUrl = logoUrl;
         PrimaryColor = primaryColor;
         Tagline = tagline;
+        CancelationWindowHours = cancelationWindowHours ?? CancelationWindowHours;
         PeakHoursEnabled = peakHoursEnabled;
     }
 

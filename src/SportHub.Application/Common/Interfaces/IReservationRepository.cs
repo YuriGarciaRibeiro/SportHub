@@ -4,8 +4,10 @@ using Domain.Entities;
 namespace Application.Common.Interfaces;
 
 public interface IReservationRepository
-{
-    Task<Reservation?> GetByIdAsync(Guid id);
+{   
+
+
+    Task<Reservation?> GetByIdAsync(Guid id, GetReservationSettings? includeSettings = null);
     Task<List<Reservation>> GetAllAsync();
     Task AddAsync(Reservation entity);
     Task UpdateAsync(Reservation entity);
@@ -89,4 +91,12 @@ public class TopCustomer
     public string Email { get; set; } = null!;
     public decimal TotalSpent { get; set; }
     public int Reservations { get; set; }
+}
+
+public class GetReservationSettings
+{
+    public bool IncludeCourt { get; set; } = true;
+    public bool IncludeTenant { get; set; } = false;
+    public bool IncludeUser { get; set; } = true;
+    public bool AsNoTracking { get; set; } = true;
 }

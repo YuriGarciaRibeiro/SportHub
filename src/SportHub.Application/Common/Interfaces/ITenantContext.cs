@@ -19,6 +19,7 @@ public interface ITenantContext
     string? FacebookUrl { get; }
     string? WhatsappNumber { get; }
     bool PeakHoursEnabled { get; }
+    int? CancelationWindowHours { get; }
 
     bool IsResolved { get; }
 
