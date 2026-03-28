@@ -21,5 +21,9 @@ public class UpdateSettingsValidator : AbstractValidator<UpdateSettingsCommand>
         RuleFor(x => x.Tagline)
             .MaximumLength(150).WithMessage("A tagline deve ter no máximo 150 caracteres.")
             .When(x => !string.IsNullOrEmpty(x.Tagline));
+
+        RuleFor(x => x.Description)
+            .MaximumLength(5000).WithMessage("A descrição deve ter no máximo 5000 caracteres.")
+            .When(x => !string.IsNullOrEmpty(x.Description));
     }
 }

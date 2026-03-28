@@ -23,6 +23,7 @@ public class Tenant
     [JsonInclude] public string? CoverImageUrl { get; private set; }
     [JsonInclude] public string? PrimaryColor { get; private set; }
     [JsonInclude] public string? Tagline { get; private set; }
+    [JsonInclude] public string? Description { get; private set; }
 
     // Redes sociais globais da marca
     [JsonInclude] public string? InstagramUrl { get; private set; }
@@ -72,12 +73,13 @@ public class Tenant
         CoverImageUrl = coverImageUrl;
     }
 
-    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline, int? cancelationWindowHours, bool peakHoursEnabled)
+    public void UpdateSettings(string name, string? logoUrl, string? primaryColor, string? tagline, string? description, int? cancelationWindowHours, bool peakHoursEnabled)
     {
         Name = name;
         LogoUrl = logoUrl;
         PrimaryColor = primaryColor;
         Tagline = tagline;
+        Description = description;
         CancelationWindowHours = cancelationWindowHours ?? CancelationWindowHours;
         PeakHoursEnabled = peakHoursEnabled;
     }

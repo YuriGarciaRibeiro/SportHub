@@ -47,6 +47,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
         public string? CoverImageUrl => null;
         public string? PrimaryColor => null;
         public string? Tagline => null;
+        public string? Description => null;
         public string? InstagramUrl => null;
         public string? FacebookUrl => null;
         public string? WhatsappNumber => null;

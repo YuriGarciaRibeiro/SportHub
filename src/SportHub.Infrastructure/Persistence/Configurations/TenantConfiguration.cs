@@ -45,6 +45,9 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(t => t.WhatsappNumber)
             .HasMaxLength(20);
 
+        builder.Property(t => t.Description)
+            .HasColumnType("text");
+
         builder.HasIndex(t => t.Slug).IsUnique();
         builder.HasIndex(t => t.CustomDomain).IsUnique();
         builder.HasIndex(t => t.Status);

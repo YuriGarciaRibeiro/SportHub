@@ -15,6 +15,7 @@ public interface ITenantContext
     string? CoverImageUrl { get; }
     string? PrimaryColor { get; }
     string? Tagline { get; }
+    string? Description { get; }
     string? InstagramUrl { get; }
     string? FacebookUrl { get; }
     string? WhatsappNumber { get; }

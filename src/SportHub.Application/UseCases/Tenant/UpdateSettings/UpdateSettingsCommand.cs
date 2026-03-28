@@ -8,6 +8,7 @@ public record UpdateSettingsCommand(
     string? LogoUrl,
     string? PrimaryColor,
     string? Tagline,
+    string? Description,
     string? InstagramUrl,
     string? FacebookUrl,
     string? WhatsappNumber,

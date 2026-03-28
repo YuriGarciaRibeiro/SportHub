@@ -18,6 +18,7 @@ public class TenantContext : ITenantContext
     public string? CoverImageUrl => _tenant?.CoverImageUrl;
     public string? PrimaryColor => _tenant?.PrimaryColor;
     public string? Tagline => _tenant?.Tagline;
+    public string? Description => _tenant?.Description;
     public string? InstagramUrl => _tenant?.InstagramUrl;
     public string? FacebookUrl => _tenant?.FacebookUrl;
     public string? WhatsappNumber => _tenant?.WhatsappNumber;
