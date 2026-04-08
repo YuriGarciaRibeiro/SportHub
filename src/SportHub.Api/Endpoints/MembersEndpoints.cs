@@ -1,6 +1,7 @@
 using Application.Common.Models;
 using Application.Security;
 using Application.UseCases.Members.GetMembers;
+using Application.UseCases.Members.ToggleMemberStatus;
 using Application.UseCases.Members.UpdateMemberRole;
 using Application.UseCases.Members.UpsertMember;
 using Domain.Enums;
@@ -62,6 +63,19 @@ public static class MembersEndpoints
         .WithName("UpdateMemberRole")
         .WithSummary("Atualiza o role de um membro (apenas Owner)")
         .Produces<MemberRoleUpdatedResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // PATCH /api/members/{id}/status — Bloqueia ou ativa um membro
+        group.MapPatch("/{id:guid}/status", async (Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new ToggleMemberStatusCommand(id));
+            return result.ToIResult();
+        })
+        .WithName("ToggleMemberStatus")
+        .WithSummary("Alterna o status ativo/inativo de um membro (apenas Owner)")
+        .Produces<ToggleMemberStatusResponse>(StatusCodes.Status200OK)
         .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);

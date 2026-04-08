@@ -65,6 +65,7 @@ public static class ServiceExtensions
         builder.Services.AddScoped<ICourtsRepository, CourtsRepository>();
         builder.Services.AddScoped<ISportsRepository, SportsRepository>();
         builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+        builder.Services.AddScoped<ICourtMaintenanceRepository, CourtMaintenanceRepository>();
 
         builder.Services.AddScoped<ILocationsRepository, LocationsRepository>();
 

@@ -1,6 +1,7 @@
 using Application.Common.Interfaces;
 using Application.Common.Models;
 using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using SportHub.Infrastructure.Extensions;
@@ -79,7 +80,7 @@ public class ReservationRepository : IReservationRepository
     {
         var dateUtc = DateTime.SpecifyKind(day.Date, DateTimeKind.Utc);
         return await _dbContext.Reservations
-            .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc)
+            .Where(r => r.CourtId == courtId && r.StartTimeUtc.Date == dateUtc && r.Status != ReservationStatus.Cancelled)
             .ToListAsync();
     }
 
@@ -99,7 +100,7 @@ public class ReservationRepository : IReservationRepository
     public async Task<bool> ExistsConflictAsync(Guid courtId, DateTime startUtc, DateTime endUtc)
     {
         return await _dbContext.Reservations
-            .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc);
+            .AnyAsync(r => r.CourtId == courtId && r.StartTimeUtc < endUtc && r.EndTimeUtc > startUtc && r.Status != ReservationStatus.Cancelled);
     }
 
     public async Task<List<Reservation>> GetByUserAsync(Guid userId)
@@ -208,6 +209,14 @@ public class ReservationRepository : IReservationRepository
             .FirstOrDefaultAsync(ct);
     }
 
+    public async Task<decimal> GetTotalSpentByUserAsync(Guid userId, CancellationToken ct = default)
+    {
+        return await _dbContext.Reservations
+            .Where(r => r.UserId == userId &&
+                        (r.Status == ReservationStatus.Confirmed || r.Status == ReservationStatus.Completed))
+            .SumAsync(r => r.TotalPrice, ct);
+    }
+
     public async Task<List<CourtFrequency>> GetTopCourtsByUserAsync(Guid userId, int top, CancellationToken ct = default)
     {
         return await _dbContext.Reservations
@@ -306,9 +315,8 @@ public class ReservationRepository : IReservationRepository
     {
         var tenantId = _tenantContext.TenantId;
         var cancelled = await _dbContext.Reservations
-            .IgnoreQueryFilters()
             .Include(r => r.Court)
-            .Where(r => r.TenantId == tenantId && r.IsDeleted && r.DeletedAt >= fromUtc && r.DeletedAt < toUtc)
+            .Where(r => r.TenantId == tenantId && r.Status == ReservationStatus.Cancelled && r.UpdatedAt >= fromUtc && r.UpdatedAt < toUtc)
             .Select(r => new
             {
                 Revenue = (decimal)(r.EndTimeUtc - r.StartTimeUtc).TotalMinutes / 60m * r.Court.PricePerHour

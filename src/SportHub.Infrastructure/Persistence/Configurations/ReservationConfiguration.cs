@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,6 +15,10 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
         builder.HasIndex(r => r.CourtId);
         builder.HasIndex(r => r.UserId);
         builder.HasIndex(r => new { r.CourtId, r.StartTimeUtc });
+
+        builder.Property(r => r.Status)
+               .HasConversion<int>()
+               .HasDefaultValue(ReservationStatus.Pending);
 
         builder.HasOne(r => r.CreatedByUser)
                .WithMany()

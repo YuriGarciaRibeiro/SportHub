@@ -1,9 +1,7 @@
-using System.ComponentModel;
 using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Application.CQRS;
-using FluentResults;
-using MediatR;
+using Application.UseCases.CourtMaintenance.GetCourtMaintenances;
 
 namespace Application.UseCases.Court.GetCourtById;
 
@@ -20,9 +18,10 @@ public class GetCourtByIdHandler : IQueryHandler<GetCourtByIdQuery, CourtPublicR
     {
         var court = await _courtRepository.GetByIdAsync(request.Id, new GetCourtIncludeSettings
         {
-                IncludeLocation = true,
-                IncludeSports = true,
-                AsNoTracking = true
+            IncludeLocation = true,
+            IncludeSports = true,
+            IncludeMaintenances = true,
+            AsNoTracking = true
         });
 
         if (court is null)
@@ -47,7 +46,9 @@ public class GetCourtByIdHandler : IQueryHandler<GetCourtByIdQuery, CourtPublicR
             court.Location?.Name,
             court.PeakPricePerHour,
             court.PeakStartTime,
-            court.PeakEndTime
+            court.PeakEndTime,
+            court.Maintenances.Select(m => new CourtMaintenanceResponse(
+                m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList()
         );
 
         return Result.Ok(response);

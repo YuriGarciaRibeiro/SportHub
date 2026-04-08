@@ -33,6 +33,7 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<Sport> Sports { get; set; } = null!;
     public DbSet<Reservation> Reservations { get; set; } = null!;
     public DbSet<Location> Locations { get; set; } = null!;
+    public DbSet<CourtMaintenance> CourtMaintenances { get; set; } = null!;
 
     private Guid CurrentTenantId => _tenantContext.TenantId;
 

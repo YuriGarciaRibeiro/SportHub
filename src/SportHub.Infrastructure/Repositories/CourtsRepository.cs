@@ -25,6 +25,7 @@ public class CourtsRepository : ICourtsRepository
         .If(includeSettings?.IncludeTenant == true, q => q.Include(c => c.Tenant))
         .If(includeSettings?.IncludeSports == true, q => q.Include(c => c.Sports))
         .If(includeSettings?.IncludeLocation == true, q => q.Include(c => c.Location))
+        .If(includeSettings?.IncludeMaintenances == true, q => q.Include(c => c.Maintenances))
         .AsSplitQuery()
         .FirstOrDefaultAsync(c => c.Id == id);
     }
@@ -36,6 +37,7 @@ public class CourtsRepository : ICourtsRepository
             .If(includeSettings?.IncludeTenant == true, q => q.Include(c => c.Tenant))
             .If(includeSettings?.IncludeSports == true, q => q.Include(c => c.Sports))
             .If(includeSettings?.IncludeLocation == true, q => q.Include(c => c.Location))
+            .If(includeSettings?.IncludeMaintenances == true, q => q.Include(c => c.Maintenances))
             .AsSplitQuery()
             .ToListAsync();
     }

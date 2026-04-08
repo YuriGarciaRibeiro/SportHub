@@ -2,6 +2,7 @@ using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Application.Services;
 using Domain.Entities;
+using Domain.Enums;
 
 public class ReservationService : IReservationService
 {
@@ -20,7 +21,13 @@ public class ReservationService : IReservationService
 
     public async Task<Result<List<(DateTime SlotUtc, bool IsAvailable)>>> GetSlotsAsync(Guid courtId, DateTime day)
     {
-        var court = await _courtRepository.GetByIdAsync(courtId);
+        var court = await _courtRepository.GetByIdAsync(courtId, new Application.Common.Interfaces.GetCourtIncludeSettings
+        {
+            IncludeMaintenances = true,
+            IncludeSports = false,
+            IncludeLocation = false,
+            AsNoTracking = true
+        });
         if (court == null) return Result.Fail(new NotFound("Court not found"));
 
         var localDate = day.Date;
@@ -38,6 +45,28 @@ public class ReservationService : IReservationService
             var slotEnd = slotUtc + slotDuration;
             var isAvailable = !existingReservations.Any(r => slotUtc < r.EndTimeUtc && slotEnd > r.StartTimeUtc);
             slots.Add((slotUtc, isAvailable));
+        }
+
+        var localDayOfWeek = TimeZoneInfo.ConvertTimeFromUtc(openingUtc, BrazilTz).DayOfWeek;
+        var localDateOnly = DateOnly.FromDateTime(localDate);
+
+        var activeMaintenances = court.Maintenances.Where(m =>
+            (m.Type == Domain.Enums.MaintenanceType.Recurring && m.DayOfWeek == localDayOfWeek) ||
+            (m.Type == Domain.Enums.MaintenanceType.OneTime && m.Date == localDateOnly)
+        );
+
+        foreach (var maint in activeMaintenances)
+        {
+            var mStartUtc = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(localDate + maint.StartTime.ToTimeSpan(), DateTimeKind.Unspecified), BrazilTz);
+            var mEndUtc = TimeZoneInfo.ConvertTimeToUtc(
+                DateTime.SpecifyKind(localDate + maint.EndTime.ToTimeSpan(), DateTimeKind.Unspecified), BrazilTz);
+
+            slots = slots.Select(s =>
+                s.Item1 < mEndUtc && s.Item1 + slotDuration > mStartUtc
+                    ? (s.Item1, false)
+                    : s
+            ).ToList();
         }
 
         return slots;
@@ -77,6 +106,7 @@ public class ReservationService : IReservationService
             UserId = userId,
             StartTimeUtc = startUtc,
             EndTimeUtc = endUtc,
+            Status = ReservationStatus.Confirmed,
             IsPeakHours = pricing.IsPeakHours,
             PricePerHour = pricing.PeakSlots > 0 && pricing.NormalSlots == 0
                 ? court.PeakPricePerHour ?? court.PricePerHour

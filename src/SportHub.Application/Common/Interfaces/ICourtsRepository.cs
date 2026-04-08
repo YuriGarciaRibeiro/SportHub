@@ -32,5 +32,6 @@ public class GetCourtIncludeSettings
     public bool IncludeSports { get; set; } = true;
     public bool IncludeLocation { get; set; } = true;
     public bool IncludeTenant { get; set; } = false;
+    public bool IncludeMaintenances { get; set; } = false;
     public bool AsNoTracking { get; set; } = true;
 }

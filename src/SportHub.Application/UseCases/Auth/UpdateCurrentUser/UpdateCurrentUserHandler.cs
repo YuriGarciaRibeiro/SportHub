@@ -38,10 +38,12 @@ public class UpdateCurrentUserHandler : ICommandHandler<UpdateCurrentUserCommand
             user.Id,
             user.FirstName,
             user.LastName,
+            $"{user.FirstName} {user.LastName}".Trim(),
             user.Email,
             user.Role.ToString(),
             user.LastLoginAt,
-            user.CreatedAt
+            user.CreatedAt,
+            0m
         ));
     }
 }

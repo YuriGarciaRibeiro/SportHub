@@ -1,5 +1,6 @@
 using Application.Common.Models;
 using Application.CQRS;
+using Domain.Enums;
 
 namespace Application.UseCases.Reservations.GetMyReservations;
 
@@ -32,5 +33,6 @@ public record ReservationResponse(
     decimal NormalSubtotal,
     decimal PeakSubtotal,
     decimal? NormalPricePerSlot,
-    decimal? PeakPricePerSlot
+    decimal? PeakPricePerSlot,
+    ReservationStatus Status
 );

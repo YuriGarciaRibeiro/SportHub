@@ -1,4 +1,5 @@
 using Domain.Common;
+using Domain.Enums;
 using SportHub.Domain.Common;
 
 namespace Domain.Entities;
@@ -11,6 +12,8 @@ public class Reservation : TenantEntity, IEntity
 
     public DateTime StartTimeUtc { get; set; }
     public DateTime EndTimeUtc { get; set; }
+
+    public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
 
     public decimal TotalPrice { get; set; }
     public bool IsPeakHours { get; set; }

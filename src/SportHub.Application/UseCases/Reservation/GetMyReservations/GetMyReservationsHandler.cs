@@ -49,7 +49,8 @@ public class GetMyReservationsHandler : IQueryHandler<GetMyReservationsQuery, Pa
                 r.NormalSubtotal,
                 r.PeakSubtotal,
                 r.NormalPricePerSlot,
-                r.PeakPricePerSlot))],
+                r.PeakPricePerSlot,
+                r.Status))],
             TotalCount = paged.TotalCount,
             Page = paged.Page,
             PageSize = paged.PageSize

@@ -36,7 +36,7 @@ public class CancelReservationHandler : ICommandHandler<CancelReservationCommand
             IncludeCourt = false,
             IncludeTenant = true,
             IncludeUser = false,
-            AsNoTracking = true
+            AsNoTracking = false
         });
 
         if (reservation is null)
@@ -54,7 +54,8 @@ public class CancelReservationHandler : ICommandHandler<CancelReservationCommand
 
         _logger.LogInformation("Cancelando reserva {ReservationId} por usuário {UserId}", request.ReservationId, currentUserId);
 
-        await _reservationRepository.RemoveAsync(reservation);
+        reservation.Status = ReservationStatus.Cancelled;
+        await _reservationRepository.UpdateAsync(reservation);
 
         var cacheKey = _cacheService.GenerateCacheKey(CacheKeyPrefix.GetAvailability, reservation.CourtId, reservation.StartTimeUtc.ToString("yyyy-MM-dd"));
         await _cacheService.RemoveAsync(cacheKey, cancellationToken);

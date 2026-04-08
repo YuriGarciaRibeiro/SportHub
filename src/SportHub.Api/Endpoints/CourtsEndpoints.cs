@@ -10,6 +10,9 @@ using Application.UseCases.Court.UploadCourtImage;
 using Application.UseCases.Court.UploadCourtGalleryImage;
 using Application.UseCases.Court.CheckoutPreview;
 using Application.UseCases.Court.DeleteCourtGalleryImage;
+using Application.UseCases.CourtMaintenance.CreateCourtMaintenance;
+using Application.UseCases.CourtMaintenance.DeleteCourtMaintenance;
+using Application.UseCases.CourtMaintenance.GetCourtMaintenances;
 using Application.UseCases.Reservations.CreateReservation;
 using Application.CQRS;
 using Application.Security;
@@ -233,6 +236,44 @@ public static class CourtsEndpoints
         })
         .WithName("DeleteCourtGalleryImage")
         .WithSummary("Remove uma imagem da galeria da quadra")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // GET /courts/{courtId}/maintenances — IsStaff
+        group.MapGet("/{courtId:guid}/maintenances", async (Guid courtId, ISender sender) =>
+        {
+            var result = await sender.Send(new GetCourtMaintenancesQuery { CourtId = courtId });
+            return result.ToIResult();
+        })
+        .WithName("GetCourtMaintenances")
+        .WithSummary("Lista janelas de manutenção da quadra")
+        .RequireAuthorization(PolicyNames.IsStaff)
+        .Produces<List<CourtMaintenanceResponse>>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+        // POST /courts/{courtId}/maintenances — IsManager
+        group.MapPost("/{courtId:guid}/maintenances", async (Guid courtId, CreateCourtMaintenanceCommand command, ISender sender) =>
+        {
+            command.CourtId = courtId;
+            var result = await sender.Send(command);
+            return result.ToIResult(StatusCodes.Status201Created);
+        })
+        .WithName("CreateCourtMaintenance")
+        .WithSummary("Cria uma janela de manutenção para a quadra")
+        .RequireAuthorization(PolicyNames.IsManager)
+        .Produces<Guid>(StatusCodes.Status201Created)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // DELETE /courts/{courtId}/maintenances/{id} — IsManager
+        group.MapDelete("/{courtId:guid}/maintenances/{id:guid}", async (Guid courtId, Guid id, ISender sender) =>
+        {
+            var result = await sender.Send(new DeleteCourtMaintenanceCommand { CourtId = courtId, MaintenanceId = id });
+            return result.ToIResult();
+        })
+        .WithName("DeleteCourtMaintenance")
+        .WithSummary("Remove uma janela de manutenção da quadra")
         .RequireAuthorization(PolicyNames.IsManager)
         .Produces(StatusCodes.Status204NoContent)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound);

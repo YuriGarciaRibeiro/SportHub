@@ -30,6 +30,7 @@ public interface IReservationRepository
         DateTime? endDate = null);
     Task<List<CustomerReservationMetrics>> GetMetricsByUserIdsAsync(IEnumerable<Guid> userIds, CancellationToken ct = default);
     Task<CustomerReservationMetrics?> GetMetricsByUserIdAsync(Guid userId, CancellationToken ct = default);
+    Task<decimal> GetTotalSpentByUserAsync(Guid userId, CancellationToken ct = default);
     Task<List<CourtFrequency>> GetTopCourtsByUserAsync(Guid userId, int top, CancellationToken ct = default);
     Task<int> CountByDayAsync(DateTime day);
     Task<decimal> GetTotalRevenueByDayAsync(DateTime day);

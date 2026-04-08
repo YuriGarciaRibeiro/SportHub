@@ -2,6 +2,7 @@ using Application.Common.Errors;
 using Application.Common.Interfaces;
 using Application.CQRS;
 using Application.UseCases.Court.GetCourtById;
+using Application.UseCases.CourtMaintenance.GetCourtMaintenances;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases.Court.UpdateCourt;
@@ -72,7 +73,9 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
             court.Location?.Name,
             court.PeakPricePerHour,
             court.PeakStartTime,
-            court.PeakEndTime
+            court.PeakEndTime,
+            court.Maintenances.Select(m => new CourtMaintenanceResponse(
+                m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList()
         );
 
         return Result.Ok(response);

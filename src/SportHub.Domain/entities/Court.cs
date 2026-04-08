@@ -31,5 +31,6 @@ public class Court : TenantEntity, IEntity
     public Location? Location { get; set; }
 
     public List<Sport> Sports { get; set; } = [];
+    public List<CourtMaintenance> Maintenances { get; set; } = [];
     public Tenant Tenant { get; set; } = null!;
 }

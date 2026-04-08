@@ -1,3 +1,5 @@
+using Application.UseCases.CourtMaintenance.GetCourtMaintenances;
+
 namespace Application.UseCases.Court.GetCourtById;
 
 public record CourtPublicResponse(
@@ -17,6 +19,7 @@ public record CourtPublicResponse(
     string? LocationName,
     decimal? PeakPricePerHour,
     TimeOnly? PeakStartTime,
-    TimeOnly? PeakEndTime);
+    TimeOnly? PeakEndTime,
+    List<CourtMaintenanceResponse> Maintenances);
 
 public record SportSummary(Guid Id, string Name);

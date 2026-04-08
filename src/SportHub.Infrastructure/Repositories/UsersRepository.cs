@@ -21,7 +21,9 @@ public class UsersRepository : IUsersRepository
     }
 
     public async Task<User?> GetByIdAsync(Guid id) =>
-        await _dbSet.FindAsync(id);
+        await _dbContext.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted);
 
     public async Task<List<User>> GetAllAsync() =>
         await _dbSet.ToListAsync();

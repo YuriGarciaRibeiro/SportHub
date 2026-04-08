@@ -2,6 +2,7 @@ using Application.Common.Interfaces;
 using Application.Common.Models;
 using Application.CQRS;
 using Application.UseCases.Court.GetCourtById;
+using Application.UseCases.CourtMaintenance.GetCourtMaintenances;
 using FluentResults;
 
 namespace Application.UseCases.Court.GetAllCourts;
@@ -49,7 +50,9 @@ public class GetAllCourtsHandler : IQueryHandler<GetAllCourtsQuery, PagedResult<
                 c.Location?.Name,
                 c.PeakPricePerHour,
                 c.PeakStartTime,
-                c.PeakEndTime
+                c.PeakEndTime,
+                c.Maintenances.Select(m => new CourtMaintenanceResponse(
+                    m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList()
             )).ToList(),
             TotalCount = pagedCourts.TotalCount,
             Page = pagedCourts.Page,
