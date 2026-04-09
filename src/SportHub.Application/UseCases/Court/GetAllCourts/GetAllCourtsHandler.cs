@@ -52,7 +52,8 @@ public class GetAllCourtsHandler : IQueryHandler<GetAllCourtsQuery, PagedResult<
                 c.PeakStartTime,
                 c.PeakEndTime,
                 c.Maintenances.Select(m => new CourtMaintenanceResponse(
-                    m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList()
+                    m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList(),
+                c.TimeZone
             )).ToList(),
             TotalCount = pagedCourts.TotalCount,
             Page = pagedCourts.Page,

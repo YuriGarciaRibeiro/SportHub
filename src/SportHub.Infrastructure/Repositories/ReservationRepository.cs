@@ -361,6 +361,17 @@ public class ReservationRepository : IReservationRepository
             .ToList();
     }
 
+    public async Task<Reservation?> GetActiveByUserAsync(Guid userId, DateTime nowUtc, CancellationToken ct = default)
+    {
+        return await _dbContext.Reservations
+            .Include(r => r.Court)
+            .Where(r => r.UserId == userId
+                && r.Status == ReservationStatus.Confirmed
+                && r.StartTimeUtc <= nowUtc
+                && r.EndTimeUtc >= nowUtc)
+            .FirstOrDefaultAsync(ct);
+    }
+
     public async Task<List<CourtOccupancy>> GetCourtOccupancyTodayAsync(DateTime todayStartUtc, CancellationToken ct = default)
     {
         var tenantId = _tenantContext.TenantId;

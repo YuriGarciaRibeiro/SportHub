@@ -1,6 +1,7 @@
 using Application.Common.Models;
 using Application.Security;
 using Application.UseCases.Reservations.CancelReservation;
+using Application.UseCases.Reservations.GetActiveReservation;
 using Application.UseCases.Reservations.GetAllReservations;
 using Application.UseCases.Reservations.GetCourtReservations;
 using Application.UseCases.Reservations.GetMyReservations;
@@ -14,6 +15,19 @@ public static class ReservationsEndpoints
 {
     public static void MapReservationsEndpoints(this IEndpointRouteBuilder app)
     {
+        // GET /api/reservations/active — reserva em andamento do usuário autenticado
+        app.MapGet("/api/reservations/active", async (ISender sender) =>
+        {
+            var result = await sender.Send(new GetActiveReservationQuery());
+            return result.ToIResult();
+        })
+        .WithName("GetActiveReservation")
+        .WithSummary("Retorna a reserva em andamento do usuário autenticado")
+        .WithTags("Reservations")
+        .RequireAuthorization()
+        .Produces<ActiveReservationResponse?>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
+
         // GET /api/reservations/me — reservas do usuário autenticado
         app.MapGet("/api/reservations/me", async (
             [AsParameters] GetMyReservationsFilter filter,

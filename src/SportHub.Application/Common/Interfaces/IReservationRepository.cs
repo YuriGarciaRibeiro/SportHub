@@ -40,6 +40,7 @@ public interface IReservationRepository
     Task<List<CourtRevenue>> GetRevenueByCourtAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default);
     Task<CancellationStats> GetCancellationStatsAsync(DateTime fromUtc, DateTime toUtc, CancellationToken ct = default);
     Task<List<TopCustomer>> GetTopCustomersAsync(DateTime fromUtc, DateTime toUtc, int top, CancellationToken ct = default);
+    Task<Reservation?> GetActiveByUserAsync(Guid userId, DateTime nowUtc, CancellationToken ct = default);
 }
 
 public class CustomerReservationMetrics

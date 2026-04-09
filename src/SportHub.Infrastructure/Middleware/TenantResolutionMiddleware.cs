@@ -142,7 +142,12 @@ public class TenantResolutionMiddleware
         var host = context.Request.Host.Host;
         var parts = host.Split('.');
 
+        // Produção: abc.sporthub.app (3+ partes)
+        // Dev:      abc.localhost ou abc.lvh.me (2 partes, mas com subdomínio)
         if (parts.Length >= 3)
+            return parts[0].ToLowerInvariant();
+
+        if (parts.Length == 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www")
             return parts[0].ToLowerInvariant();
 
         if (context.Request.Headers.TryGetValue("X-Tenant-Slug", out var headerSlug))

@@ -48,7 +48,8 @@ public class GetCourtByIdHandler : IQueryHandler<GetCourtByIdQuery, CourtPublicR
             court.PeakStartTime,
             court.PeakEndTime,
             court.Maintenances.Select(m => new CourtMaintenanceResponse(
-                m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList()
+                m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList(),
+            court.TimeZone
         );
 
         return Result.Ok(response);

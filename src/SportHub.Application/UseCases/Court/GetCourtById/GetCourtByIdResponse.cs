@@ -20,6 +20,7 @@ public record CourtPublicResponse(
     decimal? PeakPricePerHour,
     TimeOnly? PeakStartTime,
     TimeOnly? PeakEndTime,
-    List<CourtMaintenanceResponse> Maintenances);
+    List<CourtMaintenanceResponse> Maintenances,
+    string TimeZone);
 
 public record SportSummary(Guid Id, string Name);
