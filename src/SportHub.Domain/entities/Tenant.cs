@@ -44,6 +44,10 @@ public class Tenant
 
     [JsonInclude] public int CancelationWindowHours { get; private set; } = 0;
 
+    // Legal pages (rich text / markdown)
+    [JsonInclude] public string? TermsOfService { get; private set; }
+    [JsonInclude] public string? PrivacyPolicy { get; private set; }
+
     // Constructor for EF Core and JSON Deserialization (Cache)
     public Tenant() { }
 
@@ -89,6 +93,12 @@ public class Tenant
         InstagramUrl = instagramUrl;
         FacebookUrl = facebookUrl;
         WhatsappNumber = whatsappNumber;
+    }
+
+    public void UpdateLegalPages(string? termsOfService, string? privacyPolicy)
+    {
+        TermsOfService = termsOfService;
+        PrivacyPolicy = privacyPolicy;
     }
 
     public void Suspend() => Status = TenantStatus.Suspended;

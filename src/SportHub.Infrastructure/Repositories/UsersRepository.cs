@@ -85,6 +85,13 @@ public class UsersRepository : IUsersRepository
             .AnyAsync(u => u.TenantId == tenantId && u.Email == email && !u.IsDeleted);
     }
 
+    public async Task<User?> GetByPasswordResetTokenAsync(string token)
+    {
+        var tenantId = _tenantContext.TenantId;
+        return await _dbContext.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.TenantId == tenantId && u.PasswordResetToken == token && !u.IsDeleted);
+    }
 
     public async Task<PagedResult<User>> GetPagedAsync(
         int page,

@@ -1,3 +1,4 @@
+using Application.Common.Interfaces;
 using Application.Security;
 using Application.UseCases.Tenant.UpdateSettings;
 using Application.UseCases.Tenant.UploadTenantCover;
@@ -84,6 +85,68 @@ public static class SettingsEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
+        // GET /api/settings/terms — público
+        app.MapGet("/api/settings/terms", (ITenantContext tenantCtx) =>
+        {
+            if (!tenantCtx.IsResolved)
+                return Results.NotFound(new { message = "Tenant não encontrado." });
+
+            return Results.Ok(new LegalPageResponse(tenantCtx.TermsOfService));
+        })
+        .WithName("GetTermsOfService")
+        .WithSummary("Retorna os Termos de Serviço personalizados do tenant (público)")
+        .AllowAnonymous()
+        .WithTags("Settings")
+        .Produces<LegalPageResponse>(StatusCodes.Status200OK);
+
+        // GET /api/settings/privacy — público
+        app.MapGet("/api/settings/privacy", (ITenantContext tenantCtx) =>
+        {
+            if (!tenantCtx.IsResolved)
+                return Results.NotFound(new { message = "Tenant não encontrado." });
+
+            return Results.Ok(new LegalPageResponse(tenantCtx.PrivacyPolicy));
+        })
+        .WithName("GetPrivacyPolicy")
+        .WithSummary("Retorna a Política de Privacidade personalizada do tenant (público)")
+        .AllowAnonymous()
+        .WithTags("Settings")
+        .Produces<LegalPageResponse>(StatusCodes.Status200OK);
+
+        // PUT /api/settings/legal — IsOwner
+        app.MapPut("/api/settings/legal", async (
+            UpdateLegalPagesRequest request,
+            ITenantContext tenantCtx,
+            ITenantRepository tenantRepo,
+            IUnitOfWork unitOfWork,
+            ICacheService cache) =>
+        {
+            if (!tenantCtx.IsResolved)
+                return Results.NotFound(new { message = "Tenant não encontrado." });
+
+            var tenant = await tenantRepo.GetByIdAsync(tenantCtx.TenantId);
+            if (tenant is null)
+                return Results.NotFound(new { message = "Tenant não encontrado." });
+
+            tenant.UpdateLegalPages(request.TermsOfService, request.PrivacyPolicy);
+            await tenantRepo.UpdateAsync(tenant);
+            await unitOfWork.SaveChangesAsync();
+
+            var key = cache.GenerateCacheKey(global::Application.Common.Enums.CacheKeyPrefix.TenantBySlug, tenant.Slug);
+            await cache.RemoveAsync(key);
+
+            return Results.NoContent();
+        })
+        .WithName("UpdateLegalPages")
+        .WithSummary("Atualiza os Termos de Serviço e Política de Privacidade do tenant")
+        .RequireAuthorization(PolicyNames.IsOwner)
+        .WithTags("Settings")
+        .Produces(StatusCodes.Status204NoContent)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
         return app;
     }
 }
+
+public record LegalPageResponse(string? Content);
+public record UpdateLegalPagesRequest(string? TermsOfService, string? PrivacyPolicy);

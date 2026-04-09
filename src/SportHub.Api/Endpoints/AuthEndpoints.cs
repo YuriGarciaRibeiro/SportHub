@@ -8,6 +8,9 @@ using Application.UseCases.Auth.Login;
 using Application.UseCases.Auth.RefreshToken;
 using Application.UseCases.Auth.GetCurrentUser;
 using Application.UseCases.Auth.UpdateCurrentUser;
+using Application.UseCases.Auth.ChangePassword;
+using Application.UseCases.Auth.ForgotPassword;
+using Application.UseCases.Auth.ResetPassword;
 using SportHub.Application.UseCases.Auth.DeleteUser;
 using Application.Common.Interfaces;
 
@@ -108,6 +111,45 @@ public static class AuthEndpoints
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
         .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+
+        // PUT /auth/change-password — alterar senha estando logado
+        group.MapPut("/change-password", async (ChangePasswordCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("ChangePassword")
+        .WithSummary("Altera a senha do usuário autenticado")
+        .RequireAuthorization()
+        .Produces(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // POST /auth/forgot-password — solicitar reset de senha
+        group.MapPost("/forgot-password", async (ForgotPasswordCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("ForgotPassword")
+        .WithSummary("Solicita um token de reset de senha (enviado por email)")
+        .AllowAnonymous()
+        .Produces(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
+
+        // POST /auth/reset-password — resetar senha com token
+        group.MapPost("/reset-password", async (ResetPasswordCommand command, ISender sender) =>
+        {
+            var result = await sender.Send(command);
+            return result.ToIResult();
+        })
+        .WithName("ResetPassword")
+        .WithSummary("Reseta a senha usando um token válido")
+        .AllowAnonymous()
+        .Produces(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+        .Produces<ProblemDetails>(StatusCodes.Status422UnprocessableEntity);
 
         return group;
     }

@@ -24,6 +24,8 @@ public class TenantContext : ITenantContext
     public string? WhatsappNumber => _tenant?.WhatsappNumber;
     public bool PeakHoursEnabled => _tenant?.PeakHoursEnabled ?? false;
     public int? CancelationWindowHours => _tenant?.CancelationWindowHours;
+    public string? TermsOfService => _tenant?.TermsOfService;
+    public string? PrivacyPolicy => _tenant?.PrivacyPolicy;
     public bool IsResolved => _tenant is not null;
 
     public void Resolve(Tenant tenant)

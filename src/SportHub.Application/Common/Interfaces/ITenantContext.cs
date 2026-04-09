@@ -21,6 +21,8 @@ public interface ITenantContext
     string? WhatsappNumber { get; }
     bool PeakHoursEnabled { get; }
     int? CancelationWindowHours { get; }
+    string? TermsOfService { get; }
+    string? PrivacyPolicy { get; }
 
     bool IsResolved { get; }
 

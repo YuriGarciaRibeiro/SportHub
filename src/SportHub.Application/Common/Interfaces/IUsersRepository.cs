@@ -18,6 +18,7 @@ public interface IUsersRepository
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByRefreshTokenAsync(string refreshToken);
     Task<bool> EmailExistsAsync(string email);
+    Task<User?> GetByPasswordResetTokenAsync(string token);
     Task<PagedResult<User>> GetPagedAsync(
         int page,
         int pageSize,

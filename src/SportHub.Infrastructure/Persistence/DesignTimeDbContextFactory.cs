@@ -53,6 +53,8 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Applicatio
         public string? WhatsappNumber => null;
         public bool PeakHoursEnabled => false;
         public int? CancelationWindowHours => null;
+        public string? TermsOfService => null;
+        public string? PrivacyPolicy => null;
         public bool IsResolved => false;
         public void Resolve(Tenant tenant) { }
     }
