@@ -28,7 +28,7 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
 
     public async Task<Result<CourtPublicResponse>> Handle(UpdateCourtCommand request, CancellationToken cancellationToken)
     {
-        var court = await _courtsRepository.GetByIdAsync(request.Id, new GetCourtIncludeSettings { IncludeSports = true, AsNoTracking = false });
+        var court = await _courtsRepository.GetByIdAsync(request.Id, new GetCourtIncludeSettings { IncludeSports = true, IncludeTenant = true, AsNoTracking = false });
 
         if (court is null)
             return Result.Fail(new NotFound($"Quadra com ID {request.Id} não encontrada."));
@@ -52,7 +52,8 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
         foreach (var sport in sports)
             court.Sports.Add(sport);
         court.PeakPricePerHour = request.Court.PeakPricePerHour;
-
+        court.CancelationWindowHours = request.Court.CancelationWindowHours;
+        court.LateCancellationFeePercent = request.Court.LateCancellationFeePercent;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -75,7 +76,11 @@ public class UpdateCourtHandler : ICommandHandler<UpdateCourtCommand, CourtPubli
             court.PeakStartTime,
             court.PeakEndTime,
             court.Maintenances.Select(m => new CourtMaintenanceResponse(
-                m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList()
+                m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList(),
+            court.TimeZone,
+            court.CancelationWindowHours,
+            court.CancelationWindowHours ?? court.Tenant.CancelationWindowHours,
+            court.LateCancellationFeePercent
         );
 
         return Result.Ok(response);

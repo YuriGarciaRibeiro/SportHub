@@ -24,6 +24,9 @@ public class Court : TenantEntity, IEntity
     public TimeOnly? PeakEndTime { get; set; } = null!;
     public decimal? PeakPricePerHour { get; set; } = null;
 
+    public int? CancelationWindowHours { get; set; } = null;
+    public decimal? LateCancellationFeePercent { get; set; } = null;
+
     public List<string> Amenities { get; set; } = [];
     public List<string> ImageUrls { get; set; } = [];
 

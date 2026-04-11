@@ -26,6 +26,9 @@ public class CourtConfiguration : IEntityTypeConfiguration<Court>
         builder.Property(c => c.ImageUrls)
             .HasColumnType("text[]");
 
+        builder.Property(c => c.LateCancellationFeePercent)
+            .HasPrecision(5, 2);
+
         builder.Property(c => c.LocationId)
             .IsRequired();
 

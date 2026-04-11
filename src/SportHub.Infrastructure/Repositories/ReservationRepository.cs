@@ -138,7 +138,7 @@ public class ReservationRepository : IReservationRepository
         DateTime? endDate = null)
     {
         var query = _dbContext.Reservations
-            .Include(r => r.Court)
+            .Include(r => r.Court).ThenInclude(c => c.Tenant)
             .Include(r => r.User)
             .Include(r => r.CreatedByUser)
             .AsQueryable();

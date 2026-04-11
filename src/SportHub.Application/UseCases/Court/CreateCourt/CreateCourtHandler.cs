@@ -43,7 +43,9 @@ public class CreateCourtHandler : ICommandHandler<CreateCourtCommand, Guid>
             Amenities = request.Court.Amenities,
             LocationId = request.Court.LocationId,
             Sports = sports.ToList(),
-            PeakPricePerHour = request.Court.PeakPricePerHour
+            PeakPricePerHour = request.Court.PeakPricePerHour,
+            CancelationWindowHours = request.Court.CancelationWindowHours,
+            LateCancellationFeePercent = request.Court.LateCancellationFeePercent
         };
 
         await _courtsRepository.AddAsync(court);

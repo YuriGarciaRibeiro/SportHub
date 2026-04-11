@@ -34,5 +34,7 @@ public record ReservationResponse(
     decimal PeakSubtotal,
     decimal? NormalPricePerSlot,
     decimal? PeakPricePerSlot,
-    ReservationStatus Status
+    ReservationStatus Status,
+    int EffectiveCancelationWindowHours,
+    decimal? LateCancellationFeePercent
 );

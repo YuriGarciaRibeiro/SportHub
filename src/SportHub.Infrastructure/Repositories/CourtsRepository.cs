@@ -94,6 +94,7 @@ public class CourtsRepository : ICourtsRepository
         var query = _dbContext.Courts
             .Include(c => c.Sports)
             .Include(c => c.Location)
+            .Include(c => c.Tenant)
             .AsSplitQuery()
             .AsNoTracking()
             .AsQueryable();

@@ -33,7 +33,7 @@ public class CancelReservationHandler : ICommandHandler<CancelReservationCommand
     {
         var reservation = await _reservationRepository.GetByIdAsync(request.ReservationId, new GetReservationSettings
         {
-            IncludeCourt = false,
+            IncludeCourt = true,
             IncludeTenant = true,
             IncludeUser = false,
             AsNoTracking = false
@@ -49,8 +49,25 @@ public class CancelReservationHandler : ICommandHandler<CancelReservationCommand
         if (reservation.UserId != currentUserId && !isManagerOrAbove)
             return Result.Fail(new Forbidden("Você não tem permissão para cancelar esta reserva."));
         
-        if (DateTime.UtcNow + TimeSpan.FromHours(reservation.Tenant.CancelationWindowHours) > reservation.StartTimeUtc)
-            return Result.Fail(new BadRequest($"Reservas só podem ser canceladas com pelo menos {reservation.Tenant.CancelationWindowHours} horas de antecedência."));
+        var effectiveWindowHours = reservation.Court.CancelationWindowHours
+            ?? reservation.Tenant.CancelationWindowHours;
+
+        var isWithinWindow = DateTime.UtcNow + TimeSpan.FromHours(effectiveWindowHours) > reservation.StartTimeUtc;
+
+        if (isWithinWindow)
+        {
+            if (reservation.Court.LateCancellationFeePercent is > 0)
+            {
+                var feeAmount = reservation.TotalPrice * (reservation.Court.LateCancellationFeePercent.Value / 100m);
+                return Result.Fail(new BadRequest(
+                    $"Esta reserva está dentro da janela de cancelamento de {effectiveWindowHours} hora(s). " +
+                    $"Uma taxa de cancelamento tardio de {reservation.Court.LateCancellationFeePercent}% " +
+                    $"(R$ {feeAmount:F2}) seria aplicada. Cancelamento não permitido."));
+            }
+
+            return Result.Fail(new BadRequest(
+                $"Reservas só podem ser canceladas com pelo menos {effectiveWindowHours} horas de antecedência."));
+        }
 
         _logger.LogInformation("Cancelando reserva {ReservationId} por usuário {UserId}", request.ReservationId, currentUserId);
 

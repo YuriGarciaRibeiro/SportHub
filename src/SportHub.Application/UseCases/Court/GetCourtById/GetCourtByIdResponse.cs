@@ -21,6 +21,9 @@ public record CourtPublicResponse(
     TimeOnly? PeakStartTime,
     TimeOnly? PeakEndTime,
     List<CourtMaintenanceResponse> Maintenances,
-    string TimeZone);
+    string TimeZone,
+    int? CancelationWindowHours,
+    int EffectiveCancelationWindowHours,
+    decimal? LateCancellationFeePercent);
 
 public record SportSummary(Guid Id, string Name);

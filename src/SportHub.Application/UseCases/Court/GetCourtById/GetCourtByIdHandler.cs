@@ -21,6 +21,7 @@ public class GetCourtByIdHandler : IQueryHandler<GetCourtByIdQuery, CourtPublicR
             IncludeLocation = true,
             IncludeSports = true,
             IncludeMaintenances = true,
+            IncludeTenant = true,
             AsNoTracking = true
         });
 
@@ -49,7 +50,10 @@ public class GetCourtByIdHandler : IQueryHandler<GetCourtByIdQuery, CourtPublicR
             court.PeakEndTime,
             court.Maintenances.Select(m => new CourtMaintenanceResponse(
                 m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList(),
-            court.TimeZone
+            court.TimeZone,
+            court.CancelationWindowHours,
+            court.CancelationWindowHours ?? court.Tenant.CancelationWindowHours,
+            court.LateCancellationFeePercent
         );
 
         return Result.Ok(response);

@@ -33,5 +33,15 @@ public class UpdateCourtValidator : AbstractValidator<UpdateCourtCommand>
             .GreaterThanOrEqualTo(0)
             .When(x => x.Court.PeakPricePerHour.HasValue)
             .WithMessage("O preço de pico por hora deve ser maior ou igual a zero.");
+
+        RuleFor(x => x.Court.CancelationWindowHours)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.Court.CancelationWindowHours.HasValue)
+            .WithMessage("A janela de cancelamento deve ser maior ou igual a zero.");
+
+        RuleFor(x => x.Court.LateCancellationFeePercent)
+            .GreaterThanOrEqualTo(0).LessThanOrEqualTo(100)
+            .When(x => x.Court.LateCancellationFeePercent.HasValue)
+            .WithMessage("A taxa de cancelamento tardio deve ser entre 0 e 100.");
     }
 }

@@ -50,7 +50,9 @@ public class GetMyReservationsHandler : IQueryHandler<GetMyReservationsQuery, Pa
                 r.PeakSubtotal,
                 r.NormalPricePerSlot,
                 r.PeakPricePerSlot,
-                r.Status))],
+                r.Status,
+                r.Court.CancelationWindowHours ?? r.Court.Tenant.CancelationWindowHours,
+                r.Court.LateCancellationFeePercent))],
             TotalCount = paged.TotalCount,
             Page = paged.Page,
             PageSize = paged.PageSize

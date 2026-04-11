@@ -27,5 +27,6 @@ public class CourtRequest
     public Guid LocationId { get; set; }
     public IEnumerable<Guid> Sports { get; set; } = new List<Guid>();
     public decimal? PeakPricePerHour { get; set; } = null;
-    
+    public int? CancelationWindowHours { get; set; } = null;
+    public decimal? LateCancellationFeePercent { get; set; } = null;
 }

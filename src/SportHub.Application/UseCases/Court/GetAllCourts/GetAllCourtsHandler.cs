@@ -53,7 +53,10 @@ public class GetAllCourtsHandler : IQueryHandler<GetAllCourtsQuery, PagedResult<
                 c.PeakEndTime,
                 c.Maintenances.Select(m => new CourtMaintenanceResponse(
                     m.Id, m.Type, m.Description, m.DayOfWeek, m.Date, m.StartTime, m.EndTime)).ToList(),
-                c.TimeZone
+                c.TimeZone,
+                c.CancelationWindowHours,
+                c.CancelationWindowHours ?? c.Tenant.CancelationWindowHours,
+                c.LateCancellationFeePercent
             )).ToList(),
             TotalCount = pagedCourts.TotalCount,
             Page = pagedCourts.Page,
